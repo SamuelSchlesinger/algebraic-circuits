@@ -24,3 +24,7 @@ Evaluation of lines, programs, and circuits commutes with homomorphisms.
 ```sh
 lake build --wfail
 ```
+
+## License
+
+Algebraic is available under the [MIT License](LICENSE).
