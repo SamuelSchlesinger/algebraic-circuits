@@ -77,8 +77,7 @@ theorem Circuit.exists_hard_in_family_coarse
     (arity : σ.ArityAtMost r)
     (large : σ.coarseBudget r n m G < family.card) :
     ∃ target ∈ family,
-      ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
-        ¬circuit.Computes interpretation target :=
+      Circuit.GateHard interpretation G target :=
   Circuit.exists_hard_in_family_sharp interpretation family <|
     (σ.sharpBudget_le_coarseBudget arity).trans_lt large
 

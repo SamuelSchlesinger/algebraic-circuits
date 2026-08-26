@@ -428,8 +428,7 @@ theorem Circuit.exists_hard_in_family_sharp
     (family : Finset (Target U n m))
     (large : σ.sharpBudget n m G < family.card) :
     ∃ target ∈ family,
-      ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
-        ¬circuit.Computes interpretation target := by
+      Circuit.GateHard interpretation G target := by
   apply Circuit.exists_hard_in_family_of_card_lt interpretation family
   exact (Circuit.card_functionsAtMost_le_sharpBudget
     interpretation n m G).trans_lt large
@@ -438,12 +437,9 @@ theorem Circuit.exists_hard_in_family_sharp
 theorem Circuit.exists_hard_sharp
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
-    (large :
-      σ.sharpBudget n m G <
-        Fintype.card U ^ (m * Fintype.card U ^ n)) :
+    (large : σ.sharpBudget n m G < Target.count U n m) :
     ∃ target : Target U n m,
-      ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
-        ¬circuit.Computes interpretation target := by
+      Circuit.GateHard interpretation G target := by
   apply Circuit.exists_hard_of_card_lt interpretation
   exact (Circuit.card_functionsAtMost_le_sharpBudget
     interpretation n m G).trans_lt large
@@ -454,12 +450,9 @@ theorem Circuit.exists_hard_sharp_of_complete
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (complete : interpretation.FunctionallyComplete)
-    (large :
-      σ.sharpBudget n m G <
-        Fintype.card U ^ (m * Fintype.card U ^ n)) :
+    (large : σ.sharpBudget n m G < Target.count U n m) :
     ∃ target : Target U n m,
-      (∀ g ≤ G, ∀ circuit : Circuit σ n g m,
-        ¬circuit.Computes interpretation target) ∧
+      Circuit.GateHard interpretation G target ∧
       ∃ g, ∃ circuit : Circuit σ n g m,
         circuit.Computes interpretation target := by
   obtain ⟨target, hard⟩ := Circuit.exists_hard_sharp interpretation large
@@ -469,10 +462,9 @@ theorem Circuit.exists_hard_sharp_of_complete
 theorem Circuit.exists_boolean_hard_sharp
     [Fintype σ.Op]
     (interpretation : Interpretation σ Bool)
-    (large : σ.sharpBudget n m G < 2 ^ (m * 2 ^ n)) :
+    (large : σ.sharpBudget n m G < Target.count Bool n m) :
     ∃ target : Target Bool n m,
-      ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
-        ¬circuit.Computes interpretation target := by
-  simpa using Circuit.exists_hard_sharp interpretation large
+      Circuit.GateHard interpretation G target :=
+  Circuit.exists_hard_sharp interpretation large
 
 end Algebraic

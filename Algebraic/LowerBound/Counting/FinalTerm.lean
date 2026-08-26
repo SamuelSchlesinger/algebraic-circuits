@@ -15,6 +15,15 @@ that sum by its final real-valued term, without yet invoking Stirling.
 
 namespace Algebraic
 
+/-- Real-valued envelope obtained by replacing every summand of the sharp
+budget by its final factorial-divided term. -/
+noncomputable def Signature.finalTerm
+    (σ : Signature) [Fintype σ.Op]
+    (n m G : Nat) : Real :=
+  (G + 1) *
+    (σ.lineCount (n + G) : Real) ^ (G + m) /
+      (G.factorial : Real)
+
 /-- The tail of a factorial is bounded by replacing every factor by the final
 index. -/
 theorem Nat.factorial_le_factorial_mul_pow
@@ -51,9 +60,8 @@ theorem Signature.sharpBudget_cast_le_finalTerm
     {n m G : Nat}
     (enoughLines : G ≤ σ.lineCount (n + G)) :
     (σ.sharpBudget n m G : Real) ≤
-      (G + 1) *
-        (σ.lineCount (n + G) : Real) ^ (G + m) /
-          (G.factorial : Real) := by
+      σ.finalTerm n m G := by
+  unfold Signature.finalTerm
   let base := σ.lineCount (n + G)
   have termBound (g : Nat) (bounded : g ≤ G) :
       (σ.sharpCount n g m : Real) ≤
@@ -123,9 +131,7 @@ theorem Circuit.card_functionsAtMost_cast_le_finalTerm
     {n m G : Nat}
     (enoughLines : G ≤ σ.lineCount (n + G)) :
     ((Circuit.functionsAtMost interpretation n m G).card : Real) ≤
-      (G + 1) *
-        (σ.lineCount (n + G) : Real) ^ (G + m) /
-          (G.factorial : Real) := by
+      σ.finalTerm n m G := by
   calc
     ((Circuit.functionsAtMost interpretation n m G).card : Real) ≤
         (σ.sharpBudget n m G : Real) := by
@@ -140,13 +146,9 @@ theorem Circuit.exists_hard_in_family_of_finalTerm
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
     (enoughLines : G ≤ σ.lineCount (n + G))
-    (large :
-      (G + 1) *
-          (σ.lineCount (n + G) : Real) ^ (G + m) /
-            (G.factorial : Real) < family.card) :
+    (large : σ.finalTerm n m G < family.card) :
     ∃ target ∈ family,
-      ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
-        ¬circuit.Computes interpretation target := by
+      Circuit.GateHard interpretation G target := by
   apply Circuit.exists_hard_in_family_sharp interpretation family
   have castBound : (σ.sharpBudget n m G : Real) < (family.card : Real) :=
     (σ.sharpBudget_cast_le_finalTerm enoughLines).trans_lt large
@@ -158,19 +160,13 @@ theorem Circuit.exists_hard_of_finalTerm
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (enoughLines : G ≤ σ.lineCount (n + G))
-    (large :
-      (G + 1) *
-          (σ.lineCount (n + G) : Real) ^ (G + m) /
-            (G.factorial : Real) <
-        (Fintype.card U : Real) ^ (m * Fintype.card U ^ n)) :
+    (large : σ.finalTerm n m G < (Target.count U n m : Real)) :
     ∃ target : Target U n m,
-      ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
-        ¬circuit.Computes interpretation target := by
+      Circuit.GateHard interpretation G target := by
   apply Circuit.exists_hard_sharp interpretation
   have castBound : (σ.sharpBudget n m G : Real) <
-      ((Fintype.card U ^ (m * Fintype.card U ^ n) : Nat) : Real) :=
-    (σ.sharpBudget_cast_le_finalTerm enoughLines).trans_lt (by
-      simpa using large)
+      (Target.count U n m : Real) :=
+    (σ.sharpBudget_cast_le_finalTerm enoughLines).trans_lt large
   exact_mod_cast castBound
 
 end Algebraic

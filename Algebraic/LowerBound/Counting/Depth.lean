@@ -374,8 +374,7 @@ theorem Circuit.exists_depth_hard_in_family
     (large :
       (Depth.functions interpretation n depth).card ^ m < family.card) :
     ∃ target ∈ family,
-      ∀ g, ∀ circuit : Circuit σ n g m,
-        circuit.Computes interpretation target → depth < circuit.depth := by
+      Circuit.DepthHard interpretation depth target := by
   classical
   have targetCount := Depth.card_targets_le interpretation n m depth
   have small : (Depth.targets interpretation n m depth).card < family.card :=
@@ -383,6 +382,7 @@ theorem Circuit.exists_depth_hard_in_family
   obtain ⟨target, inFamily, notShallow⟩ :=
     Finset.exists_mem_notMem_of_card_lt_card small
   refine ⟨target, inFamily, ?_⟩
+  unfold Circuit.DepthHard
   intro g circuit computes
   by_contra notDeep
   have bounded : circuit.depth ≤ depth := by omega
@@ -399,8 +399,7 @@ theorem Circuit.exists_depth_hard_in_family_of_countBound
     {depth : Nat}
     (large : Depth.countBound σ n depth ^ m < family.card) :
     ∃ target ∈ family,
-      ∀ g, ∀ circuit : Circuit σ n g m,
-        circuit.Computes interpretation target → depth < circuit.depth :=
+      Circuit.DepthHard interpretation depth target :=
   Circuit.exists_depth_hard_in_family interpretation family <|
     (Nat.pow_le_pow_left
       (Depth.card_functions_le_countBound interpretation n depth) m).trans_lt large
@@ -412,15 +411,13 @@ theorem Circuit.exists_depth_hard
     {depth : Nat}
     (large :
       (Depth.functions interpretation n depth).card ^ m <
-        Fintype.card U ^ (m * Fintype.card U ^ n)) :
+        Target.count U n m) :
     ∃ target : Target U n m,
-      ∀ g, ∀ circuit : Circuit σ n g m,
-        circuit.Computes interpretation target → depth < circuit.depth := by
+      Circuit.DepthHard interpretation depth target := by
   classical
   have targetCard : Fintype.card (Target U n m) =
-      Fintype.card U ^ (m * Fintype.card U ^ n) := by
-    simpa only [Nat.card_eq_fintype_card] using
-      (card_target (U := U) (n := n) (m := m))
+      Target.count U n m := by
+    rw [Target.count, Nat.card_eq_fintype_card]
   obtain ⟨target, _, hard⟩ := Circuit.exists_depth_hard_in_family
     interpretation (Finset.univ : Finset (Target U n m))
     (by simpa only [Finset.card_univ, targetCard] using large)
@@ -433,10 +430,9 @@ theorem Circuit.exists_depth_hard_of_countBound
     {depth : Nat}
     (large :
       Depth.countBound σ n depth ^ m <
-        Fintype.card U ^ (m * Fintype.card U ^ n)) :
+        Target.count U n m) :
     ∃ target : Target U n m,
-      ∀ g, ∀ circuit : Circuit σ n g m,
-        circuit.Computes interpretation target → depth < circuit.depth := by
+      Circuit.DepthHard interpretation depth target := by
   apply Circuit.exists_depth_hard interpretation
   exact (Nat.pow_le_pow_left
     (Depth.card_functions_le_countBound interpretation n depth) m).trans_lt large
@@ -475,8 +471,7 @@ theorem Circuit.exists_depth_hard_in_family_coarse
     (arity : σ.ArityAtMost r)
     (large : Depth.coarseCount σ r n depth ^ m < family.card) :
     ∃ target ∈ family,
-      ∀ g, ∀ circuit : Circuit σ n g m,
-        circuit.Computes interpretation target → depth < circuit.depth :=
+      Circuit.DepthHard interpretation depth target :=
   Circuit.exists_depth_hard_in_family_of_countBound interpretation family <|
     (Nat.pow_le_pow_left
       (Depth.countBound_le_coarseCount σ arity n depth) m).trans_lt large
@@ -488,13 +483,11 @@ theorem Circuit.exists_boolean_depth_hard_coarse
     {r depth : Nat}
     (arity : σ.ArityAtMost r)
     (large :
-      Depth.coarseCount σ r n depth ^ m < 2 ^ (m * 2 ^ n)) :
+      Depth.coarseCount σ r n depth ^ m < Target.count Bool n m) :
     ∃ target : Target Bool n m,
-      ∀ g, ∀ circuit : Circuit σ n g m,
-        circuit.Computes interpretation target → depth < circuit.depth := by
+      Circuit.DepthHard interpretation depth target := by
   apply Circuit.exists_depth_hard_of_countBound interpretation
   exact (Nat.pow_le_pow_left
-    (Depth.countBound_le_coarseCount σ arity n depth) m).trans_lt (by
-      simpa using large)
+    (Depth.countBound_le_coarseCount σ arity n depth) m).trans_lt large
 
 end Algebraic

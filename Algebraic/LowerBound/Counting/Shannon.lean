@@ -20,6 +20,24 @@ namespace Algebraic
 
 /-! ## Stirling reduction -/
 
+/-- Logarithmic exponent obtained from the factorial-improved final term after
+retaining the leading part of Stirling's lower bound. -/
+noncomputable def Signature.stirlingExponent
+    (σ : Signature) [Fintype σ.Op]
+    (n m G : Nat) : Real :=
+  Real.log (G + 1) +
+    (G + m) * Real.log (σ.lineCount (n + G)) -
+      ((G : Real) * Real.log G - G)
+
+namespace Shannon
+
+/-- Logarithm of the number `q ^ (m * q ^ n)` of `m`-output functions on
+`n` inputs over a `q`-element universe, when `q` is positive. -/
+noncomputable def logTargetCount (q n m : Nat) : Real :=
+  ((m * q ^ n : Nat) : Real) * Real.log q
+
+end Shannon
+
 /-- The part of Stirling's lower bound responsible for the sharp leading
 constant. -/
 theorem Nat.cast_mul_log_sub_le_log_factorial
@@ -42,13 +60,8 @@ theorem Signature.finalTerm_le_exp_stirling
     {n m G : Nat}
     (positive : 0 < G)
     (linesPositive : 0 < σ.lineCount (n + G)) :
-    (G + 1) *
-          (σ.lineCount (n + G) : Real) ^ (G + m) /
-            (G.factorial : Real) ≤
-      Real.exp
-        (Real.log (G + 1) +
-          (G + m) * Real.log (σ.lineCount (n + G)) -
-            ((G : Real) * Real.log G - G)) := by
+    σ.finalTerm n m G ≤ Real.exp (σ.stirlingExponent n m G) := by
+  unfold Signature.finalTerm Signature.stirlingExponent
   apply (Real.log_le_iff_le_exp (by positivity)).mp
   rw [Real.log_div (by positivity) (by positivity),
     Real.log_mul (by positivity) (by positivity), Real.log_pow]
@@ -66,21 +79,22 @@ theorem Circuit.exists_hard_of_stirlingLog
     (gatePositive : 0 < G)
     (enoughLines : G ≤ σ.lineCount (n + G))
     (linesPositive : 0 < σ.lineCount (n + G))
-    (large :
-      Real.log (G + 1) +
-            (G + m) * Real.log (σ.lineCount (n + G)) -
-              ((G : Real) * Real.log G - G) <
-        ((m * Fintype.card U ^ n : Nat) : Real) *
-          Real.log (Fintype.card U)) :
+    (large : σ.stirlingExponent n m G <
+      Shannon.logTargetCount (Fintype.card U) n m) :
     ∃ target : Target U n m,
-      ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
-        ¬circuit.Computes interpretation target := by
+      Circuit.GateHard interpretation G target := by
   apply Circuit.exists_hard_of_finalTerm interpretation enoughLines
   apply (σ.finalTerm_le_exp_stirling gatePositive linesPositive).trans_lt
   have exponentBound := Real.exp_lt_exp.mpr large
+  unfold Shannon.logTargetCount at exponentBound
   rw [Real.exp_nat_mul, Real.exp_log (by
     exact_mod_cast Nat.zero_lt_of_lt universeNontrivial)] at exponentBound
-  simpa using exponentBound
+  calc
+    Real.exp (σ.stirlingExponent n m G) <
+        (Fintype.card U : Real) ^ (m * Fintype.card U ^ n) := exponentBound
+    _ = (Target.count U n m : Real) := by
+      rw [Target.count_eq, Nat.card_eq_fintype_card]
+      norm_cast
 
 /-! ## Gate-budget estimates -/
 
@@ -264,9 +278,7 @@ private theorem stirlingExponent_le
     (hr : 2 ≤ r)
     (gatePositive : 0 < G)
     (inputsSmall : n + 1 ≤ G) :
-    Real.log (G + 1) +
-          (G + m) * Real.log (σ.lineCount (n + G)) -
-            ((G : Real) * Real.log G - G) ≤
+    σ.stirlingExponent n m G ≤
       (r - 1 : Nat) * G * Real.log G +
         overhead σ r m * G := by
   let c : Real :=
@@ -302,6 +314,7 @@ private theorem stirlingExponent_le
       (m : Real) * c + 1 = ((m : Real) * c + 1) * 1 := by ring
       _ ≤ ((m : Real) * c + 1) * G :=
         mul_le_mul_of_nonneg_left gateOne (by positivity)
+  unfold Signature.stirlingExponent
   dsimp only [overhead]
   rw [Nat.cast_sub (by omega : 1 ≤ r)]
   norm_num only [Nat.cast_one]
@@ -334,14 +347,8 @@ private theorem eventually_stirlingExponent_le_target_sub_budget
     (hr : 2 ≤ r)
     (hm : 0 < m) :
     ∀ᶠ n in Filter.atTop,
-      Real.log (gateBudget q r m n + 1) +
-            (gateBudget q r m n + m) *
-              Real.log (σ.lineCount (n + gateBudget q r m n)) -
-              ((gateBudget q r m n : Nat) *
-                  Real.log (gateBudget q r m n) -
-                gateBudget q r m n) ≤
-        ((m * q ^ n : Nat) : Real) * Real.log q -
-          gateBudget q r m n := by
+      σ.stirlingExponent n m (gateBudget q r m n) ≤
+        Shannon.logTargetCount q n m - gateBudget q r m n := by
   have qOne : (1 : Real) < q := by exact_mod_cast (by omega : 1 < q)
   have logQPositive : 0 < Real.log q := Real.log_pos qOne
   have arityGapPositive : 0 < (r - 1 : Nat) := by omega
@@ -404,10 +411,11 @@ private theorem eventually_stirlingExponent_le_target_sub_budget
         sub_le_sub_right productBound _
   have exponentBound := stirlingExponent_le
     (m := m) maximum hr GPositive inputsBelow
+  unfold Signature.stirlingExponent at exponentBound
   change
     Real.log (G + 1) +
           (G + m) * Real.log (σ.lineCount (n + G)) -
-            (G * Real.log G - G) ≤
+          (G * Real.log G - G) ≤
       ((m * q ^ n : Nat) : Real) * Real.log q - G
   have gapTimesGate :
       (overhead σ r m + 1) * (G : Real) ≤
@@ -427,10 +435,7 @@ private theorem eventually_mul_finalTerm_le_fullSpace
     (hm : 0 < m)
     (K : Nat) :
     ∀ᶠ n in Filter.atTop,
-      (K : Real) * (gateBudget q r m n + 1) *
-          (σ.lineCount (n + gateBudget q r m n) : Real) ^
-            (gateBudget q r m n + m) /
-            ((gateBudget q r m n).factorial : Real) ≤
+      (K : Real) * σ.finalTerm n m (gateBudget q r m n) ≤
         (q : Real) ^ (m * q ^ n) := by
   have exponentBound :=
     eventually_stirlingExponent_le_target_sub_budget maximum hq hr hm
@@ -451,36 +456,23 @@ private theorem eventually_mul_finalTerm_le_fullSpace
       (K : Real) ≤ G := by exact_mod_cast KBound
       _ ≤ G + 1 := by linarith
       _ ≤ Real.exp G := Real.add_one_le_exp _
-  let A : Real :=
-    Real.log (G + 1) +
-      (G + m) * Real.log (σ.lineCount (n + G)) -
-        ((G : Real) * Real.log G - G)
+  let A := σ.stirlingExponent n m G
   change
-    (K : Real) * (G + 1) *
-          (σ.lineCount (n + G) : Real) ^ (G + m) /
-            (G.factorial : Real) ≤
+    (K : Real) * σ.finalTerm n m G ≤
       (q : Real) ^ (m * q ^ n)
-  change
-    (G + 1) *
-          (σ.lineCount (n + G) : Real) ^ (G + m) /
-            (G.factorial : Real) ≤ Real.exp A at finalTermBound
-  change A ≤ ((m * q ^ n : Nat) : Real) * Real.log q - G at bounded
+  change σ.finalTerm n m G ≤ Real.exp A at finalTermBound
+  change A ≤ Shannon.logTargetCount q n m - G at bounded
   calc
-    (K : Real) * (G + 1) *
-          (σ.lineCount (n + G) : Real) ^ (G + m) /
-            (G.factorial : Real) =
-        (K : Real) * ((G + 1) *
-          (σ.lineCount (n + G) : Real) ^ (G + m) /
-            (G.factorial : Real)) := by ring
-    _ ≤ (K : Real) * Real.exp A :=
+    (K : Real) * σ.finalTerm n m G ≤ (K : Real) * Real.exp A :=
       mul_le_mul_of_nonneg_left finalTermBound (Nat.cast_nonneg K)
     _ ≤ Real.exp G * Real.exp A :=
       mul_le_mul_of_nonneg_right KExp (Real.exp_pos A).le
     _ = Real.exp (G + A) := (Real.exp_add G A).symm
-    _ ≤ Real.exp (((m * q ^ n : Nat) : Real) * Real.log q) := by
+    _ ≤ Real.exp (Shannon.logTargetCount q n m) := by
       rw [Real.exp_le_exp]
       linarith
     _ = (q : Real) ^ (m * q ^ n) := by
+      unfold Shannon.logTargetCount
       rw [Real.exp_nat_mul, Real.exp_log (by exact_mod_cast (by omega : 0 < q))]
 
 end Shannon
@@ -512,17 +504,13 @@ theorem Circuit.asymptoticallyAlmostAllHard_shannon
       maximum universeNontrivial arityAtLeastTwo outputsPositive K
     filter_upwards [bounded] with n hn
     calc
-      (K : Real) *
-            (Shannon.gateBudget (Fintype.card U) r m n + 1) *
-          (σ.lineCount
-              (n + Shannon.gateBudget (Fintype.card U) r m n) : Real) ^
-            (Shannon.gateBudget (Fintype.card U) r m n + m) /
-            ((Shannon.gateBudget
-              (Fintype.card U) r m n).factorial : Real) ≤
+      (K : Real) * σ.finalTerm n m
+            (Shannon.gateBudget (Fintype.card U) r m n) ≤
           (Fintype.card U : Real) ^
             (m * Fintype.card U ^ n) := hn
       _ = ((Circuit.fullFamily U m n).card : Real) := by
-        rw [Circuit.card_fullFamily]
+        rw [Circuit.card_fullFamily, Target.count_eq,
+          Nat.card_eq_fintype_card]
         norm_cast
 
 /-- Conventional density form of the closed Shannon theorem. -/
@@ -536,15 +524,15 @@ theorem Circuit.tendsto_easyDensity_zero_shannon
     (outputsPositive : 0 < m) :
     Filter.Tendsto
       (fun n =>
-        ((Circuit.easyInFamily interpretation
+        Circuit.easyDensity interpretation
           (Circuit.fullFamily U m n)
-          (Shannon.gateBudget (Fintype.card U) r m n)).card : Real) /
-            (Circuit.fullFamily U m n).card)
+          (Shannon.gateBudget (Fintype.card U) r m n))
       Filter.atTop (nhds 0) := by
   apply (Circuit.asymptoticallyAlmostAllHard_shannon interpretation
     maximum universeNontrivial arityAtLeastTwo outputsPositive).tendsto_easyDensity_zero
   exact Filter.Eventually.of_forall fun n => by
-    rw [Circuit.card_fullFamily]
+    rw [Circuit.card_fullFamily, Target.count_eq,
+      Nat.card_eq_fintype_card]
     positivity
 
 /-- Boolean specialization of the closed Shannon theorem. For a binary basis
@@ -559,10 +547,9 @@ theorem Circuit.tendsto_boolean_easyDensity_zero_shannon
     (outputsPositive : 0 < m) :
     Filter.Tendsto
       (fun n =>
-        ((Circuit.easyInFamily interpretation
+        Circuit.easyDensity interpretation
           (Circuit.fullFamily Bool m n)
-          (Shannon.gateBudget 2 r m n)).card : Real) /
-            (Circuit.fullFamily Bool m n).card)
+          (Shannon.gateBudget 2 r m n))
       Filter.atTop (nhds 0) := by
   simpa only [Fintype.card_bool] using
     Circuit.tendsto_easyDensity_zero_shannon interpretation maximum
@@ -579,10 +566,9 @@ theorem Circuit.tendsto_finiteField_easyDensity_zero_shannon
     (outputsPositive : 0 < m) :
     Filter.Tendsto
       (fun n =>
-        ((Circuit.easyInFamily interpretation
+        Circuit.easyDensity interpretation
           (Circuit.fullFamily K m n)
-          (Shannon.gateBudget (Fintype.card K) r m n)).card : Real) /
-            (Circuit.fullFamily K m n).card)
+          (Shannon.gateBudget (Fintype.card K) r m n))
       Filter.atTop (nhds 0) :=
   Circuit.tendsto_easyDensity_zero_shannon interpretation maximum
     Fintype.one_lt_card arityAtLeastTwo outputsPositive

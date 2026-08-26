@@ -46,6 +46,24 @@ theorem Circuit.Computes.eval_eq
     circuit.eval interpretation = target :=
   funext computes
 
+/-- A target is gate-hard at budget `G` when no circuit with at most `G`
+internal gates computes it. -/
+def Circuit.GateHard
+    (interpretation : Interpretation σ U)
+    (G : Nat)
+    (target : Target U n m) : Prop :=
+  ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
+    ¬circuit.Computes interpretation target
+
+/-- A target is depth-hard at `depth` when every circuit computing it has
+strictly greater depth. -/
+def Circuit.DepthHard
+    (interpretation : Interpretation σ U)
+    (depth : Nat)
+    (target : Target U n m) : Prop :=
+  ∀ g, ∀ circuit : Circuit σ n g m,
+    circuit.Computes interpretation target → depth < circuit.depth
+
 /-- An interpretation is functionally complete if every finite-arity,
 finite-output target has some circuit. -/
 def Interpretation.FunctionallyComplete

@@ -94,11 +94,19 @@ theorem card_circuit [Fintype σ.Op] :
     card_program, Fintype.card_fun, card_line]
   simp
 
+/-- Number of functions from `U^n` to `U^m`. -/
+noncomputable def Target.count (U : Type*) (n m : Nat) : Nat :=
+  Nat.card (Target U n m)
+
+theorem Target.count_eq [Finite U] :
+    Target.count U n m = Nat.card U ^ (m * Nat.card U ^ n) := by
+  simp only [Target.count, Target, Nat.card_fun, Nat.card_fin]
+  rw [← Nat.pow_mul]
+
 /-- Exact number of functions from `U^n` to `U^m`. -/
 theorem card_target [Finite U] :
-    Nat.card (Target U n m) = Nat.card U ^ (m * Nat.card U ^ n) := by
-  simp only [Target, Nat.card_fun, Nat.card_fin]
-  rw [← Nat.pow_mul]
+    Nat.card (Target U n m) = Nat.card U ^ (m * Nat.card U ^ n) :=
+  Target.count_eq
 
 /-- Number of possible lines when `w` wires are available. -/
 def Signature.lineCount (σ : Signature) [Fintype σ.Op] (w : Nat) : Nat :=

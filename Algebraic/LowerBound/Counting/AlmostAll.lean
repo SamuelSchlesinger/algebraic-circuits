@@ -34,6 +34,14 @@ noncomputable def Circuit.hardInFamily
   exact family.filter fun target =>
     target ∉ Circuit.functionsAtMost interpretation n m G
 
+/-- Proportion of a finite family computed within gate budget `G`. -/
+noncomputable def Circuit.easyDensity
+    [Fintype σ.Op] [Fintype U]
+    (interpretation : Interpretation σ U)
+    (family : Finset (Target U n m))
+    (G : Nat) : Real :=
+  (Circuit.easyInFamily interpretation family G).card / family.card
+
 theorem Circuit.mem_hardInFamily_iff
     [Fintype σ.Op] [Fintype U]
     {interpretation : Interpretation σ U}
@@ -41,14 +49,10 @@ theorem Circuit.mem_hardInFamily_iff
     {target : Target U n m} :
     target ∈ Circuit.hardInFamily interpretation family G ↔
       target ∈ family ∧
-        ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
-          ¬circuit.Computes interpretation target := by
+        Circuit.GateHard interpretation G target := by
   classical
-  rw [Circuit.hardInFamily, Finset.mem_filter]
-  refine and_congr_right fun _ => ?_
-  simpa using not_congr
-    (Circuit.mem_functionsAtMost_iff
-      (interpretation := interpretation) (target := target) (G := G))
+  rw [Circuit.hardInFamily, Finset.mem_filter,
+    Circuit.not_mem_functionsAtMost_iff]
 
 theorem Circuit.card_easyInFamily_le_sharpBudget
     [Fintype σ.Op] [Fintype U]
@@ -133,9 +137,7 @@ theorem Circuit.asymptoticallyAlmostAllHard_of_finalTerm
     (enoughLines : ∀ᶠ n in Filter.atTop,
       gateBudget n ≤ σ.lineCount (n + gateBudget n))
     (negligible : ∀ K : Nat, ∀ᶠ n in Filter.atTop,
-      (K : Real) * (gateBudget n + 1) *
-          (σ.lineCount (n + gateBudget n) : Real) ^ (gateBudget n + m) /
-            ((gateBudget n).factorial : Real) ≤ (family n).card) :
+      (K : Real) * σ.finalTerm n m (gateBudget n) ≤ (family n).card) :
     Circuit.AsymptoticallyAlmostAllHard
       interpretation m family gateBudget := by
   intro K
@@ -143,9 +145,7 @@ theorem Circuit.asymptoticallyAlmostAllHard_of_finalTerm
   have easyBound :
       ((Circuit.easyInFamily interpretation
         (family n) (gateBudget n)).card : Real) ≤
-        (gateBudget n + 1) *
-          (σ.lineCount (n + gateBudget n) : Real) ^ (gateBudget n + m) /
-            ((gateBudget n).factorial : Real) := by
+        σ.finalTerm n m (gateBudget n) := by
     calc
       ((Circuit.easyInFamily interpretation
           (family n) (gateBudget n)).card : Real) ≤
@@ -162,13 +162,8 @@ theorem Circuit.asymptoticallyAlmostAllHard_of_finalTerm
       (K : Real) *
           (Circuit.easyInFamily interpretation
             (family n) (gateBudget n)).card ≤
-          (K : Real) * ((gateBudget n + 1) *
-            (σ.lineCount (n + gateBudget n) : Real) ^ (gateBudget n + m) /
-              ((gateBudget n).factorial : Real)) :=
+          (K : Real) * σ.finalTerm n m (gateBudget n) :=
         mul_le_mul_of_nonneg_left easyBound (Nat.cast_nonneg K)
-      _ = (K : Real) * (gateBudget n + 1) *
-          (σ.lineCount (n + gateBudget n) : Real) ^ (gateBudget n + m) /
-            ((gateBudget n).factorial : Real) := by ring
       _ ≤ ((family n).card : Real) := bounded
   exact_mod_cast castBound
 
@@ -182,12 +177,10 @@ noncomputable def Circuit.fullFamily
 
 @[simp] theorem Circuit.card_fullFamily
     (U : Type*) [Fintype U] (m n : Nat) :
-    (Circuit.fullFamily U m n).card =
-      Fintype.card U ^ (m * Fintype.card U ^ n) := by
+    (Circuit.fullFamily U m n).card = Target.count U n m := by
   classical
   rw [Circuit.fullFamily, Finset.card_univ]
-  simpa only [Nat.card_eq_fintype_card] using
-    (card_target (U := U) (n := n) (m := m))
+  rw [Target.count, Nat.card_eq_fintype_card]
 
 /-- The division-free almost-all predicate implies the conventional statement
 that the real-valued density of easy functions tends to zero. -/
@@ -201,11 +194,9 @@ theorem Circuit.AsymptoticallyAlmostAllHard.tendsto_easyDensity_zero
       interpretation m family gateBudget)
     (familyNonempty : ∀ᶠ n in Filter.atTop, 0 < (family n).card) :
     Filter.Tendsto
-      (fun n =>
-        ((Circuit.easyInFamily interpretation
-          (family n) (gateBudget n)).card : Real) /
-            (family n).card)
+      (fun n => Circuit.easyDensity interpretation (family n) (gateBudget n))
       Filter.atTop (nhds 0) := by
+  unfold Circuit.easyDensity
   rw [tendsto_order]
   constructor
   · intro lower lowerNegative

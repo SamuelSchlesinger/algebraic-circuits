@@ -34,6 +34,8 @@ Reusable circuit analysis is kept separate from particular lower-bound methods:
 
 - `ScalarFunction`, `Target`, and `Circuit.outputFunction` name the scalar and
   multi-output semantic views used throughout the library.
+- `Circuit.GateHard` and `Circuit.DepthHard` package the conclusions of size and
+  depth lower bounds without exposing their quantified circuit witnesses.
 - `Computes`, `Interpretation.FunctionallyComplete`, `DependsOnlyOn`, and
   `EssentialAt` give the semantic vocabulary.
 - `Circuit.inputSupport` computes the structural input support of a circuit.
@@ -50,9 +52,11 @@ modules under `Algebraic/LowerBound/FanIn`.
 The counting development is exported by `Algebraic.LowerBound.Counting`:
 
 - `Algebraic.Counting.Syntax` gives finite instances and exact cardinality
-  formulas for lines, programs, circuits, and the full target-function space.
+  formulas for lines, programs, circuits, and the full target-function space;
+  `Target.count` names the latter cardinality.
 - `Counting.Basic` bounds the functions computed with at most `G` internal
-  gates and works relative to any finite family of target functions.
+  gates and works relative to any finite family of target functions;
+  `Signature.orderedBudget` names the exact ordered-syntax count.
 - `Counting.Depth` constructs the interpretation-sensitive closure of scalar
   functions under one operation layer and proves exact, numeric, and
   arity-only depth criteria.
@@ -64,11 +68,11 @@ The counting development is exported by `Algebraic.LowerBound.Counting`:
   `Signature.sharpBudget`.
 - `Counting.Arity` packages maximum arity and bounds the number of available
   lines; `Counting.Coarse` derives elementary arity-only size bounds.
-- `Counting.FinalTerm` replaces the exact sharp sum by its final real-valued
-  factorial-divided term without using Stirling.
+- `Counting.FinalTerm` replaces the exact sharp sum by the named real-valued
+  `Signature.finalTerm` envelope without using Stirling.
 - `Counting.AlmostAll` defines easy and hard subfamilies, gives a division-free
-  density-zero criterion, and relates it to the conventional real density
-  limit.
+  density-zero criterion, and relates it to the conventional
+  `Circuit.easyDensity` limit.
 - `Counting.Shannon` applies Stirling and proves the closed-form theorem for an
   arbitrary fixed finite basis. If `q` is the universe size, `r ≥ 2` is the
   attained maximum gate arity, and `m > 0` is fixed, then the density of
