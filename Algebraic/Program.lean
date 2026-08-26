@@ -7,15 +7,31 @@ namespace Algebraic
 /-- A wire is either an original input or the output of an earlier gate. -/
 abbrev Wire n g := Fin (n + g)
 
+/-- Regard an original input as a wire. -/
+abbrev Wire.input {n g : Nat} (input : Fin n) : Wire n g :=
+  Fin.castAdd g input
+
+/-- Regard a gate output as a wire. -/
+abbrev Wire.gate {n g : Nat} (gate : Fin g) : Wire n g :=
+  Fin.natAdd n gate
+
 /-- One gate together with the wires supplying its arguments. -/
 structure Line (σ : Signature) (n g : Nat) where
+  /-- The operation performed by the gate. -/
   op : σ.Op
+  /-- The wire supplying each argument of the operation. -/
   wires : Fin (σ.Arity op) → Wire n g
 
 /-- A topologically ordered straight-line program of `g` gates. -/
 inductive Program (σ : Signature) (n : Nat) : Nat → Type v where
   | empty : Program σ n 0
   | gate : Program σ n g → Line σ n g → Program σ n (g + 1)
+
+/-- Every gate in a program has at most `r` arguments. -/
+def Program.FanInAtMost : (program : Program σ n g) → Nat → Prop
+  | .empty, _ => True
+  | .gate program line, r =>
+      program.FanInAtMost r ∧ σ.Arity line.op ≤ r
 
 /-- Evaluate a line from the values of the inputs and preceding gates. -/
 def Line.eval

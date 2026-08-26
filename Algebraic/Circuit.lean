@@ -4,8 +4,14 @@ namespace Algebraic
 
 /-- A straight-line program followed by a terminal layer of output gates. -/
 structure Circuit (σ : Signature) (n g m : Nat) where
+  /-- The internal gates of the circuit. -/
   program : Program σ n g
+  /-- The terminal gate computing each output. -/
   outputs : Fin m → Line σ n g
+
+/-- Every internal and output gate in a circuit has at most `r` arguments. -/
+def Circuit.FanInAtMost (c : Circuit σ n g m) (r : Nat) : Prop :=
+  c.program.FanInAtMost r ∧ ∀ k, σ.Arity (c.outputs k).op ≤ r
 
 /-- The total number of internal and output gates in a circuit. -/
 def Circuit.size (_ : Circuit σ n g m) : Nat :=

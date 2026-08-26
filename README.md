@@ -3,7 +3,7 @@
 Algebraic is a small Lean 4 library for finite-arity universal algebra and
 shared circuit computation over algebraic interpretations.
 
-The library has five layers:
+The core library has five layers:
 
 - `Signature` describes operation symbols and their arities.
 - `Interpretation` assigns concrete operations to a signature.
@@ -19,10 +19,39 @@ terminal-output depth.
 
 Evaluation of lines, programs, and circuits commutes with homomorphisms.
 
+Reusable circuit analysis is kept separate from particular lower-bound methods:
+
+- `Computes`, `DependsOnlyOn`, and `EssentialAt` give the semantic vocabulary.
+- `Circuit.inputSupport` computes the structural input support of a circuit.
+- `Circuit.FanInAtMost` states the structural bounded-fan-in hypothesis.
+- `Circuit.card_inputSupport_le_depth` and `Circuit.card_inputSupport_le_size`
+  bound that support for bounded-fan-in circuits.
+- `Circuit.essential_le_depth` and `Circuit.essential_le_size` turn those
+  structural bounds into semantic lower-bound tools.
+
+Lower-bound methods live under `Algebraic/LowerBound`. `Algebraic.LowerBound`
+is an import umbrella; the current bounded-fan-in method has separate size and
+depth modules under `Algebraic/LowerBound/FanIn`.
+
 ## Build
 
 ```sh
 lake build --wfail
+```
+
+Generate the API documentation with:
+
+```sh
+cd docbuild
+lake build Algebraic:docs
+```
+
+The generated site starts at `docbuild/.lake/build/doc/index.html`.
+Serve that directory over HTTP for working search and navigation, for example:
+
+```sh
+cd docbuild/.lake/build/doc
+python3 -m http.server
 ```
 
 ## License
