@@ -1,0 +1,6 @@
+name = "algebraic"
+version = "0.1.0"
+defaultTargets = ["Algebraic"]
+
+[[lean_lib]]
+name = "Algebraic"
