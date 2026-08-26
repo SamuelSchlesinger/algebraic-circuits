@@ -6,4 +6,5 @@ import Algebraic.Program
 import Algebraic.Circuit
 import Algebraic.Semantics
 import Algebraic.Support
+import Algebraic.Counting
 import Algebraic.LowerBound

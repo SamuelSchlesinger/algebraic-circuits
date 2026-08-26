@@ -9,12 +9,50 @@ This file contains the small semantic vocabulary used by circuit lower bounds.
 
 namespace Algebraic
 
+/-- A single-output function on `n` inputs over `U`. -/
+abbrev ScalarFunction (U : Type u) (n : Nat) := (Fin n → U) → U
+
+/-- An `m`-output function on `n` inputs over `U`. -/
+abbrev Target (U : Type u) (n m : Nat) := (Fin n → U) → Fin m → U
+
+/-- The scalar function computed by one terminal output gate. -/
+def Circuit.outputFunction
+    (circuit : Circuit σ n g m)
+    (interpretation : Interpretation σ U)
+    (output : Fin m) : ScalarFunction U n :=
+  fun input => circuit.eval interpretation input output
+
+@[simp] theorem Circuit.outputFunction_apply
+    (circuit : Circuit σ n g m)
+    (interpretation : Interpretation σ U)
+    (output : Fin m)
+    (input : Fin n → U) :
+    circuit.outputFunction interpretation output input =
+      circuit.eval interpretation input output := rfl
+
 /-- Exact pointwise computation of a function by a circuit. -/
 def Circuit.Computes
     (c : Circuit σ n g m)
     (interpretation : Interpretation σ U)
-    (target : (Fin n → U) → Fin m → U) : Prop :=
+    (target : Target U n m) : Prop :=
   ∀ input, c.eval interpretation input = target input
+
+/-- Pointwise computation gives equality of the computed and target functions. -/
+theorem Circuit.Computes.eval_eq
+    {circuit : Circuit σ n g m}
+    {interpretation : Interpretation σ U}
+    {target : Target U n m}
+    (computes : circuit.Computes interpretation target) :
+    circuit.eval interpretation = target :=
+  funext computes
+
+/-- An interpretation is functionally complete if every finite-arity,
+finite-output target has some circuit. -/
+def Interpretation.FunctionallyComplete
+    (interpretation : Interpretation σ U) : Prop :=
+  ∀ n m, ∀ target : Target U n m,
+    ∃ g, ∃ circuit : Circuit σ n g m,
+      circuit.Computes interpretation target
 
 /-- A function depends only on the input coordinates in `support`. -/
 def DependsOnlyOn

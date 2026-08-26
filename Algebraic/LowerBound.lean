@@ -1,4 +1,5 @@
 import Algebraic.LowerBound.FanIn
+import Algebraic.LowerBound.Counting
 
 /-!
 # Circuit lower bounds

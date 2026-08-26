@@ -19,9 +19,23 @@ terminal-output depth.
 
 Evaluation of lines, programs, and circuits commutes with homomorphisms.
 
+The core program API also supports semantics-preserving structural changes:
+
+- `Wire.Renaming` represents wire maps that fix original inputs, with identity,
+  composition, extension, and permutation constructors.
+- `Line.mapWires`, `Line.eval_mapWires`, and `Line.eval_mapRenaming` transport a
+  line across a wire map.
+- simp lemmas describe the old and last gate of an appended program.
+- `Program.gateFunction` and `Program.wireFunction` expose scalar semantics.
+- `Program.lines` views a program as a fully widened indexed collection of
+  lines; `Program.lines_eval` relates that view back to program evaluation.
+
 Reusable circuit analysis is kept separate from particular lower-bound methods:
 
-- `Computes`, `DependsOnlyOn`, and `EssentialAt` give the semantic vocabulary.
+- `ScalarFunction`, `Target`, and `Circuit.outputFunction` name the scalar and
+  multi-output semantic views used throughout the library.
+- `Computes`, `Interpretation.FunctionallyComplete`, `DependsOnlyOn`, and
+  `EssentialAt` give the semantic vocabulary.
 - `Circuit.inputSupport` computes the structural input support of a circuit.
 - `Circuit.FanInAtMost` states the structural bounded-fan-in hypothesis.
 - `Circuit.card_inputSupport_le_depth` and `Circuit.card_inputSupport_le_size`
@@ -30,8 +44,45 @@ Reusable circuit analysis is kept separate from particular lower-bound methods:
   structural bounds into semantic lower-bound tools.
 
 Lower-bound methods live under `Algebraic/LowerBound`. `Algebraic.LowerBound`
-is an import umbrella; the current bounded-fan-in method has separate size and
-depth modules under `Algebraic/LowerBound/FanIn`.
+is an import umbrella. The bounded-fan-in method has separate size and depth
+modules under `Algebraic/LowerBound/FanIn`.
+
+The counting development is exported by `Algebraic.LowerBound.Counting`:
+
+- `Algebraic.Counting.Syntax` gives finite instances and exact cardinality
+  formulas for lines, programs, circuits, and the full target-function space.
+- `Counting.Basic` bounds the functions computed with at most `G` internal
+  gates and works relative to any finite family of target functions.
+- `Counting.Depth` constructs the interpretation-sensitive closure of scalar
+  functions under one operation layer and proves exact, numeric, and
+  arity-only depth criteria.
+- `Counting.Normalization` semantically hash-conses a circuit without
+  increasing its gate count.
+- `Counting.Sharp` removes the artificial topological ordering: for exactly
+  `g` irredundant gates, the number of computed functions times `g!` is at most
+  `lineCount (n + g) ^ (g + m)`. Summing the resulting quotients gives
+  `Signature.sharpBudget`.
+- `Counting.Arity` packages maximum arity and bounds the number of available
+  lines; `Counting.Coarse` derives elementary arity-only size bounds.
+- `Counting.FinalTerm` replaces the exact sharp sum by its final real-valued
+  factorial-divided term without using Stirling.
+- `Counting.AlmostAll` defines easy and hard subfamilies, gives a division-free
+  density-zero criterion, and relates it to the conventional real density
+  limit.
+- `Counting.Shannon` applies Stirling and proves the closed-form theorem for an
+  arbitrary fixed finite basis. If `q` is the universe size, `r ≥ 2` is the
+  attained maximum gate arity, and `m > 0` is fixed, then the density of
+  functions computable with at most
+  `⌊m * q ^ n / ((r - 1) * n)⌋` internal gates tends to zero. Boolean and
+  finite-field forms are included; for binary one-output Boolean bases the
+  budget simplifies to `2 ^ n / n`.
+
+The sharp lower bound does not assume functional completeness. When an
+interpretation is complete, `Circuit.exists_hard_sharp_of_complete` additionally
+returns a circuit computing the hard target, so the conclusion is a genuine
+finite complexity lower bound rather than mere non-representability.
+The closed almost-all theorem also avoids a completeness assumption: its
+conclusion is that no circuit within the stated budget computes the target.
 
 ## Build
 

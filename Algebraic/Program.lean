@@ -1,6 +1,8 @@
 import Algebraic.Signature
 import Algebraic.Interpretation
 import Algebraic.Homomorphism
+import Mathlib.Data.Fin.SuccPred
+import Mathlib.Logic.Equiv.Defs
 
 namespace Algebraic
 
@@ -15,12 +17,161 @@ abbrev Wire.input {n g : Nat} (input : Fin n) : Wire n g :=
 abbrev Wire.gate {n g : Nat} (gate : Fin g) : Wire n g :=
   Fin.natAdd n gate
 
+/-- A renaming of gate wires that fixes every original input. Gate wires may be
+sent to either inputs or gates in the target namespace. -/
+structure Wire.Renaming (n g h : Nat) where
+  /-- The target wire representing each source gate. -/
+  gates : Fin g → Wire n h
+
+namespace Wire.Renaming
+
+/-- Apply an input-fixing wire renaming. -/
+def apply (ρ : Wire.Renaming n g h) : Wire n g → Wire n h :=
+  Fin.addCases Wire.input ρ.gates
+
+instance : CoeFun (Wire.Renaming n g h) fun _ => Wire n g → Wire n h :=
+  ⟨apply⟩
+
+@[simp] theorem apply_input
+    (ρ : Wire.Renaming n g h) (input : Fin n) :
+    ρ (Wire.input input) = Wire.input input := by
+  simp [apply]
+
+@[simp] theorem apply_gate
+    (ρ : Wire.Renaming n g h) (gate : Fin g) :
+    ρ (Wire.gate gate) = ρ.gates gate := by
+  simp [apply]
+
+/-- The identity wire renaming. -/
+def id : Wire.Renaming n g g where
+  gates := Wire.gate
+
+@[simp] theorem id_apply (wire : Wire n g) :
+    (id : Wire.Renaming n g g) wire = wire := by
+  refine Fin.addCases (fun input => ?_) (fun gate => ?_) wire <;> simp [id]
+
+/-- Compose input-fixing wire renamings. -/
+def comp
+    (outer : Wire.Renaming n h k)
+    (inner : Wire.Renaming n g h) : Wire.Renaming n g k where
+  gates := outer ∘ inner.gates
+
+@[simp] theorem comp_apply
+    (outer : Wire.Renaming n h k)
+    (inner : Wire.Renaming n g h)
+    (wire : Wire n g) :
+    (outer.comp inner) wire = outer (inner wire) := by
+  refine Fin.addCases (fun input => ?_) (fun gate => ?_) wire <;>
+    simp [comp, Function.comp_apply]
+
+/-- Include all wires into a namespace with one additional gate. -/
+def castSucc : Wire.Renaming n g (g + 1) where
+  gates := fun gate => Wire.gate gate.castSucc
+
+@[simp] theorem castSucc_apply (wire : Wire n g) :
+    (castSucc : Wire.Renaming n g (g + 1)) wire = wire.castSucc := by
+  refine Fin.addCases (fun input => ?_) (fun gate => ?_) wire
+  · simp [castSucc, Fin.castSucc_castAdd]
+  · simp [castSucc]
+
+/-- Extend a renaming while replacing the new last gate by an existing wire. -/
+def skipLast
+    (prior : Wire.Renaming n g k)
+    (replacement : Wire n k) : Wire.Renaming n (g + 1) k where
+  gates := Fin.lastCases replacement prior.gates
+
+theorem skipLast_gate_last
+    (prior : Wire.Renaming n g k)
+    (replacement : Wire n k) :
+    prior.skipLast replacement (Wire.gate (Fin.last g)) = replacement := by
+  rw [apply_gate]
+  simp [skipLast]
+
+@[simp] theorem skipLast_lastWire
+    (prior : Wire.Renaming n g k)
+    (replacement : Wire n k) :
+    prior.skipLast replacement (Fin.last (n + g)) = replacement := by
+  rw [← Fin.natAdd_last (n := n) (m := g)]
+  exact skipLast_gate_last prior replacement
+
+@[simp] theorem skipLast_castSucc
+    (prior : Wire.Renaming n g k)
+    (replacement : Wire n k)
+    (wire : Wire n g) :
+    prior.skipLast replacement wire.castSucc = prior wire := by
+  refine Fin.addCases (fun input => ?_) (fun gate => ?_) wire
+  · simp [Fin.castSucc_castAdd]
+  · simp [skipLast]
+
+/-- Extend a renaming and retain the new last gate as a fresh target gate. -/
+def appendLast
+    (prior : Wire.Renaming n g k) : Wire.Renaming n (g + 1) (k + 1) where
+  gates := Fin.lastCases (Wire.gate (n := n) (Fin.last k)) fun gate =>
+    (prior.gates gate).castSucc
+
+theorem appendLast_gate_last
+    (prior : Wire.Renaming n g k) :
+    prior.appendLast (Wire.gate (Fin.last g)) =
+      Wire.gate (n := n) (Fin.last k) := by
+  rw [apply_gate]
+  simp [appendLast]
+
+@[simp] theorem appendLast_lastWire
+    (prior : Wire.Renaming n g k) :
+    prior.appendLast (Fin.last (n + g)) = Wire.gate (n := n) (Fin.last k) := by
+  rw [← Fin.natAdd_last (n := n) (m := g)]
+  exact appendLast_gate_last prior
+
+@[simp] theorem appendLast_castSucc
+    (prior : Wire.Renaming n g k)
+    (wire : Wire n g) :
+    prior.appendLast wire.castSucc = (prior wire).castSucc := by
+  refine Fin.addCases (fun input => ?_) (fun gate => ?_) wire
+  · simp [Fin.castSucc_castAdd]
+  · simp [appendLast]
+
+/-- Rename gate wires by a permutation. -/
+def ofPermutation (permutation : Equiv.Perm (Fin g)) : Wire.Renaming n g g where
+  gates := fun gate => Wire.gate (permutation gate)
+
+theorem ofPermutation_gate
+    (permutation : Equiv.Perm (Fin g)) (gate : Fin g) :
+    (ofPermutation permutation : Wire.Renaming n g g) (Wire.gate gate) =
+      Wire.gate (permutation gate) := by
+  simp [ofPermutation]
+
+/-- A source and target gate valuation agree along a renaming when they agree
+on the image of every source gate. Original inputs agree automatically. -/
+theorem value_apply
+    (ρ : Wire.Renaming n g h)
+    (inputs : Fin n → U)
+    (oldGates : Fin g → U)
+    (newGates : Fin h → U)
+    (preservesGates : ∀ gate,
+      (Fin.addCases inputs newGates : Wire n h → U) (ρ.gates gate) =
+        oldGates gate)
+    (wire : Wire n g) :
+    (Fin.addCases inputs newGates : Wire n h → U) (ρ wire) =
+      (Fin.addCases inputs oldGates : Wire n g → U) wire := by
+  refine Fin.addCases (fun input => ?_) (fun gate => ?_) wire
+  · simp
+  · simpa using preservesGates gate
+
+end Wire.Renaming
+
 /-- One gate together with the wires supplying its arguments. -/
 structure Line (σ : Signature) (n g : Nat) where
   /-- The operation performed by the gate. -/
   op : σ.Op
   /-- The wire supplying each argument of the operation. -/
   wires : Fin (σ.Arity op) → Wire n g
+
+/-- Apply a function to every wire read by a line. -/
+def Line.mapWires
+    (line : Line σ n g)
+    (wireMap : Wire n g → Wire n h) : Line σ n h where
+  op := line.op
+  wires := wireMap ∘ line.wires
 
 /-- A topologically ordered straight-line program of `g` gates. -/
 inductive Program (σ : Signature) (n : Nat) : Nat → Type v where
@@ -40,6 +191,42 @@ def Line.eval
   (inputs : Fin n → U)
   (gates : Fin g → U) : U :=
   i line.op (Fin.addCases inputs gates ∘ line.wires)
+
+/-- Mapping a line's wires preserves evaluation when the new valuation agrees
+with the old valuation along the map. -/
+theorem Line.eval_mapWires
+    (line : Line σ n g)
+    (wireMap : Wire n g → Wire n h)
+    (interpretation : Interpretation σ U)
+    (inputs : Fin n → U)
+    (oldGates : Fin g → U)
+    (newGates : Fin h → U)
+    (preserves : ∀ wire : Wire n g,
+      (Fin.addCases inputs newGates : Wire n h → U) (wireMap wire) =
+        (Fin.addCases inputs oldGates : Wire n g → U) wire) :
+    (line.mapWires wireMap).eval interpretation inputs newGates =
+      line.eval interpretation inputs oldGates := by
+  unfold Line.mapWires Line.eval
+  congr 1
+  funext argument
+  simp only [Function.comp_apply]
+  exact preserves (line.wires argument)
+
+/-- Specialization of `Line.eval_mapWires` to an input-fixing wire renaming. -/
+theorem Line.eval_mapRenaming
+    (line : Line σ n g)
+    (ρ : Wire.Renaming n g h)
+    (interpretation : Interpretation σ U)
+    (inputs : Fin n → U)
+    (oldGates : Fin g → U)
+    (newGates : Fin h → U)
+    (preservesGates : ∀ gate,
+      (Fin.addCases inputs newGates : Wire n h → U) (ρ.gates gate) =
+        oldGates gate) :
+    (line.mapWires ρ).eval interpretation inputs newGates =
+      line.eval interpretation inputs oldGates := by
+  apply Line.eval_mapWires
+  exact ρ.value_apply inputs oldGates newGates preservesGates
 
 /-- The depth of a line, given the depth of every wire it may read. -/
 def Line.depth
@@ -74,6 +261,25 @@ def Program.eval
   | .gate p line =>
       let prior := p.eval i x
       Fin.lastCases (line.eval i x prior) prior
+
+@[simp] theorem Program.eval_gate_last
+    (program : Program σ n g)
+    (line : Line σ n g)
+    (interpretation : Interpretation σ U)
+    (input : Fin n → U) :
+    (program.gate line).eval interpretation input (Fin.last g) =
+      line.eval interpretation input (program.eval interpretation input) := by
+  simp [Program.eval]
+
+@[simp] theorem Program.eval_gate_castSucc
+    (program : Program σ n g)
+    (line : Line σ n g)
+    (interpretation : Interpretation σ U)
+    (input : Fin n → U)
+    (gate : Fin g) :
+    (program.gate line).eval interpretation input gate.castSucc =
+      program.eval interpretation input gate := by
+  simp [Program.eval]
 
 /-- The depth of every gate in a program. Inputs have implicit depth zero. -/
 def Program.depths (p : Program σ n g) : Fin g → Nat :=
@@ -119,5 +325,150 @@ def Program.trace
   (i : Interpretation σ U)
   (x : Fin n → U) : Fin (n + g) → U :=
   Fin.addCases x (p.eval i x)
+
+@[simp] theorem Program.trace_gate_castSucc
+    (program : Program σ n g)
+    (line : Line σ n g)
+    (interpretation : Interpretation σ U)
+    (input : Fin n → U)
+    (wire : Wire n g) :
+    (program.gate line).trace interpretation input wire.castSucc =
+      program.trace interpretation input wire := by
+  unfold Program.trace
+  refine Fin.addCases (fun original => ?_) (fun gate => ?_) wire
+  · simp [Fin.castSucc_castAdd]
+  · simp
+
+@[simp] theorem Program.trace_gate_last
+    (program : Program σ n g)
+    (line : Line σ n g)
+    (interpretation : Interpretation σ U)
+    (input : Fin n → U) :
+    (program.gate line).trace interpretation input (Fin.last (n + g)) =
+      line.eval interpretation input (program.eval interpretation input) := by
+  rw [← Fin.natAdd_last (n := n) (m := g)]
+  unfold Program.trace
+  rw [Fin.addCases_right]
+  simp
+
+/-- The scalar function computed by an internal gate. -/
+def Program.gateFunction
+    (program : Program σ n g)
+    (interpretation : Interpretation σ U)
+    (gate : Fin g) : (Fin n → U) → U :=
+  fun input => program.eval interpretation input gate
+
+/-- The scalar function carried by an input or internal-gate wire. -/
+def Program.wireFunction
+    (program : Program σ n g)
+    (interpretation : Interpretation σ U)
+    (wire : Wire n g) : (Fin n → U) → U :=
+  fun input => program.trace interpretation input wire
+
+@[simp] theorem Program.gateFunction_apply
+    (program : Program σ n g)
+    (interpretation : Interpretation σ U)
+    (gate : Fin g)
+    (input : Fin n → U) :
+    program.gateFunction interpretation gate input =
+      program.eval interpretation input gate := rfl
+
+@[simp] theorem Program.wireFunction_input
+    (program : Program σ n g)
+    (interpretation : Interpretation σ U)
+    (inputWire : Fin n) :
+    program.wireFunction interpretation (Wire.input inputWire) =
+      fun input => input inputWire := by
+  funext input
+  simp [Program.wireFunction, Program.trace]
+
+@[simp] theorem Program.wireFunction_gate
+    (program : Program σ n g)
+    (interpretation : Interpretation σ U)
+    (gate : Fin g) :
+    program.wireFunction interpretation (Wire.gate gate) =
+      program.gateFunction interpretation gate := by
+  funext input
+  simp [Program.wireFunction, Program.trace]
+
+@[simp] theorem Program.gateFunction_gate_last
+    (program : Program σ n g)
+    (line : Line σ n g)
+    (interpretation : Interpretation σ U) :
+    (program.gate line).gateFunction interpretation (Fin.last g) =
+      fun input => line.eval interpretation input
+        (program.eval interpretation input) := by
+  funext input
+  exact Program.eval_gate_last program line interpretation input
+
+@[simp] theorem Program.gateFunction_gate_castSucc
+    (program : Program σ n g)
+    (line : Line σ n g)
+    (interpretation : Interpretation σ U)
+    (gate : Fin g) :
+    (program.gate line).gateFunction interpretation gate.castSucc =
+      program.gateFunction interpretation gate := by
+  funext input
+  exact Program.eval_gate_castSucc program line interpretation input gate
+
+@[simp] theorem Program.trace_gateWire
+    (program : Program σ n g)
+    (interpretation : Interpretation σ U)
+    (input : Fin n → U)
+    (gate : Fin g) :
+    program.trace interpretation input (Wire.gate gate) =
+      program.gateFunction interpretation gate input := by
+  unfold Program.trace Program.gateFunction Wire.gate
+  simp
+
+/-- The program's lines, each widened to the final wire namespace. -/
+def Program.lines : (program : Program σ n g) → Fin g → Line σ n g
+  | .empty => Fin.elim0
+  | @Program.gate _ _ g program line =>
+      Fin.lastCases
+        (line.mapWires Wire.Renaming.castSucc)
+        (fun gate => (program.lines gate).mapWires Wire.Renaming.castSucc)
+
+@[simp] theorem Program.lines_gate_last
+    (program : Program σ n g)
+    (line : Line σ n g) :
+    (program.gate line).lines (Fin.last g) =
+      line.mapWires Wire.Renaming.castSucc := by
+  simp [Program.lines]
+
+@[simp] theorem Program.lines_gate_castSucc
+    (program : Program σ n g)
+    (line : Line σ n g)
+    (gate : Fin g) :
+    (program.gate line).lines gate.castSucc =
+      (program.lines gate).mapWires Wire.Renaming.castSucc := by
+  simp [Program.lines]
+
+/-- A widened line evaluates to the value of its corresponding program gate. -/
+theorem Program.lines_eval
+    (program : Program σ n g)
+    (interpretation : Interpretation σ U)
+    (input : Fin n → U)
+    (gate : Fin g) :
+    (program.lines gate).eval interpretation input
+        (program.eval interpretation input) =
+      program.eval interpretation input gate := by
+  induction program with
+  | empty => exact Fin.elim0 gate
+  | @gate g program line ih =>
+      have evalWidened (oldLine : Line σ n g) :
+          (oldLine.mapWires Wire.Renaming.castSucc).eval interpretation input
+              ((program.gate line).eval interpretation input) =
+            oldLine.eval interpretation input
+              (program.eval interpretation input) := by
+        apply Line.eval_mapWires
+        intro wire
+        simpa only [Wire.Renaming.castSucc_apply, Program.trace] using
+          Program.trace_gate_castSucc program line interpretation input wire
+      refine Fin.lastCases ?_ (fun priorGate => ?_) gate
+      · simpa only [Program.lines_gate_last, Program.eval_gate_last] using
+          evalWidened line
+      · simp only [Program.lines_gate_castSucc, Program.eval_gate_castSucc]
+        exact (evalWidened (program.lines priorGate)).trans (ih priorGate)
 
 end Algebraic
