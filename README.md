@@ -49,6 +49,29 @@ Lower-bound methods live under `Algebraic/LowerBound`. `Algebraic.LowerBound`
 is an import umbrella. The bounded-fan-in method has separate size and depth
 modules under `Algebraic/LowerBound/FanIn`.
 
+Gate elimination is organized as a proof-carrying, basis-independent method:
+
+- `OperationCost` assigns arbitrary natural weights to operation symbols.
+- `InputSubstitution` covers restrictions, identifications, and more general
+  semantic substitutions.
+- `Circuit.Reduction` packages a residual circuit, semantic preservation under
+  a substitution, and a certified cost saving.
+- `GateElimination.Framework` turns well-founded local reductions into a
+  global lower bound for an arbitrary state-indexed target family.
+- `GateElimination.OptimalFramework` lets the local proof assume a circuit
+  lexicographically minimal by weighted cost and internal gate count; the
+  library chooses that representative and transfers the result back to every
+  circuit.
+- `GateElimination.Xor.ThreeGateEliminator` is the sole local obligation for
+  the `3 * (n - 1)` XOR lower bound over any weighted Boolean basis.
+- The De Morgan specialization charges AND and OR while treating constants and
+  NOT as free. `DeMorgan.xorThreeGateEliminator` discharges the local obligation,
+  and `DeMorgan.xor_lowerBound` exports the unconditional lower bound. The
+  library does not currently formalize a matching upper-bound construction.
+- Minimum-circuit and elimination witnesses are chosen classically. These APIs
+  certify lower bounds in Lean but do not implement an executable optimizer or
+  gate-elimination algorithm.
+
 The counting development is exported by `Algebraic.LowerBound.Counting`:
 
 - `Algebraic.Counting.Syntax` gives finite instances and exact cardinality

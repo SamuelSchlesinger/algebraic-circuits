@@ -1,0 +1,73 @@
+import Algebraic.Cost
+import Mathlib.Data.Fintype.OfMap
+
+/-!
+# The De Morgan basis
+
+The basis contains Boolean constants, a structural identity gate, unary
+negation, and binary conjunction and disjunction. Identity models a direct
+output wire in the library's terminal-output representation. `binaryCost`
+implements the standard gate-elimination cost model in which only the binary
+gates are charged.
+-/
+
+namespace Algebraic
+namespace DeMorgan
+
+/-- Operation symbols in the De Morgan basis. -/
+inductive Op
+  | false
+  | true
+  | id
+  | not
+  | and
+  | or
+  deriving DecidableEq
+
+/-- The De Morgan basis has six operation symbols. -/
+instance : Fintype Op :=
+  Fintype.ofList [.false, .true, .id, .not, .and, .or] (by
+    intro op
+    cases op <;> simp)
+
+/-- Arity of an operation in the De Morgan basis. -/
+def arity : Op → Nat
+  | .false | .true => 0
+  | .id | .not => 1
+  | .and | .or => 2
+
+@[simp] theorem arity_false : arity .false = 0 := rfl
+@[simp] theorem arity_true : arity .true = 0 := rfl
+@[simp] theorem arity_id : arity .id = 1 := rfl
+@[simp] theorem arity_not : arity .not = 1 := rfl
+@[simp] theorem arity_and : arity .and = 2 := rfl
+@[simp] theorem arity_or : arity .or = 2 := rfl
+
+/-- Signature of the De Morgan basis. -/
+abbrev signature : Signature where
+  Op := Op
+  Arity := arity
+
+/-- Standard Boolean interpretation of the De Morgan basis. -/
+def interpretation : (op : Op) → (Fin (arity op) → Bool) → Bool
+  | .false, _ => false
+  | .true, _ => true
+  | .id, input => input ⟨0, by decide⟩
+  | .not, input => !(input ⟨0, by decide⟩)
+  | .and, input => input ⟨0, by decide⟩ && input ⟨1, by decide⟩
+  | .or, input => input ⟨0, by decide⟩ || input ⟨1, by decide⟩
+
+/-- Cost model charging exactly the binary gates. -/
+def binaryCost : OperationCost signature
+  | .and | .or => 1
+  | .false | .true | .id | .not => 0
+
+@[simp] theorem binaryCost_false : binaryCost .false = 0 := rfl
+@[simp] theorem binaryCost_true : binaryCost .true = 0 := rfl
+@[simp] theorem binaryCost_id : binaryCost .id = 0 := rfl
+@[simp] theorem binaryCost_not : binaryCost .not = 0 := rfl
+@[simp] theorem binaryCost_and : binaryCost .and = 1 := rfl
+@[simp] theorem binaryCost_or : binaryCost .or = 1 := rfl
+
+end DeMorgan
+end Algebraic

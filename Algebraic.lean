@@ -6,5 +6,9 @@ import Algebraic.Program
 import Algebraic.Circuit
 import Algebraic.Semantics
 import Algebraic.Support
+import Algebraic.Cost
+import Algebraic.Restriction
+import Algebraic.Reduction
+import Algebraic.Compaction
 import Algebraic.Counting
 import Algebraic.LowerBound

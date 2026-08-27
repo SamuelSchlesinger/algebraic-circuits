@@ -173,6 +173,17 @@ def Line.mapWires
   op := line.op
   wires := wireMap ∘ line.wires
 
+@[simp] theorem Line.mapWires_op
+    (line : Line σ n g)
+    (wireMap : Wire n g → Wire n h) :
+    (line.mapWires wireMap).op = line.op := rfl
+
+@[simp] theorem Line.mapWires_wires
+    (line : Line σ n g)
+    (wireMap : Wire n g → Wire n h)
+    (argument : Fin (σ.Arity line.op)) :
+    (line.mapWires wireMap).wires argument = wireMap (line.wires argument) := rfl
+
 /-- A topologically ordered straight-line program of `g` gates. -/
 inductive Program (σ : Signature) (n : Nat) : Nat → Type v where
   | empty : Program σ n 0
@@ -325,6 +336,15 @@ def Program.trace
   (i : Interpretation σ U)
   (x : Fin n → U) : Fin (n + g) → U :=
   Fin.addCases x (p.eval i x)
+
+@[simp] theorem Program.trace_input
+    (program : Program σ n g)
+    (interpretation : Interpretation σ U)
+    (input : Fin n → U)
+    (sourceInput : Fin n) :
+    program.trace interpretation input (Wire.input sourceInput) =
+      input sourceInput := by
+  simp [Program.trace]
 
 @[simp] theorem Program.trace_gate_castSucc
     (program : Program σ n g)

@@ -1,4 +1,5 @@
 import Algebraic.LowerBound.Counting.Basic
+import Algebraic.Compaction
 
 /-!
 # Semantic circuit normalization
@@ -31,6 +32,9 @@ structure Program.Normalization
   injective_gateFunction : Function.Injective (result.gateFunction interpretation)
   /-- Normalization never adds gates. -/
   gateCount_le : gateCount ≤ g
+  /-- Normalization does not increase any nonnegative operation cost. -/
+  cost_le : ∀ operationCost : OperationCost σ,
+    result.cost operationCost ≤ program.cost operationCost
 
 /-- Hash-cons a program by semantic gate function, preserving every wire value. -/
 noncomputable def Program.normalize
@@ -45,88 +49,50 @@ noncomputable def Program.normalize
           intro input wire
           simp
         injective_gateFunction := fun impossible => Fin.elim0 impossible
-        gateCount_le := Nat.le_refl 0 }
+        gateCount_le := Nat.le_refl 0
+        cost_le := fun _ => Nat.le_refl 0 }
   | @Program.gate _ _ g program line => by
       classical
       let prior := program.normalize interpretation
+      let priorCompaction : Program.Compaction program interpretation :=
+        { gateCount := prior.gateCount
+          result := prior.result
+          wireMap := prior.wireMap
+          trace_eq := prior.trace_eq
+          gateCount_le := prior.gateCount_le
+          cost_le := prior.cost_le }
       let mappedLine := line.mapWires prior.wireMap
       let freshFunction : ScalarFunction U n :=
         fun input => mappedLine.eval interpretation input
           (prior.result.eval interpretation input)
-      have mappedEval (input : Fin n → U) :
-          mappedLine.eval interpretation input
-              (prior.result.eval interpretation input) =
-            line.eval interpretation input
-              (program.eval interpretation input) := by
-        apply line.eval_mapRenaming
-        intro gate
-        simpa only [Program.trace, Wire.Renaming.apply_gate,
-          Fin.addCases_right] using
-          prior.trace_eq input (Wire.gate gate)
       by_cases duplicate : ∃ representative,
           prior.result.gateFunction interpretation representative = freshFunction
       · let representative := Classical.choose duplicate
         have representative_eq := Classical.choose_spec duplicate
+        have replacement_eq (input : Fin n → U) :
+            prior.result.trace interpretation input
+                (Wire.gate (n := n) representative) =
+              mappedLine.eval interpretation input
+                (prior.result.eval interpretation input) := by
+          rw [Program.trace_gateWire]
+          exact congrFun representative_eq input
+        let compacted := priorCompaction.eliminate line
+          (Wire.gate (n := n) representative) replacement_eq
         exact
           { gateCount := prior.gateCount
             result := prior.result
             wireMap := prior.wireMap.skipLast
               (Wire.gate (n := n) representative)
-            trace_eq := by
-              intro input wire
-              refine Fin.lastCases ?_ (fun priorWire => ?_) wire
-              · calc
-                  prior.result.trace interpretation input
-                      (prior.wireMap.skipLast (Wire.gate representative)
-                        (Fin.last (n + g))) =
-                    prior.result.trace interpretation input
-                      (Wire.gate representative) := congrArg
-                        (prior.result.trace interpretation input)
-                        (Wire.Renaming.skipLast_lastWire prior.wireMap
-                          (Wire.gate representative))
-                  _ =
-                    prior.result.gateFunction interpretation representative input := by
-                      rw [Program.trace_gateWire]
-                  _ = freshFunction input := congrFun representative_eq input
-                  _ = mappedLine.eval interpretation input
-                      (prior.result.eval interpretation input) := rfl
-                  _ = _ := mappedEval input
-                  _ = (program.gate line).trace interpretation input
-                      (Fin.last (n + g)) :=
-                    (Program.trace_gate_last program line interpretation input).symm
-              · rw [Wire.Renaming.skipLast_castSucc,
-                  Program.trace_gate_castSucc]
-                exact prior.trace_eq input priorWire
+            trace_eq := compacted.trace_eq
             injective_gateFunction := prior.injective_gateFunction
-            gateCount_le := prior.gateCount_le.trans (Nat.le_succ g) }
+            gateCount_le := compacted.gateCount_le
+            cost_le := compacted.cost_le }
       · exact
+          let compacted := priorCompaction.copy line
           { gateCount := prior.gateCount + 1
             result := prior.result.gate mappedLine
             wireMap := prior.wireMap.appendLast
-            trace_eq := by
-              intro input wire
-              refine Fin.lastCases ?_ (fun priorWire => ?_) wire
-              · calc
-                  (prior.result.gate mappedLine).trace interpretation input
-                      (prior.wireMap.appendLast (Fin.last (n + g))) =
-                    (prior.result.gate mappedLine).trace interpretation input
-                      (Wire.gate (Fin.last prior.gateCount)) := congrArg
-                        ((prior.result.gate mappedLine).trace interpretation input)
-                        (Wire.Renaming.appendLast_lastWire prior.wireMap)
-                  _ = (prior.result.gate mappedLine).gateFunction interpretation
-                      (Fin.last prior.gateCount) input := by
-                    rw [Program.trace_gateWire]
-                  _ =
-                    mappedLine.eval interpretation input
-                      (prior.result.eval interpretation input) := by
-                    rw [Program.gateFunction_gate_last]
-                  _ = _ := mappedEval input
-                  _ = (program.gate line).trace interpretation input
-                      (Fin.last (n + g)) :=
-                    (Program.trace_gate_last program line interpretation input).symm
-              · rw [Wire.Renaming.appendLast_castSucc,
-                  Program.trace_gate_castSucc, Program.trace_gate_castSucc]
-                exact prior.trace_eq input priorWire
+            trace_eq := compacted.trace_eq
             injective_gateFunction := by
               intro left right equal
               revert equal
@@ -148,7 +114,8 @@ noncomputable def Program.normalize
                 have same := prior.injective_gateFunction (by simpa using equal)
                 subst rightPrior
                 rfl
-            gateCount_le := Nat.add_le_add_right prior.gateCount_le 1 }
+            gateCount_le := compacted.gateCount_le
+            cost_le := compacted.cost_le }
 
 /-! ## Circuit normalization -/
 
@@ -165,6 +132,9 @@ structure Circuit.Normalization
   injective_gateFunction :
     Function.Injective (result.program.gateFunction interpretation)
   gateCount_le : gateCount ≤ g
+  /-- Normalization does not increase any nonnegative operation cost. -/
+  cost_le : ∀ operationCost : OperationCost σ,
+    result.cost operationCost ≤ circuit.cost operationCost
 
 /-- Normalize the internal program and rename the terminal output wires. -/
 noncomputable def Circuit.normalize
@@ -194,7 +164,11 @@ noncomputable def Circuit.normalize
         funext input output
         exact outputEval input output
       injective_gateFunction := normalized.injective_gateFunction
-      gateCount_le := normalized.gateCount_le }
+      gateCount_le := normalized.gateCount_le
+      cost_le := by
+        intro operationCost
+        unfold result Circuit.cost
+        exact Nat.add_le_add_right (normalized.cost_le operationCost) _ }
 
 /-! ## Irredundant function families -/
 
