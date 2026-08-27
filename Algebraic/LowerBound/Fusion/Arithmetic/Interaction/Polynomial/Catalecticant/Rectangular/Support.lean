@@ -140,6 +140,26 @@ def columnSupport
         polynomial).col column ≠ 0 := by
   exact SumOfTerms.MatrixRank.Support.mem_columnSupport _ _
 
+/-- The canonical row support covers every nonzero row. -/
+theorem rowsSupportedOn_rowSupport
+    [Field K]
+    (degree split : Nat)
+    (polynomial : MvPolynomial (Fin degree) K) :
+    RowsSupportedOn degree split polynomial
+      (rowSupport degree split polynomial) := by
+  intro row nonzero
+  exact (mem_rowSupport degree split polynomial row).2 nonzero
+
+/-- The canonical column support covers every nonzero column. -/
+theorem columnsSupportedOn_columnSupport
+    [Field K]
+    (degree split : Nat)
+    (polynomial : MvPolynomial (Fin degree) K) :
+    ColumnsSupportedOn degree split polynomial
+      (columnSupport degree split polynomial) := by
+  intro column nonzero
+  exact (mem_columnSupport degree split polynomial column).2 nonzero
+
 /-- The canonical support-size rank budget at one split. -/
 def rankBudget
     [Field K]
