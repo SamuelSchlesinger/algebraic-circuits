@@ -1,5 +1,5 @@
 import Algebraic.Basis.Arithmetic
-import Algebraic.LowerBound.Fusion.Framework
+import Algebraic.LowerBound.Fusion.Arithmetic.BoundedFailure
 import Mathlib.Data.Fintype.Card
 
 /-!
@@ -70,6 +70,30 @@ def model
     have power_lt : 2 ^ level.1 < 2 ^ levels :=
       Nat.pow_lt_pow_right (by decide) level.2
     exact (Nat.not_le_of_lt power_lt) (target_ge.trans observed)
+
+/-- The dyadic model has the canonical finite witness enumeration. -/
+noncomputable instance witnessFintype
+    (measure : Measure K R constant)
+    (problem : Problem R)
+    (levels : Nat)
+    (input_le_one : ∀ input,
+      measure.value (problem.inputs input) ≤ 1)
+    (target_ge : 2 ^ levels ≤ measure.value problem.target) :
+    Fintype (model measure problem levels input_le_one target_ge).Witness := by
+  unfold model
+  infer_instance
+
+@[simp] theorem witness_card
+    (measure : Measure K R constant)
+    (problem : Problem R)
+    (levels : Nat)
+    (input_le_one : ∀ input,
+      measure.value (problem.inputs input) ≤ 1)
+    (target_ge : 2 ^ levels ≤ measure.value problem.target) :
+    Fintype.card (model measure problem levels input_le_one target_ge).Witness =
+      levels := by
+  change Fintype.card (Fin levels) = levels
+  simp
 
 /-- Addition preserves every dyadic witness. -/
 theorem add_preserved
@@ -186,6 +210,55 @@ theorem mul_failure_unique
   apply Fin.ext
   exact Nat.le_antisymm (Nat.le_of_not_gt not_second_lt_first)
     (Nat.le_of_not_gt not_first_lt_second)
+
+/-- The dyadic local lemmas packaged for the generic bounded-failure arithmetic
+interface.  Its capacity is exactly one threshold per multiplication. -/
+noncomputable def failureRules
+    (measure : Measure K R constant)
+    (problem : Problem R)
+    (levels : Nat)
+    (input_le_one : ∀ input,
+      measure.value (problem.inputs input) ≤ 1)
+    (target_ge : 2 ^ levels ≤ measure.value problem.target) :
+    @Fusion.Arithmetic.FailureRules K R _ _ constant problem
+      (model measure problem levels input_le_one target_ge)
+      (witnessFintype measure problem levels input_le_one target_ge) := by
+  letI : Fintype
+      (model measure problem levels input_le_one target_ge).Witness :=
+    witnessFintype measure problem levels input_le_one target_ge
+  refine {
+    capacity := 1
+    add_preserved :=
+      add_preserved measure problem levels input_le_one target_ge
+    constant_preserved :=
+      constant_preserved measure problem levels input_le_one target_ge
+    mul_failure_card_le := ?_
+  }
+  classical
+  intro arguments
+  rw [Finset.card_le_one]
+  intro first firstPresent second secondPresent
+  have firstFailure : ¬
+      (⟨.mul, arguments⟩ : Atom (Arithmetic.signature K) R).PreservedBy
+        (model measure problem levels input_le_one target_ge) first := by
+    simpa using firstPresent
+  have secondFailure : ¬
+      (⟨.mul, arguments⟩ : Atom (Arithmetic.signature K) R).PreservedBy
+        (model measure problem levels input_le_one target_ge) second := by
+    simpa using secondPresent
+  exact mul_failure_unique measure problem levels input_le_one target_ge
+    arguments first second
+    firstFailure secondFailure
+
+@[simp] theorem failureRules_capacity
+    (measure : Measure K R constant)
+    (problem : Problem R)
+    (levels : Nat)
+    (input_le_one : ∀ input,
+      measure.value (problem.inputs input) ≤ 1)
+    (target_ge : 2 ^ levels ≤ measure.value problem.target) :
+    (failureRules measure problem levels input_le_one target_ge).capacity = 1 := by
+  simp [failureRules]
 
 /-- Retain the arguments of multiplication atoms and discard all free
 addition and constant atoms. -/
@@ -420,14 +493,9 @@ theorem cover_cost_lowerBound
     (target_ge : 2 ^ levels ≤ measure.value problem.target)
     (cover : Cover (model measure problem levels input_le_one target_ge)) :
     levels ≤ cover.cost := by
-  have cardinality := Fintype.card_le_of_injective
-    (failingMultiplication measure problem levels input_le_one target_ge cover)
-    (failingMultiplication_injective measure problem levels input_le_one
-      target_ge cover)
-  calc
-    levels ≤ (multiplicationArguments cover.atoms).length := by
-      simpa using cardinality
-    _ = cover.cost := multiplicationArguments_length cover.atoms
+  simpa using
+    (failureRules measure problem levels input_le_one target_ge).cover_lowerBound
+      (by simp) cover
 
 /-- A dyadic measure lower bound transfers to every arithmetic circuit
 constructing the target. -/
