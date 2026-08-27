@@ -2,6 +2,7 @@ import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Translation
 import Algebraic.LowerBound.Fusion.Arithmetic.Expression
 import Algebraic.LowerBound.Fusion.Contextual
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Degree
+import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Decomposition
 
 /-!
 # Graded restriction of compiled Waring circuits
@@ -293,6 +294,24 @@ theorem compiled_criticalLayerOrPowerAtMultiplications
     (⟨.mul, arguments⟩ : Atom (Algebraic.Arithmetic.signature K)
       (MvPolynomial (Fin (2 * n)) K)) present
   exact localProof arguments rfl
+
+/-- Compiled Waring circuits have a one-term decomposition of every critical
+multiplication layer. -/
+theorem compiled_decompositionAtMultiplications_one
+    [Field K]
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit
+      (Algebraic.SumOfTerms.signature (Term K n)) 0 g 1) :
+    Algebraic.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Decomposition.AtMultiplications
+      (id : K → K) n ((Translation.translation (K := K) n).compile circuit)
+      1 := by
+  intro arguments present
+  apply
+    Algebraic.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Decomposition.atMost_one_of_criticalLayerOrPower
+      n
+  exact compiled_criticalLayerOrPowerAtMultiplications n positive circuit
+    arguments present
 
 /-- Compilation transports construction of the squarefree Waring target to
 construction by an ordinary arithmetic circuit on the shared variables. -/
