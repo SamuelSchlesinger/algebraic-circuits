@@ -127,6 +127,77 @@ theorem support_bind₁
   intro exponent present
   exact support_bind₁_monomial_coeff substitution polynomial exponent present
 
+/-- Powers of two monotone polynomials with the same support again have the
+same support. -/
+theorem support_pow_congr
+    [DecidableEq TargetVar]
+    {left right : MvPolynomial TargetVar ℕ}
+    (supportEqual : left.support = right.support)
+    (power : Nat) :
+    (left ^ power).support = (right ^ power).support := by
+  induction power with
+  | zero => simp
+  | succ power inductionHypothesis =>
+      rw [pow_succ, pow_succ,
+        MonotonePolynomial.polynomial_support_mul,
+        MonotonePolynomial.polynomial_support_mul,
+        inductionHypothesis, supportEqual]
+
+/-- Pointwise support equality is preserved by a finite product of monotone
+polynomials. -/
+theorem support_finset_prod_congr
+    [DecidableEq TargetVar]
+    (indices : Finset Index)
+    (left right : Index → MvPolynomial TargetVar ℕ)
+    (supportEqual : ∀ index ∈ indices,
+      (left index).support = (right index).support) :
+    (∏ index ∈ indices, left index).support =
+      (∏ index ∈ indices, right index).support := by
+  classical
+  induction indices using Finset.induction with
+  | empty => simp
+  | @insert index indices absent inductionHypothesis =>
+      rw [Finset.prod_insert absent, Finset.prod_insert absent,
+        MonotonePolynomial.polynomial_support_mul,
+        MonotonePolynomial.polynomial_support_mul,
+        supportEqual index (Finset.mem_insert_self index indices),
+        inductionHypothesis (fun other otherPresent =>
+          supportEqual other (Finset.mem_insert_of_mem otherPresent))]
+
+/-- The support of a substituted coefficient-one monomial depends only on
+the supports of the variable images, not their positive coefficients. -/
+theorem support_monomialExpansion_congr
+    [DecidableEq TargetVar]
+    (left right : SourceVar → MvPolynomial TargetVar ℕ)
+    (supportEqual : ∀ source,
+      (left source).support = (right source).support)
+    (exponent : SourceVar →₀ ℕ) :
+    (monomialExpansion left exponent).support =
+      (monomialExpansion right exponent).support := by
+  rw [monomialExpansion, monomialExpansion,
+    MvPolynomial.bind₁_monomial, MvPolynomial.bind₁_monomial]
+  simp only [MvPolynomial.C_1, one_mul]
+  exact support_finset_prod_congr exponent.support
+    (fun source => left source ^ exponent source)
+    (fun source => right source ^ exponent source)
+    (fun source _ => support_pow_congr (supportEqual source) _)
+
+/-- Over natural coefficients, the support after substitution depends only on
+the pointwise supports of the substituted variable polynomials. -/
+theorem support_bind₁_congr
+    [DecidableEq SourceVar]
+    [DecidableEq TargetVar]
+    (left right : SourceVar → MvPolynomial TargetVar ℕ)
+    (supportEqual : ∀ source,
+      (left source).support = (right source).support)
+    (polynomial : MvPolynomial SourceVar ℕ) :
+    (MvPolynomial.bind₁ left polynomial).support =
+      (MvPolynomial.bind₁ right polynomial).support := by
+  rw [support_bind₁, support_bind₁]
+  apply Finset.biUnion_congr rfl
+  intro exponent _
+  exact support_monomialExpansion_congr left right supportEqual exponent
+
 /-- Expand a substituted polynomial as the finite sum of the contributions
 of its supported source monomials. -/
 theorem bind₁_eq_sum
