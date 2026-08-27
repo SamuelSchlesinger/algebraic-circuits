@@ -18,6 +18,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Quotient
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Nonlinear
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant
+import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Degree
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Decomposition
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Mixing
