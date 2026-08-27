@@ -118,6 +118,51 @@ def transform
     MvPolynomial TargetVar ℕ :=
   MvPolynomial.bind₁ (substitution weight basis) polynomial
 
+/-- Source monomials whose accumulated coefficient weight is nonzero. -/
+def survivingSupport
+    [DecidableEq SourceVar]
+    (weight : SourceVar → ℕ)
+    (polynomial : MvPolynomial SourceVar ℕ) :
+    Finset (SourceVar →₀ ℕ) :=
+  polynomial.support.filter fun exponent => coefficient weight exponent ≠ 0
+
+/-- Exact support with arbitrary weights: discard source monomials killed by
+a zero accumulated weight, then apply the linear exponent map. -/
+theorem support_transform_eq_surviving_image
+    [DecidableEq SourceVar]
+    [DecidableEq TargetVar]
+    (weight : SourceVar → ℕ)
+    (basis : SourceVar → TargetVar →₀ ℕ)
+    (polynomial : MvPolynomial SourceVar ℕ) :
+    (transform weight basis polynomial).support =
+      (survivingSupport weight polynomial).image
+        (MonomialSubstitution.exponentMap basis) := by
+  classical
+  rw [transform, Expansion.support_bind₁]
+  ext target
+  constructor
+  · intro targetPresent
+    rw [Finset.mem_biUnion] at targetPresent
+    obtain ⟨source, sourcePresent, targetPresent⟩ := targetPresent
+    rw [support_monomialExpansion_eq_if] at targetPresent
+    by_cases sourceKilled : coefficient weight source = 0
+    · simp [sourceKilled] at targetPresent
+    · have targetEqual : target =
+          MonomialSubstitution.exponentMap basis source := by
+        simpa [sourceKilled] using targetPresent
+      exact Finset.mem_image.mpr
+        ⟨source, Finset.mem_filter.mpr ⟨sourcePresent, sourceKilled⟩,
+          targetEqual.symm⟩
+  · intro targetPresent
+    rw [Finset.mem_image] at targetPresent
+    obtain ⟨source, sourcePresent, sourceEqual⟩ := targetPresent
+    rw [survivingSupport, Finset.mem_filter] at sourcePresent
+    rw [Finset.mem_biUnion]
+    refine ⟨source, sourcePresent.1, ?_⟩
+    rw [support_monomialExpansion_eq_if,
+      if_neg sourcePresent.2, Finset.mem_singleton]
+    exact sourceEqual.symm
+
 /-- Exact support of a positive weighted monomial substitution. -/
 theorem support_transform
     [DecidableEq SourceVar]

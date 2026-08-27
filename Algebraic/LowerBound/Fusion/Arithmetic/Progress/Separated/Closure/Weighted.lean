@@ -99,6 +99,55 @@ theorem achievable_separationClosure_of_pos
   unfold separationClosure at positive ⊢
   exact Nat.findGreatest_of_ne_zero rfl positive.ne'
 
+/-- Weighted transformed support depends only on source support. -/
+theorem transform_support_eq_of_support_eq
+    [DecidableEq SourceVar]
+    (weight : SourceVar → ℕ)
+    (basis : SourceVar → ℕ →₀ ℕ)
+    {left right : MvPolynomial SourceVar ℕ}
+    (supportEqual : left.support = right.support) :
+    (transform weight basis left).support =
+      (transform weight basis right).support := by
+  rw [transform, transform,
+    WeightedMonomialSubstitution.support_transform_eq_surviving_image,
+    WeightedMonomialSubstitution.support_transform_eq_surviving_image]
+  unfold WeightedMonomialSubstitution.survivingSupport
+  rw [supportEqual]
+
+/-- Weighted Schnorr closure is coefficient-insensitive: polynomials with the
+same support have exactly the same value. -/
+theorem separationClosure_eq_of_support_eq
+    {left right : MvPolynomial SourceVar ℕ}
+    (supportEqual : left.support = right.support) :
+    separationClosure left = separationClosure right := by
+  classical
+  apply Nat.le_antisymm
+  · by_cases positive : 0 < separationClosure left
+    · obtain ⟨weight, basis, witnessed⟩ :=
+        achievable_separationClosure_of_pos positive
+      calc
+        separationClosure left ≤
+            separationNumber (transform weight basis left).support :=
+          witnessed
+        _ = separationNumber (transform weight basis right).support := by
+          rw [transform_support_eq_of_support_eq weight basis supportEqual]
+        _ ≤ separationClosure right :=
+          separationNumber_transform_le_closure _ _ _
+    · omega
+  · by_cases positive : 0 < separationClosure right
+    · obtain ⟨weight, basis, witnessed⟩ :=
+        achievable_separationClosure_of_pos positive
+      calc
+        separationClosure right ≤
+            separationNumber (transform weight basis right).support :=
+          witnessed
+        _ = separationNumber (transform weight basis left).support := by
+          rw [transform_support_eq_of_support_eq weight basis
+            supportEqual.symm]
+        _ ≤ separationClosure left :=
+          separationNumber_transform_le_closure _ _ _
+    · omega
+
 /-- A single variable has zero weighted closure, even though it may be
 deleted by a zero weight. -/
 @[simp] theorem separationClosure_X
