@@ -5,10 +5,10 @@ import Mathlib.LinearAlgebra.Dimension.Constructions
 # Multi-output arithmetic interaction bounds
 
 All outputs of one arithmetic circuit share the same multiplication gates and
-hence the same interaction span.  If the feature values of `m` requested
-outputs are linearly independent, that common span needs at least `m`
-generators.  Because one generator is extracted from each multiplication
-gate, the circuit needs at least `m` multiplications.
+hence the same interaction span.  The dimension of the requested output
+feature span is therefore at most the number of multiplication gates.  In
+particular, if the feature values of `m` requested outputs are linearly
+independent, the circuit needs at least `m` multiplications.
 
 The `target` field of the base `Problem` is intentionally irrelevant here;
 the problem supplies the common input family used by the interaction
@@ -54,6 +54,62 @@ theorem targetFeature_mem_circuitSubmodule
   rw [← congrFun constructs output]
   exact feature_circuit_output_mem certificate circuit output
 
+/-- The dimension of the requested output-feature span is at most the number
+of multiplication gates.  This rank form permits dependent and redundant
+output families. -/
+theorem featureSpan_finrank_le_multiplicationCost
+    {constant : C → U}
+    {problem : Problem U}
+    (certificate : Certificate (K := K) (Q := Q) constant problem)
+    (targets : Fin m → U)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C)
+      problem.inputCount g m)
+    (constructs : Constructs (constant := constant) problem targets circuit) :
+    Module.finrank K
+        (Submodule.span K (Set.range (certificate.feature ∘ targets))) ≤
+      circuit.cost
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) := by
+  classical
+  let atoms := circuitAtoms circuit
+    (Algebraic.Arithmetic.interpretation constant) problem.inputs
+  let interactionFeature :
+      Fin (interactions certificate atoms).length → Q :=
+    fun index => (interactions certificate atoms).get index
+  have targetSpan_le :
+      Submodule.span K (Set.range (certificate.feature ∘ targets)) ≤
+        generatedSubmodule certificate atoms := by
+    apply Submodule.span_le.mpr
+    intro featureValue present
+    obtain ⟨output, rfl⟩ := present
+    exact targetFeature_mem_circuitSubmodule certificate targets circuit
+      constructs output
+  let _ : Module.Finite K (generatedSubmodule certificate atoms) := by
+    change Module.Finite K
+      (Submodule.span K (Set.range interactionFeature))
+    exact Module.Finite.span_of_finite K (Set.finite_range interactionFeature)
+  calc
+    Module.finrank K
+        (Submodule.span K (Set.range (certificate.feature ∘ targets))) ≤
+        Module.finrank K (generatedSubmodule certificate atoms) :=
+      Submodule.finrank_mono targetSpan_le
+    _ ≤ (interactions certificate atoms).length := by
+      have interactionFinrank :=
+        finrank_range_le_card (R := K) interactionFeature
+      unfold Set.finrank at interactionFinrank
+      simp only [Fintype.card_fin] at interactionFinrank
+      change Module.finrank K
+          (Submodule.span K (Set.range interactionFeature)) ≤
+        (interactions certificate atoms).length
+      exact interactionFinrank
+    _ = Atom.listCost atoms
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) :=
+      interactions_length certificate atoms
+    _ = circuit.cost
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) := by
+      simpa [atoms] using circuitAtoms_cost circuit
+        (Algebraic.Arithmetic.interpretation constant) problem.inputs
+        (Algebraic.Arithmetic.multiplicationCost (K := C))
+
 /-- Linearly independent output features force one multiplication interaction
 per output. -/
 theorem circuit_multiplication_lowerBound_of_linearIndependent
@@ -67,47 +123,12 @@ theorem circuit_multiplication_lowerBound_of_linearIndependent
     (constructs : Constructs (constant := constant) problem targets circuit) :
     m ≤ circuit.cost
       (Algebraic.Arithmetic.multiplicationCost (K := C)) := by
-  classical
-  let atoms := circuitAtoms circuit
-    (Algebraic.Arithmetic.interpretation constant) problem.inputs
-  let interactionFeature :
-      Fin (interactions certificate atoms).length → Q :=
-    fun index => (interactions certificate atoms).get index
-  have targetMem : ∀ output,
-      certificate.feature (targets output) ∈
-        generatedSubmodule certificate atoms := by
-    intro output
-    exact targetFeature_mem_circuitSubmodule certificate targets circuit
-      constructs output
-  have targetRange_le :
-      Set.range (certificate.feature ∘ targets) ⊆
-        Submodule.span K (Set.range interactionFeature) := by
-    intro featureValue present
-    obtain ⟨output, rfl⟩ := present
-    exact targetMem output
-  have cardinalBound : Cardinal.mk (Fin m) ≤
-      Fintype.card (Set.range interactionFeature) :=
-    linearIndependent_le_span'
-      (certificate.feature ∘ targets) independent
-      (Set.range interactionFeature) targetRange_le
-  have naturalBound : m ≤
-      Fintype.card (Set.range interactionFeature) := by
-    simpa using cardinalBound
-  have outputCount_le_interactions : m ≤
-      (interactions certificate atoms).length :=
-    naturalBound.trans (by
-      simpa using Fintype.card_range_le interactionFeature)
-  calc
-    m ≤ (interactions certificate atoms).length :=
-      outputCount_le_interactions
-    _ = Atom.listCost atoms
-        (Algebraic.Arithmetic.multiplicationCost (K := C)) :=
-      interactions_length certificate atoms
-    _ = circuit.cost
-        (Algebraic.Arithmetic.multiplicationCost (K := C)) := by
-      simpa [atoms] using circuitAtoms_cost circuit
-        (Algebraic.Arithmetic.interpretation constant) problem.inputs
-        (Algebraic.Arithmetic.multiplicationCost (K := C))
+  have spanBound := featureSpan_finrank_le_multiplicationCost certificate
+    targets circuit constructs
+  have dimensionEq : Module.finrank K
+      (Submodule.span K (Set.range (certificate.feature ∘ targets))) = m := by
+    simpa using finrank_span_eq_card independent
+  rwa [dimensionEq] at spanBound
 
 end Multiple
 end Interaction

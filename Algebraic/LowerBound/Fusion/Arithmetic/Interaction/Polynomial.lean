@@ -1,6 +1,7 @@
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Linear
 import Algebraic.LowerBound.Fusion.Arithmetic.Combined
 import Mathlib.Algebra.MvPolynomial.Basic
+import Mathlib.LinearAlgebra.Matrix.Rank
 import Mathlib.LinearAlgebra.StdBasis
 
 /-!
@@ -114,6 +115,124 @@ abbrev inputProblem
   inputCount := n
   inputs := fun input => MvPolynomial.X (inputVariables input)
   target := 0
+
+/-- Matrix of selected coefficients: rows are selected exponents and columns
+are requested outputs. -/
+def coefficientMatrix
+    [CommSemiring K]
+    (exponent : I → σ →₀ ℕ)
+    (outputs : Fin m → MvPolynomial σ K) : Matrix I (Fin m) K :=
+  fun selected output =>
+    MvPolynomial.coeff (exponent selected) (outputs output)
+
+@[simp] theorem coefficientMatrix_col
+    [CommSemiring K]
+    (exponent : I → σ →₀ ℕ)
+    (outputs : Fin m → MvPolynomial σ K)
+    (output : Fin m) :
+    (coefficientMatrix exponent outputs).col output =
+      coefficientFeature exponent (outputs output) :=
+  rfl
+
+/-- The dimension of the selected-coefficient span of arbitrary requested
+polynomials is at most the multiplication cost of a circuit producing them. -/
+theorem coefficientSpan_finrank_le_multiplicationCost
+    [Field K]
+    [DecidableEq σ]
+    (constant : C → K)
+    (inputVariables : Fin n → σ)
+    (exponent : I → σ →₀ ℕ)
+    (nonconstant : ∀ selected, exponent selected ≠ 0)
+    (notInput : ∀ selected input,
+      exponent selected ≠ Finsupp.single (inputVariables input) 1)
+    (outputs : Fin m → MvPolynomial σ K)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) n g m)
+    (constructs : Multiple.Constructs
+      (constant := fun scalar => MvPolynomial.C (constant scalar))
+      (inputProblem inputVariables) outputs circuit) :
+    Module.finrank K
+        (Submodule.span K
+          (Set.range (coefficientFeature exponent ∘ outputs))) ≤
+      circuit.cost
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) := by
+  let certificate := Linear.certificate (K := K)
+    (fun scalar => MvPolynomial.C (constant scalar))
+    (inputProblem inputVariables) (coefficientFeature exponent)
+    (fun input => coefficientFeature_X_eq_zero exponent
+      (inputVariables input) (fun selected => notInput selected input))
+    (fun scalar => coefficientFeature_C_eq_zero exponent nonconstant
+      (constant scalar))
+  exact Multiple.featureSpan_finrank_le_multiplicationCost certificate outputs
+    circuit constructs
+
+/-- The selected coefficient-matrix rank lower-bounds multiplication cost. -/
+theorem coefficientMatrix_rank_le_multiplicationCost
+    [Field K]
+    [DecidableEq σ]
+    (constant : C → K)
+    (inputVariables : Fin n → σ)
+    (exponent : I → σ →₀ ℕ)
+    (nonconstant : ∀ selected, exponent selected ≠ 0)
+    (notInput : ∀ selected input,
+      exponent selected ≠ Finsupp.single (inputVariables input) 1)
+    (outputs : Fin m → MvPolynomial σ K)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) n g m)
+    (constructs : Multiple.Constructs
+      (constant := fun scalar => MvPolynomial.C (constant scalar))
+      (inputProblem inputVariables) outputs circuit) :
+    (coefficientMatrix exponent outputs).rank ≤
+      circuit.cost
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) := by
+  rw [Matrix.rank_eq_finrank_span_cols]
+  have columns : (coefficientMatrix exponent outputs).col =
+      coefficientFeature exponent ∘ outputs := by
+    funext output selected
+    rfl
+  rw [columns]
+  exact coefficientSpan_finrank_le_multiplicationCost constant inputVariables
+    exponent nonconstant notInput outputs circuit constructs
+
+/-- Selected coefficient-matrix rank also lower-bounds total nonconstant gate
+cost. -/
+theorem coefficientMatrix_rank_le_gateCost
+    [Field K]
+    [DecidableEq σ]
+    (constant : C → K)
+    (inputVariables : Fin n → σ)
+    (exponent : I → σ →₀ ℕ)
+    (nonconstant : ∀ selected, exponent selected ≠ 0)
+    (notInput : ∀ selected input,
+      exponent selected ≠ Finsupp.single (inputVariables input) 1)
+    (outputs : Fin m → MvPolynomial σ K)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) n g m)
+    (constructs : Multiple.Constructs
+      (constant := fun scalar => MvPolynomial.C (constant scalar))
+      (inputProblem inputVariables) outputs circuit) :
+    (coefficientMatrix exponent outputs).rank ≤
+      circuit.cost (Algebraic.Arithmetic.gateCost (K := C)) :=
+  (coefficientMatrix_rank_le_multiplicationCost constant inputVariables
+    exponent nonconstant notInput outputs circuit constructs).trans
+      (Combined.circuit_multiplicationCost_le_gateCost circuit)
+
+/-- Selected coefficient-matrix rank lower-bounds raw circuit size. -/
+theorem coefficientMatrix_rank_le_size
+    [Field K]
+    [DecidableEq σ]
+    (constant : C → K)
+    (inputVariables : Fin n → σ)
+    (exponent : I → σ →₀ ℕ)
+    (nonconstant : ∀ selected, exponent selected ≠ 0)
+    (notInput : ∀ selected input,
+      exponent selected ≠ Finsupp.single (inputVariables input) 1)
+    (outputs : Fin m → MvPolynomial σ K)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) n g m)
+    (constructs : Multiple.Constructs
+      (constant := fun scalar => MvPolynomial.C (constant scalar))
+      (inputProblem inputVariables) outputs circuit) :
+    (coefficientMatrix exponent outputs).rank ≤ circuit.size :=
+  (coefficientMatrix_rank_le_gateCost constant inputVariables exponent
+    nonconstant notInput outputs circuit constructs).trans
+      (Combined.circuit_gateCost_le_size circuit)
 
 /-- Computing `m` distinct selected monomials, none constant or already a free
 input, requires at least `m` multiplication gates. -/
