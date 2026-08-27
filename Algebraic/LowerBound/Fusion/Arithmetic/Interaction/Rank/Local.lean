@@ -44,6 +44,26 @@ def CircuitBound
         (Algebraic.Arithmetic.interpretation constant) problem.inputs) →
     LinearMap.rank interaction ≤ interactionRank
 
+/-- Nonuniform local-rank budget indexed by the actual retained interaction
+occurrences of an evaluated circuit. -/
+def IndexedBound
+    {constant : C → U}
+    {problem : Problem U}
+    (certificate : Interaction.Certificate (K := K)
+      (Q := A →ₗ[K] B) constant problem)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C)
+      problem.inputCount g 1)
+    (budget : Fin (interactions certificate
+      (circuitAtoms circuit
+        (Algebraic.Arithmetic.interpretation constant)
+        problem.inputs)).length → Nat) : Prop :=
+  ∀ index,
+    LinearMap.rank
+      ((interactions certificate
+        (circuitAtoms circuit
+          (Algebraic.Arithmetic.interpretation constant)
+          problem.inputs)).get index) ≤ budget index
+
 /-- Equivalent-to-use atom-level formulation: bound the interaction created
 by every multiplication atom in the evaluated circuit. -/
 def MultiplicationBound
@@ -94,6 +114,96 @@ theorem CircuitBound.of_multiplicationBound
           exact bound arguments atomPresent
       | constant scalar =>
           simp [Atom.interaction?] at interactionEqual
+
+/-- The target feature rank is bounded by the sum of nonuniform local
+interaction-rank budgets. -/
+theorem target_rank_le_sum_indexedBudget
+    {constant : C → U}
+    {problem : Problem U}
+    (certificate : Interaction.Certificate (K := K)
+      (Q := A →ₗ[K] B) constant problem)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C)
+      problem.inputCount g 1)
+    (constructs : problem.Constructs circuit
+      (Algebraic.Arithmetic.interpretation constant))
+    (budget : Fin (interactions certificate
+      (circuitAtoms circuit
+        (Algebraic.Arithmetic.interpretation constant)
+        problem.inputs)).length → Nat)
+    (localBound : IndexedBound certificate circuit budget) :
+    LinearMap.rank (certificate.feature problem.target) ≤
+      ∑ index, (budget index : Cardinal) := by
+  classical
+  let atoms := circuitAtoms circuit
+    (Algebraic.Arithmetic.interpretation constant) problem.inputs
+  let interactionFeature : Fin (interactions certificate atoms).length →
+      (A →ₗ[K] B) :=
+    fun index => (interactions certificate atoms).get index
+  have targetMem : certificate.feature problem.target ∈
+      Submodule.span K (Set.range interactionFeature) := by
+    simpa [generatedSubmodule, interactionFeature, atoms] using
+      targetFeature_mem_circuitSubmodule certificate circuit constructs
+  have targetMemImage : certificate.feature problem.target ∈
+      Submodule.span K
+        (interactionFeature ''
+          (Finset.univ : Finset
+            (Fin (interactions certificate atoms).length))) := by
+    simpa [Set.image_univ] using targetMem
+  obtain ⟨coefficients, coefficientsSpec⟩ :=
+    (Submodule.mem_span_image_finset_iff_exists_fun
+      (R := K) (v := interactionFeature)).mp targetMemImage
+  rw [← coefficientsSpec]
+  calc
+    LinearMap.rank
+        (∑ index, coefficients index • interactionFeature index) ≤
+      ∑ index,
+        LinearMap.rank (coefficients index • interactionFeature index) := by
+          simpa using LinearMap.rank_finsetSum_le
+            (Finset.univ : Finset
+              ((Finset.univ : Finset
+                (Fin (interactions certificate atoms).length)) : Type))
+            (fun index => coefficients index • interactionFeature index)
+    _ ≤ ∑ index :
+          ((Finset.univ : Finset
+            (Fin (interactions certificate atoms).length)) : Type),
+          (budget index : Cardinal) := by
+      apply Finset.sum_le_sum
+      intro index _
+      exact (Rank.linearMap_rank_smul_le
+        (coefficients index) (interactionFeature index)).trans
+          (localBound index)
+    _ = ∑ index, (budget index : Cardinal) := by
+      simpa only [Finset.univ_eq_attach] using
+        (Finset.sum_attach
+          (Finset.univ : Finset
+            (Fin (interactions certificate atoms).length))
+          (fun index => (budget index : Cardinal)))
+
+/-- Natural-number form of the nonuniform indexed-budget inequality. -/
+theorem targetRank_le_sum_indexedBudget
+    {constant : C → U}
+    {problem : Problem U}
+    (certificate : Interaction.Certificate (K := K)
+      (Q := A →ₗ[K] B) constant problem)
+    (targetRank : Nat)
+    (target_rank_ge : (targetRank : Cardinal) ≤
+      LinearMap.rank (certificate.feature problem.target))
+    (circuit : Circuit (Algebraic.Arithmetic.signature C)
+      problem.inputCount g 1)
+    (constructs : problem.Constructs circuit
+      (Algebraic.Arithmetic.interpretation constant))
+    (budget : Fin (interactions certificate
+      (circuitAtoms circuit
+        (Algebraic.Arithmetic.interpretation constant)
+        problem.inputs)).length → Nat)
+    (localBound : IndexedBound certificate circuit budget) :
+    targetRank ≤ ∑ index, budget index := by
+  have cardinalBound : (targetRank : Cardinal) ≤
+      ∑ index, (budget index : Cardinal) :=
+    target_rank_ge.trans
+      (target_rank_le_sum_indexedBudget certificate circuit constructs budget
+        localBound)
+  exact_mod_cast cardinalBound
 
 /-- Under a circuit-local rank bound, the target feature rank is at most the
 number of multiplication gates times the local bound. -/

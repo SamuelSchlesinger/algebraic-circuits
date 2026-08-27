@@ -139,6 +139,130 @@ theorem feature_rank_le
       exact SumOfTerms.Waring.term_rank_le_one (terms index)
     _ = termCount := by simp
 
+/-- A linear-map interaction is explicitly a sum of `termCount`
+catalecticant features of Waring terms. -/
+def FeatureAtMost
+    [Field K]
+    (n termCount : Nat)
+    (interaction :
+      (SumOfTerms.MatrixRank.Layer (2 * n) n → K) →ₗ[K]
+        (SumOfTerms.MatrixRank.Layer (2 * n) n → K)) : Prop :=
+  ∃ terms : Fin termCount → SumOfTerms.Waring.Term K n,
+    interaction = ∑ index,
+      SumOfTerms.Waring.feature K n
+        (SumOfTerms.Waring.termValue (terms index))
+
+/-- A polynomial critical-layer decomposition induces the corresponding
+feature decomposition. -/
+theorem featureAtMost_of_atMost
+    [Field K]
+    (n termCount : Nat)
+    (polynomial : MvPolynomial (Fin (2 * n)) K)
+    (decomposes : AtMost n termCount polynomial) :
+    FeatureAtMost n termCount (SumOfTerms.Waring.feature K n polynomial) := by
+  obtain ⟨terms, critical⟩ := decomposes
+  refine ⟨terms, ?_⟩
+  rw [← Degree.feature_homogeneousComponent n polynomial, critical, map_sum]
+
+/-- A feature decomposition by `r` Waring terms has rank at most `r`. -/
+theorem featureDecomposition_rank_le
+    [Field K]
+    [CharZero K]
+    (n termCount : Nat)
+    (interaction :
+      (SumOfTerms.MatrixRank.Layer (2 * n) n → K) →ₗ[K]
+        (SumOfTerms.MatrixRank.Layer (2 * n) n → K))
+    (decomposes : FeatureAtMost n termCount interaction) :
+    LinearMap.rank interaction ≤ termCount := by
+  obtain ⟨terms, decomposition⟩ := decomposes
+  rw [decomposition]
+  calc
+    LinearMap.rank
+        (∑ index, SumOfTerms.Waring.feature K n
+          (SumOfTerms.Waring.termValue (terms index))) ≤
+      ∑ index, LinearMap.rank
+        (SumOfTerms.Waring.feature K n
+          (SumOfTerms.Waring.termValue (terms index))) := by
+        simpa using LinearMap.rank_finsetSum_le
+          (Finset.univ : Finset (Fin termCount))
+          (fun index => SumOfTerms.Waring.feature K n
+            (SumOfTerms.Waring.termValue (terms index)))
+    _ ≤ ∑ _index : Fin termCount, (1 : Cardinal) := by
+      apply Finset.sum_le_sum
+      intro index _
+      exact SumOfTerms.Waring.term_rank_le_one (terms index)
+    _ = termCount := by simp
+
+/-- Nonuniform Waring-feature decomposition budget for the actual retained
+interaction occurrences of one evaluated circuit. -/
+def IndexedAtMost
+    [Field K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (budget : Fin (interactions (certificate constant n positive)
+      (circuitAtoms circuit
+        (Algebraic.Arithmetic.interpretation
+          (fun scalar => MvPolynomial.C (constant scalar)))
+        (MvPolynomial.X : Fin (2 * n) →
+          MvPolynomial (Fin (2 * n)) K))).length → Nat) : Prop :=
+  ∀ index,
+    FeatureAtMost n (budget index)
+      ((interactions (certificate constant n positive)
+        (circuitAtoms circuit
+          (Algebraic.Arithmetic.interpretation
+            (fun scalar => MvPolynomial.C (constant scalar)))
+          (MvPolynomial.X : Fin (2 * n) →
+            MvPolynomial (Fin (2 * n)) K))).get index)
+
+/-- Indexed Waring-feature decompositions imply the generic indexed rank
+budget. -/
+theorem indexedBound_of_indexedAtMost
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (budget : Fin (interactions (certificate constant n positive)
+      (circuitAtoms circuit
+        (Algebraic.Arithmetic.interpretation
+          (fun scalar => MvPolynomial.C (constant scalar)))
+        (MvPolynomial.X : Fin (2 * n) →
+          MvPolynomial (Fin (2 * n)) K))).length → Nat)
+    (decomposes : IndexedAtMost constant n positive circuit budget) :
+    Rank.Local.IndexedBound (certificate constant n positive) circuit budget := by
+  intro index
+  exact featureDecomposition_rank_le n (budget index) _ (decomposes index)
+
+/-- Weighted nonuniform Fusion lower bound: the total local Waring
+decomposition budget across multiplication occurrences is at least the
+central binomial coefficient. -/
+theorem centralBinom_le_sum_indexedBudget
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (constructs : (problem K n).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar => MvPolynomial.C (constant scalar))))
+    (budget : Fin (interactions (certificate constant n positive)
+      (circuitAtoms circuit
+        (Algebraic.Arithmetic.interpretation
+          (fun scalar => MvPolynomial.C (constant scalar)))
+        (MvPolynomial.X : Fin (2 * n) →
+          MvPolynomial (Fin (2 * n)) K))).length → Nat)
+    (decomposes : IndexedAtMost constant n positive circuit budget) :
+    Nat.centralBinom n ≤ ∑ index, budget index :=
+  Rank.Local.targetRank_le_sum_indexedBudget
+    (certificate constant n positive) (Nat.centralBinom n)
+    (SumOfTerms.Waring.target_rank_ge n) circuit constructs budget
+      (indexedBound_of_indexedAtMost constant n positive circuit budget
+        decomposes)
+
 /-- Circuit-local decomposition predicate for every multiplication output. -/
 def AtMultiplications
     [Field K]
