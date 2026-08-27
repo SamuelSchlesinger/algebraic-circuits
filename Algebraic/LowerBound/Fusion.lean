@@ -79,6 +79,7 @@ import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Support
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Block
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.BlockSum
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Cover
+import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Cover.Identity
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Rectangular
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Rectangular.Translation.Binary
