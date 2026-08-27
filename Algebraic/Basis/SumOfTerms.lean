@@ -53,6 +53,13 @@ def weightedCost
 def termCost : OperationCost (signature T) :=
   weightedCost 0 1
 
+/-- Charge each dictionary term by a term-dependent natural weight and make
+addition free. -/
+def dictionaryCost
+    (weight : T → Nat) : OperationCost (signature T)
+  | .add => 0
+  | .term term => weight term
+
 /-- Charge source additions and make dictionary terms free. -/
 def additionCost : OperationCost (signature T) :=
   weightedCost 1 0
@@ -73,6 +80,15 @@ def gateCost : OperationCost (signature T) :=
 @[simp] theorem termCost_add : termCost (T := T) .add = 0 := rfl
 
 @[simp] theorem termCost_term (term : T) : termCost (.term term) = 1 := rfl
+
+@[simp] theorem dictionaryCost_add
+    (weight : T → Nat) :
+    dictionaryCost weight .add = 0 := rfl
+
+@[simp] theorem dictionaryCost_term
+    (weight : T → Nat)
+    (term : T) :
+    dictionaryCost weight (.term term) = weight term := rfl
 
 @[simp] theorem additionCost_add : additionCost (T := T) .add = 1 := rfl
 

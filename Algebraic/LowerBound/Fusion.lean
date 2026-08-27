@@ -73,9 +73,11 @@ import Algebraic.LowerBound.Fusion.Arithmetic
 import Algebraic.LowerBound.Fusion.Arithmetic.Degree
 import Algebraic.LowerBound.Fusion.SumOfTerms
 import Algebraic.LowerBound.Fusion.SumOfTerms.Rank
+import Algebraic.LowerBound.Fusion.SumOfTerms.WeightedRank
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Support
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Block
+import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.BlockSum
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Cover
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Rectangular
