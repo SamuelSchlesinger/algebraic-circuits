@@ -1,4 +1,5 @@
 import Algebraic.LowerBound.Fusion.Framework
+import Algebraic.LowerBound.Fusion.Substitution
 import Algebraic.LowerBound.Fusion.Counting
 import Algebraic.LowerBound.Fusion.Arithmetic.ExactSupport
 import Algebraic.LowerBound.Fusion.Arithmetic.BoundedFailure
