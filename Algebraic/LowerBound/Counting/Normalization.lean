@@ -136,7 +136,7 @@ structure Circuit.Normalization
   cost_le : ∀ operationCost : OperationCost σ,
     result.cost operationCost ≤ circuit.cost operationCost
 
-/-- Normalize the internal program and rename the terminal output wires. -/
+/-- Normalize the program and rename the designated output wires. -/
 noncomputable def Circuit.normalize
     [Fintype U]
     (circuit : Circuit σ n g m)
@@ -147,16 +147,11 @@ noncomputable def Circuit.normalize
   let result : Circuit σ n normalized.gateCount m :=
     { program := normalized.result
       outputs := fun output =>
-        (circuit.outputs output).mapWires normalized.wireMap }
+        normalized.wireMap (circuit.outputs output) }
   have outputEval (input : Fin n → U) (output : Fin m) :
       result.eval interpretation input output =
         circuit.eval interpretation input output := by
-    unfold result Circuit.eval
-    apply Line.eval_mapRenaming
-    intro gate
-    simpa only [Program.trace, Wire.Renaming.apply_gate,
-      Fin.addCases_right] using
-      normalized.trace_eq input (Wire.gate gate)
+    exact normalized.trace_eq input (circuit.outputs output)
   exact
     { gateCount := normalized.gateCount
       result := result
@@ -167,8 +162,7 @@ noncomputable def Circuit.normalize
       gateCount_le := normalized.gateCount_le
       cost_le := by
         intro operationCost
-        unfold result Circuit.cost
-        exact Nat.add_le_add_right (normalized.cost_le operationCost) _ }
+        exact normalized.cost_le operationCost }
 
 /-! ## Irredundant function families -/
 

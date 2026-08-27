@@ -15,7 +15,7 @@ abbrev ScalarFunction (U : Type u) (n : Nat) := (Fin n → U) → U
 /-- An `m`-output function on `n` inputs over `U`. -/
 abbrev Target (U : Type u) (n m : Nat) := (Fin n → U) → Fin m → U
 
-/-- The scalar function computed by one terminal output gate. -/
+/-- The scalar function carried by one designated output wire. -/
 def Circuit.outputFunction
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U)

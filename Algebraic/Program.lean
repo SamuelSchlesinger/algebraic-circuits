@@ -169,18 +169,18 @@ structure Line (σ : Signature) (n g : Nat) where
 /-- Apply a function to every wire read by a line. -/
 def Line.mapWires
     (line : Line σ n g)
-    (wireMap : Wire n g → Wire n h) : Line σ n h where
+    (wireMap : Wire n g → Wire n' h) : Line σ n' h where
   op := line.op
   wires := wireMap ∘ line.wires
 
 @[simp] theorem Line.mapWires_op
     (line : Line σ n g)
-    (wireMap : Wire n g → Wire n h) :
+    (wireMap : Wire n g → Wire n' h) :
     (line.mapWires wireMap).op = line.op := rfl
 
 @[simp] theorem Line.mapWires_wires
     (line : Line σ n g)
-    (wireMap : Wire n g → Wire n h)
+    (wireMap : Wire n g → Wire n' h)
     (argument : Fin (σ.Arity line.op)) :
     (line.mapWires wireMap).wires argument = wireMap (line.wires argument) := rfl
 
@@ -204,19 +204,21 @@ def Line.eval
   i line.op (Fin.addCases inputs gates ∘ line.wires)
 
 /-- Mapping a line's wires preserves evaluation when the new valuation agrees
-with the old valuation along the map. -/
+with the old valuation along the map. The source and target input namespaces
+may differ. -/
 theorem Line.eval_mapWires
     (line : Line σ n g)
-    (wireMap : Wire n g → Wire n h)
+    (wireMap : Wire n g → Wire n' h)
     (interpretation : Interpretation σ U)
-    (inputs : Fin n → U)
+    (oldInputs : Fin n → U)
+    (newInputs : Fin n' → U)
     (oldGates : Fin g → U)
     (newGates : Fin h → U)
     (preserves : ∀ wire : Wire n g,
-      (Fin.addCases inputs newGates : Wire n h → U) (wireMap wire) =
-        (Fin.addCases inputs oldGates : Wire n g → U) wire) :
-    (line.mapWires wireMap).eval interpretation inputs newGates =
-      line.eval interpretation inputs oldGates := by
+      (Fin.addCases newInputs newGates : Wire n' h → U) (wireMap wire) =
+        (Fin.addCases oldInputs oldGates : Wire n g → U) wire) :
+    (line.mapWires wireMap).eval interpretation newInputs newGates =
+      line.eval interpretation oldInputs oldGates := by
   unfold Line.mapWires Line.eval
   congr 1
   funext argument
@@ -370,6 +372,19 @@ def Program.trace
   unfold Program.trace
   rw [Fin.addCases_right]
   simp
+
+/-- Evaluating every input and gate wire commutes with a homomorphism. -/
+theorem Program.map_trace
+  {i₁ : Interpretation σ U₁}
+  {i₂ : Interpretation σ U₂}
+  (p : Program σ n g)
+  (h : Homomorphism i₁ i₂)
+  (x : Fin n → U₁) :
+  h.map ∘ p.trace i₁ x = p.trace i₂ (h.map ∘ x) := by
+  funext wire
+  refine Fin.addCases (fun input => ?_) (fun gate => ?_) wire
+  · simp [Program.trace, Function.comp_apply]
+  · simpa [Program.trace, Function.comp_apply] using congrFun (p.map_eval h x) gate
 
 /-- The scalar function computed by an internal gate. -/
 def Program.gateFunction

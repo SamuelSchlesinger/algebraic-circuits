@@ -21,7 +21,7 @@ noncomputable def Signature.finalTerm
     (σ : Signature) [Fintype σ.Op]
     (n m G : Nat) : Real :=
   (G + 1) *
-    (σ.lineCount (n + G) : Real) ^ (G + m) /
+    (σ.lineCount (n + G) : Real) ^ G * (n + G : Real) ^ m /
       (G.factorial : Real)
 
 /-- The tail of a factorial is bounded by replacing every factor by the final
@@ -65,24 +65,29 @@ theorem Signature.sharpBudget_cast_le_finalTerm
   let base := σ.lineCount (n + G)
   have termBound (g : Nat) (bounded : g ≤ G) :
       (σ.sharpCount n g m : Real) ≤
-        (base : Real) ^ (G + m) / (G.factorial : Real) := by
+        ((base : Real) ^ G * (n + G : Real) ^ m) /
+          (G.factorial : Real) := by
     have lineBound : σ.lineCount (n + g) ≤ base := by
       apply Signature.lineCount_mono σ
       omega
+    have wireBound : n + g ≤ n + G := Nat.add_le_add_left bounded n
     have factorialBound : G.factorial ≤ g.factorial * base ^ (G - g) :=
       (Nat.factorial_le_factorial_mul_pow bounded).trans <|
         Nat.mul_le_mul_left _ (Nat.pow_le_pow_left enoughLines _)
     calc
       (σ.sharpCount n g m : Real) ≤
-          (σ.lineCount (n + g) ^ (g + m) : Nat) /
+          (σ.lineCount (n + g) ^ g * (n + g) ^ m : Nat) /
             (g.factorial : Real) := by
         exact Nat.cast_div_le
-      _ ≤ (base : Real) ^ (g + m) / (g.factorial : Real) := by
+      _ ≤ ((base : Real) ^ g * (n + G : Real) ^ m) /
+          (g.factorial : Real) := by
         apply div_le_div_of_nonneg_right
-        · rw [← Nat.cast_pow]
-          exact_mod_cast Nat.pow_le_pow_left lineBound (g + m)
+        · norm_cast
+          exact Nat.mul_le_mul (Nat.pow_le_pow_left lineBound g)
+            (Nat.pow_le_pow_left wireBound m)
         · exact Nat.cast_nonneg _
-      _ ≤ (base : Real) ^ (G + m) / (G.factorial : Real) := by
+      _ ≤ ((base : Real) ^ G * (n + G : Real) ^ m) /
+          (G.factorial : Real) := by
         rw [div_le_div_iff₀
           (by exact_mod_cast Nat.factorial_pos g : (0 : Real) < g.factorial)
           (by exact_mod_cast Nat.factorial_pos G : (0 : Real) < G.factorial)]
@@ -92,33 +97,35 @@ theorem Signature.sharpBudget_cast_le_finalTerm
           rw [← Nat.cast_pow, ← Nat.cast_mul]
           exact_mod_cast factorialBound
         calc
-          (base : Real) ^ (g + m) * G.factorial ≤
-              (base : Real) ^ (g + m) *
+          ((base : Real) ^ g * (n + G : Real) ^ m) * G.factorial ≤
+              ((base : Real) ^ g * (n + G : Real) ^ m) *
                 (g.factorial * base ^ (G - g)) := by
             exact mul_le_mul_of_nonneg_left castFactorialBound
-              (pow_nonneg (Nat.cast_nonneg base) _)
-          _ = (base : Real) ^ (G + m) * g.factorial := by
+              (mul_nonneg (pow_nonneg (Nat.cast_nonneg base) _)
+                (pow_nonneg
+                  (add_nonneg (Nat.cast_nonneg n) (Nat.cast_nonneg G)) _))
+          _ = ((base : Real) ^ G * (n + G : Real) ^ m) * g.factorial := by
             calc
-              (base : Real) ^ (g + m) *
+              ((base : Real) ^ g * (n + G : Real) ^ m) *
                     ((g.factorial : Real) * base ^ (G - g)) =
-                  ((base : Real) ^ (g + m) * base ^ (G - g)) *
-                    g.factorial := by ac_rfl
-              _ = (base : Real) ^ ((g + m) + (G - g)) *
+                  (((base : Real) ^ g * base ^ (G - g)) *
+                    (n + G : Real) ^ m) * g.factorial := by ring
+              _ = ((base : Real) ^ (g + (G - g)) *
+                    (n + G : Real) ^ m) * g.factorial := by
+                rw [pow_add]
+              _ = ((base : Real) ^ G * (n + G : Real) ^ m) *
                     g.factorial := by
-                exact congrArg (fun value : Real => value * g.factorial)
-                  (pow_add (base : Real) (g + m) (G - g)).symm
-              _ = (base : Real) ^ (G + m) * g.factorial := by
-                congr 2
-                omega
+                rw [Nat.add_sub_of_le bounded]
   unfold Signature.sharpBudget
   rw [Nat.cast_sum]
   calc
     (∑ g ∈ Finset.range (G + 1), (σ.sharpCount n g m : Real)) ≤
         ∑ _g ∈ Finset.range (G + 1),
-          (base : Real) ^ (G + m) / (G.factorial : Real) := by
+          ((base : Real) ^ G * (n + G : Real) ^ m) /
+            (G.factorial : Real) := by
       exact Finset.sum_le_sum fun g present =>
         termBound g (Nat.le_of_lt_succ (Finset.mem_range.mp present))
-    _ = (G + 1) * (base : Real) ^ (G + m) /
+    _ = (G + 1) * (base : Real) ^ G * (n + G : Real) ^ m /
         (G.factorial : Real) := by
       simp
       ring

@@ -3,19 +3,20 @@ import Algebraic.Basis.DeMorgan.Restriction
 /-!
 # Restricting one-output De Morgan circuits
 
-This module adds the terminal output gate to `ProgramRestriction`.  Deleted
-charged gates are indexed uniformly by `Fin (g + 1)`: internal gate `k` is
-`k.castSucc`, and the terminal output is `Fin.last g`.  The resulting exact
-cost identity is exposed as a standard `Circuit.Reduction` certificate.
+This module materializes the circuit's free output wire with an identity gate
+before applying `ProgramRestriction`. Deleted charged gates are indexed
+uniformly by `Fin (g + 1)`: internal gate `k` is `k.castSucc`, and the added
+output identity is `Fin.last g`. The resulting exact cost identity is exposed
+as a standard `Circuit.Reduction` certificate.
 -/
 
 namespace Algebraic
 namespace DeMorgan
 
-/-- Append a one-output circuit's terminal line to its internal program. -/
+/-- Append a free identity gate carrying a one-output circuit's output wire. -/
 def outputProgram
     (source : Circuit signature n g 1) : Program signature n (g + 1) :=
-  source.program.gate (source.outputs 0)
+  source.program.gate (identityLine (source.outputs 0))
 
 /-- The last wire of `outputProgram` is the circuit output. -/
 @[simp] theorem outputProgram_trace_last
@@ -32,7 +33,17 @@ def outputProgram
     (outputProgram source).wireSupport (Fin.last (n + g)) =
       source.inputSupport := by
   rw [outputProgram, Program.wireSupport_gate_last]
-  simp [Circuit.inputSupport, Circuit.outputSupport]
+  change (Finset.univ : Finset (Fin 1)).biUnion
+      (fun _ => source.program.wireSupport (source.outputs 0)) =
+    source.inputSupport
+  rw [Circuit.inputSupport]
+  change (Finset.univ : Finset (Fin 1)).biUnion
+      (fun _ => source.program.wireSupport (source.outputs 0)) =
+    (Finset.univ : Finset (Fin 1)).biUnion
+      (fun output => source.program.wireSupport (source.outputs output))
+  congr 1
+  funext output
+  rw [Fin.eq_zero output]
 
 /--
 Restriction of a one-output De Morgan circuit, with the exact set of deleted
@@ -46,7 +57,7 @@ structure CircuitRestriction
   gateCount : Nat
   /-- Residual circuit on the remaining inputs. -/
   result : Circuit signature n gateCount 1
-  /-- Deleted charged gates; `Fin.last g` denotes the terminal output gate. -/
+  /-- Deleted charged gates; `Fin.last g` denotes the added output identity. -/
   deleted : Finset (Fin (g + 1))
   /-- Pointwise semantics under the chosen input restriction. -/
   eval_eq : ∀ input,
@@ -59,9 +70,9 @@ structure CircuitRestriction
 namespace CircuitRestriction
 
 /--
-Turn a restriction of the program obtained by appending the sole output line
-back into a one-output circuit restriction.  The appended gate's residual value
-is exposed through a free terminal line.
+Turn a restriction of the program obtained by appending a free output identity
+back into a one-output circuit restriction. The restricted output residual is
+materialized as a wire using at most one free gate.
 -/
 def ofOutputProgram
     {source : Circuit signature (n + 1) g 1}
@@ -71,11 +82,12 @@ def ofOutputProgram
       (outputProgram source) selected fixedValue) :
     CircuitRestriction source selected fixedValue := by
   let outputValue := program.values (Fin.last ((n + 1) + g))
-  let result : Circuit signature n program.gateCount 1 :=
-    { program := program.result
-      outputs := fun _ => outputValue.outputLine }
+  let materialized := materialize program.result outputValue
+  let result : Circuit signature n materialized.gateCount 1 :=
+    { program := materialized.result
+      outputs := fun _ => materialized.output }
   exact
-    { gateCount := program.gateCount
+    { gateCount := materialized.gateCount
       result := result
       deleted := program.deleted
       eval_eq := by
@@ -83,9 +95,9 @@ def ofOutputProgram
         funext output
         have output_eq : output = 0 := Fin.eq_zero output
         subst output
-        change outputValue.outputLine.eval interpretation input
-            (program.result.eval interpretation input) = _
-        rw [ResidualValue.outputLine_eval]
+        change materialized.result.trace interpretation input
+            materialized.output = _
+        rw [materialized.output_eq]
         calc
           outputValue.eval program.result input =
               (outputProgram source).trace interpretation
@@ -97,7 +109,15 @@ def ofOutputProgram
             exact outputProgram_trace_last source _
       cost_eq := by
         have programCost := program.cost_eq
-        simpa [result, outputProgram, Circuit.cost] using programCost }
+        calc
+          program.deleted.card + result.cost binaryCost =
+              program.deleted.card +
+                materialized.result.cost binaryCost := rfl
+          _ = program.deleted.card + program.result.cost binaryCost := by
+            rw [materialized.cost_eq]
+          _ = (outputProgram source).cost binaryCost := programCost
+          _ = source.cost binaryCost := by
+            simp [outputProgram, Circuit.cost, identityLine] }
 
 /-- View an exact circuit restriction as a generic certified reduction. -/
 def toReduction

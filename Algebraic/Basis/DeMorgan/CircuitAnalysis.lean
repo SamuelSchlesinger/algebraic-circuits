@@ -4,9 +4,10 @@ import Algebraic.Basis.DeMorgan.Dependency
 /-!
 # Structural analysis of one-output De Morgan circuits
 
-The terminal output line is viewed as the last line of `outputProgram`.  For a
-function depending on at least two inputs, its contracted origin must therefore
-be a charged gate rather than a constant or a single literal.
+For this analysis, the circuit's free designated output wire is materialized as
+the final identity line of `outputProgram`. For a function depending on at
+least two inputs, its contracted origin must be a charged gate rather than a
+constant or a single literal.
 -/
 
 namespace Algebraic

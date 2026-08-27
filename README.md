@@ -3,19 +3,21 @@
 Algebraic is a small Lean 4 library for finite-arity universal algebra and
 shared circuit computation over algebraic interpretations.
 
-The core library has five layers:
+The core library has six layers:
 
 - `Signature` describes operation symbols and their arities.
 - `Interpretation` assigns concrete operations to a signature.
 - `Homomorphism` defines maps that preserve those operations.
 - `Program` is a topologically ordered sequence of shared internal gates.
-- `Circuit` adds a terminal layer of output gates to a program.
+- `Circuit` designates input or gate wires as outputs of a program.
+- `Translation` implements the operations of one signature by circuits over
+  another signature.
 
-A program gate may read an original input or an earlier gate. Output gates may
-read any input or internal gate, but cannot feed internal gates or one another.
-Circuit size counts internal and output gates. Inputs have depth zero, each gate
-adds one to the maximum depth of its arguments, and circuit depth is the maximum
-terminal-output depth.
+A program gate may read an original input or an earlier gate. Designating an
+output wire is free, so projections require no identity gate. Circuit size is
+the program's gate count. Inputs have depth zero, each gate adds one to the
+maximum depth of its arguments, and circuit depth is the maximum designated
+output depth.
 
 Evaluation of lines, programs, and circuits commutes with homomorphisms.
 
@@ -25,6 +27,9 @@ The core program API also supports semantics-preserving structural changes:
   composition, extension, and permutation constructors.
 - `Line.mapWires`, `Line.eval_mapWires`, and `Line.eval_mapRenaming` transport a
   line across a wire map.
+- `Wire.Substitution`, `Program.instantiate`, and `Circuit.comp` substitute
+  arbitrary input wires and compose circuits without materializing outputs as
+  gates; their evaluation and weighted-cost laws are exact.
 - simp lemmas describe the old and last gate of an appended program.
 - `Program.gateFunction` and `Program.wireFunction` expose scalar semantics.
 - `Program.lines` views a program as a fully widened indexed collection of
@@ -44,6 +49,66 @@ Reusable circuit analysis is kept separate from particular lower-bound methods:
   bound that support for bounded-fan-in circuits.
 - `Circuit.essential_le_depth` and `Circuit.essential_le_size` turn those
   structural bounds into semantic lower-bound tools.
+- `Signature.depthInterpretation` evaluates gates as arrival times. Circuit
+  evaluation in this interpretation is exactly `Circuit.outputDepths`, and a
+  translated circuit therefore inherits an exact per-operation delay semantics.
+
+Changing signatures is proof-carrying:
+
+- `Translation.pull` turns a target interpretation into the derived source
+  interpretation implemented by the operation circuits.
+- `Translation.compile_eval` proves that compiling a circuit and then
+  evaluating it is exactly evaluation in the pulled-back interpretation.
+- `Translation.pullCost` charges each source operation by the weighted cost of
+  its implementation, and `Translation.compile_cost` proves exact cost
+  preservation. Unit cost recovers exact gate count, and a uniform local
+  `K`-gate bound yields the usual `K`-factor size simulation.
+- `OptimalRealization` and `Realization.minimumCost` replace arbitrary chosen
+  gadgets by genuinely minimum-cost implementations. The resulting source
+  cost is independent of the realization used to witness implementability and
+  equals the target-basis scalar complexity of each operation.
+- `Circuit.costComplexity` and `Circuit.gateComplexity` take the infimum over
+  all implementations in `ℕ∞`; a nonrepresentable target has complexity
+  `⊤`. Exact circuit-level cost preservation induces the weighted complexity
+  inequality and the conventional constant-factor gate-complexity comparison.
+- Translations have identity and composition operations. Interpretations and
+  costs pull back contravariantly; one-stage and two-stage compilation have the
+  same semantics and cost (their gate names need not be syntactically equal).
+- `ObservedSignature U` quotients translations by their action on all
+  `U`-valued interpretations and all weighted costs, yielding an actual
+  Mathlib category rather than claiming intensional equality of compiled
+  programs.
+- `Realization` records equality with a chosen source interpretation.
+  `Simulation T I J` is definitionally just `Homomorphism I (T.pull J)`, so
+  the same theorem handles carrier and signature changes without duplicating
+  the homomorphism interface. Identities and composition are available for
+  homomorphisms, realizations, and simulations.
+- For finite source signatures, `Interpretation.simulationOverhead` is the
+  optimal maximum gadget size. It is normalized to at least one because free
+  projections can use zero gates, and is `⊤` when no realization exists.
+  It is submultiplicative; its extended-real logarithm
+  `simulationDistance` satisfies the directed triangle inequality. Two finite,
+  functionally complete bases consequently have explicit two-sided linear
+  gate-complexity bounds.
+- `BlockTranslation` implements one source value by a fixed-width block of
+  target values. Its compiler shares each multi-output gadget, preserves
+  evaluation and weighted cost exactly, and `BlockSimulation` is again a
+  homomorphism into the pulled-back interpretation.
+
+Several other compositional analyses are interpretations too:
+
+- support evaluation exactly recovers the existing structural output support;
+- degree modes propagate syntactic degree through constant-, maximum-, and
+  sum-like operations;
+- the four-point polarity domain propagates signed dependencies; and
+- finite possible-value sets soundly overapproximate arbitrary concrete input
+  sets and are exact on singleton inputs.
+
+Compiling and then running any of these analyses is exactly source evaluation
+in the pulled-back abstract interpretation. Degree and polarity deliberately
+separate this generic propagation theorem from the basis-specific proof that a
+chosen local policy soundly describes concrete polynomial degree or
+monotonicity.
 
 Lower-bound methods live under `Algebraic/LowerBound`. `Algebraic.LowerBound`
 is an import umbrella. The bounded-fan-in method has separate size and depth
@@ -65,9 +130,17 @@ Gate elimination is organized as a proof-carrying, basis-independent method:
 - `GateElimination.Xor.ThreeGateEliminator` is the sole local obligation for
   the `3 * (n - 1)` XOR lower bound over any weighted Boolean basis.
 - The De Morgan specialization charges AND and OR while treating constants and
-  NOT as free. `DeMorgan.xorThreeGateEliminator` discharges the local obligation,
-  and `DeMorgan.xor_lowerBound` exports the unconditional lower bound. The
-  library does not currently formalize a matching upper-bound construction.
+  identity and NOT as free. `DeMorgan.xorThreeGateEliminator` discharges the
+  local obligation, and `DeMorgan.xor_lowerBound` exports the unconditional
+  lower bound. `parity_lowerBound_of_deMorgan_realization` transports it to any
+  macro basis, charging every macro by the AND/OR cost of its selected De Morgan
+  implementation. `parity_lowerBound_of_deMorgan_minimumCost` strengthens this
+  to the minimum possible AND/OR implementation cost of each macro.
+  `parity_size_lowerBound_of_deMorgan_minimumCost` gives the ceiling-divided
+  unit-size consequence under a uniform intrinsic-cost bound, while
+  `parity_size_lowerBound_of_deMorgan_realization` uses a uniform bound on the
+  total size of selected implementations.
+  The library does not currently formalize a matching upper-bound construction.
 - Minimum-circuit and elimination witnesses are chosen classically. These APIs
   certify lower bounds in Lean but do not implement an executable optimizer or
   gate-elimination algorithm.
@@ -87,7 +160,8 @@ The counting development is exported by `Algebraic.LowerBound.Counting`:
   increasing its gate count.
 - `Counting.Sharp` removes the artificial topological ordering: for exactly
   `g` irredundant gates, the number of computed functions times `g!` is at most
-  `lineCount (n + g) ^ (g + m)`. Summing the resulting quotients gives
+  `lineCount (n + g) ^ g * (n + g) ^ m`. The second factor counts the freely
+  designated output wires. Summing the resulting quotients gives
   `Signature.sharpBudget`.
 - `Counting.Arity` packages maximum arity and bounds the number of available
   lines; `Counting.Coarse` derives elementary arity-only size bounds.

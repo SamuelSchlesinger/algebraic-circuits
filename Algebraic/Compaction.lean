@@ -161,7 +161,7 @@ def eliminate
     exact (compaction.cost_le operationCost).trans
       (Nat.le_add_right _ (operationCost line.op))
 
-/-- Lift a program compaction through a terminal output layer. -/
+/-- Lift a program compaction to a circuit by renaming its output wires. -/
 def toCircuit
     {circuit : Circuit σ n g m}
     (compaction : Program.Compaction circuit.program interpretation) :
@@ -169,24 +169,17 @@ def toCircuit
   let result : Circuit σ n compaction.gateCount m :=
     { program := compaction.result
       outputs := fun output =>
-        (circuit.outputs output).mapWires compaction.wireMap }
+        compaction.wireMap (circuit.outputs output) }
   exact
     { gateCount := compaction.gateCount
       result := result
       eval_eq := by
         intro input
         funext output
-        unfold result Circuit.eval
-        apply Line.eval_mapRenaming
-        intro gate
-        simpa only [Program.trace, Wire.Renaming.apply_gate,
-          Fin.addCases_right] using
-          compaction.trace_eq input (Wire.gate gate)
+        exact compaction.trace_eq input (circuit.outputs output)
       gateCount_le := compaction.gateCount_le
       cost_le := by
         intro operationCost
-        unfold result Circuit.cost
-        apply Nat.add_le_add_right
         exact compaction.cost_le operationCost }
 
 end Program.Compaction

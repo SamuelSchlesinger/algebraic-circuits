@@ -1,6 +1,7 @@
 import Algebraic.Basis.DeMorgan.Origin
 import Algebraic.Reduction
 import Mathlib.Data.Fin.Embedding
+import Mathlib.Data.Finset.Card
 
 /-!
 # De Morgan circuit restriction

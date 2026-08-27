@@ -72,26 +72,26 @@ theorem card_program [Fintype σ.Op] :
         ih, card_line]
       simp [Finset.prod_range_succ]
 
-/-- A circuit is its internal program paired with its terminal output lines. -/
+/-- A circuit is its program paired with its designated output wires. -/
 def circuitEquiv (σ : Signature) (n g m : Nat) :
-    Circuit σ n g m ≃ Program σ n g × (Fin m → Line σ n g) where
+    Circuit σ n g m ≃ Program σ n g × (Fin m → Wire n g) where
   toFun circuit := (circuit.program, circuit.outputs)
   invFun pair := ⟨pair.1, pair.2⟩
   left_inv _ := rfl
   right_inv _ := rfl
 
 noncomputable instance [Fintype σ.Op] : Fintype (Circuit σ n g m) :=
-  Fintype.ofEquiv (Program σ n g × (Fin m → Line σ n g))
+  Fintype.ofEquiv (Program σ n g × (Fin m → Wire n g))
     (circuitEquiv σ n g m).symm
 
-/-- Exact number of circuits with `g` internal and `m` terminal gates. -/
+/-- Exact number of circuits with `g` gates and `m` designated outputs. -/
 theorem card_circuit [Fintype σ.Op] :
     Fintype.card (Circuit σ n g m) =
       (∏ j ∈ Finset.range g,
         ∑ op : σ.Op, (n + j) ^ σ.Arity op) *
-      (∑ op : σ.Op, (n + g) ^ σ.Arity op) ^ m := by
+      (n + g) ^ m := by
   rw [Fintype.card_congr (circuitEquiv σ n g m), Fintype.card_prod,
-    card_program, Fintype.card_fun, card_line]
+    card_program, Fintype.card_fun]
   simp
 
 /-- Number of functions from `U^n` to `U^m`. -/

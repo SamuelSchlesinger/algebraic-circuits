@@ -36,7 +36,7 @@ def Signature.orderedBudget
     (n m G : Nat) : Nat :=
   ∑ g ∈ Finset.range (G + 1),
     (∏ j ∈ Finset.range g, σ.lineCount (n + j)) *
-      σ.lineCount (n + g) ^ m
+      (n + g) ^ m
 
 theorem Circuit.mem_functionsAtMost_iff
     [Fintype σ.Op] [Fintype U]
@@ -82,7 +82,7 @@ theorem BoundedCircuit.card [Fintype σ.Op] :
     (fun g : Nat =>
       (∏ j ∈ Finset.range g,
         ∑ op : σ.Op, (n + j) ^ σ.Arity op) *
-      (∑ op : σ.Op, (n + g) ^ σ.Arity op) ^ m)
+      (n + g) ^ m)
     (G + 1)
 
 /-- Semantic functions are no more numerous than their ordered descriptions. -/

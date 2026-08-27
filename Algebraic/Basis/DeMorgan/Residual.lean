@@ -524,30 +524,6 @@ theorem orLine_eq_binaryLine
         op.eval (values left) (values right) := by
   cases op <;> rfl
 
-/-- Use a residual value directly as a zero-cost terminal output gate. -/
-def ResidualValue.outputLine : ResidualValue n g → Line signature n g
-  | .constant value => constantLine value
-  | .wire false sourceWire => identityLine sourceWire
-  | .wire true sourceWire => notLine sourceWire
-
-@[simp] theorem ResidualValue.outputLine_cost
-    (value : ResidualValue n g) :
-    binaryCost value.outputLine.op = 0 := by
-  cases value with
-  | constant value => cases value <;> rfl
-  | wire negated sourceWire => cases negated <;> rfl
-
-@[simp] theorem ResidualValue.outputLine_eval
-    (value : ResidualValue n g)
-    (program : Program signature n g)
-    (input : Fin n → Bool) :
-    value.outputLine.eval interpretation input
-        (program.eval interpretation input) =
-      value.eval program input := by
-  cases value with
-  | constant value => cases value <;> rfl
-  | wire negated sourceWire => cases negated <;> rfl
-
 @[simp] theorem ResidualValue.eval_mapWires
     (value : ResidualValue n g)
     (wireMap : Wire.Renaming n g h)

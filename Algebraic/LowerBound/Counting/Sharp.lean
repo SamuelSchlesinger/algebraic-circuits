@@ -19,13 +19,13 @@ namespace Algebraic
 structure LooseCircuit (σ : Signature) (n g m : Nat) where
   /-- One defining line for every labeled internal gate. -/
   internal : Fin g → Line σ n g
-  /-- One terminal line for every output. -/
-  outputs : Fin m → Line σ n g
+  /-- One designated wire for every output. -/
+  outputs : Fin m → Wire n g
 
 /-- A loose circuit is equivalently a pair of indexed line collections. -/
 def looseCircuitEquiv (σ : Signature) (n g m : Nat) :
     LooseCircuit σ n g m ≃
-      (Fin g → Line σ n g) × (Fin m → Line σ n g) where
+      (Fin g → Line σ n g) × (Fin m → Wire n g) where
   toFun circuit := (circuit.internal, circuit.outputs)
   invFun pair := ⟨pair.1, pair.2⟩
   left_inv _ := rfl
@@ -33,17 +33,16 @@ def looseCircuitEquiv (σ : Signature) (n g m : Nat) :
 
 noncomputable instance [Fintype σ.Op] : Fintype (LooseCircuit σ n g m) :=
   Fintype.ofEquiv
-    ((Fin g → Line σ n g) × (Fin m → Line σ n g))
+    ((Fin g → Line σ n g) × (Fin m → Wire n g))
     (looseCircuitEquiv σ n g m).symm
 
 /-- Exact count of loose labeled circuit presentations. -/
 theorem card_looseCircuit [Fintype σ.Op] :
     Fintype.card (LooseCircuit σ n g m) =
-      σ.lineCount (n + g) ^ (g + m) := by
+      σ.lineCount (n + g) ^ g * (n + g) ^ m := by
   rw [Fintype.card_congr (looseCircuitEquiv σ n g m), Fintype.card_prod]
   simp only [Fintype.card_fun, Fintype.card_fin, card_line,
     Signature.lineCount]
-  exact (Nat.pow_add _ _ _).symm
 
 /-- A loose circuit valuation solves all of its internal gate equations. -/
 def LooseCircuit.Satisfies
@@ -54,13 +53,13 @@ def LooseCircuit.Satisfies
   ∀ gate, values gate =
     (circuit.internal gate).eval interpretation input values
 
-/-- Read terminal outputs under a chosen internal-gate valuation. -/
+/-- Read designated output wires under a chosen internal-gate valuation. -/
 def LooseCircuit.evalOutputs
     (circuit : LooseCircuit σ n g m)
-    (interpretation : Interpretation σ U)
+    (_interpretation : Interpretation σ U)
     (input : Fin n → U)
     (values : Fin g → U) : Fin m → U :=
-  fun output => (circuit.outputs output).eval interpretation input values
+  fun output => Fin.addCases input values (circuit.outputs output)
 
 theorem Wire.value_permutation
     (permutation : Equiv.Perm (Fin g))
@@ -82,8 +81,7 @@ def Circuit.relabel
     (circuit.program.lines (permutation.symm gate)).mapWires
       (Wire.Renaming.ofPermutation permutation)
   outputs := fun output =>
-    (circuit.outputs output).mapWires
-      (Wire.Renaming.ofPermutation permutation)
+    Wire.Renaming.ofPermutation permutation (circuit.outputs output)
 
 theorem Circuit.relabel_satisfies
     (circuit : Circuit σ n g m)
@@ -112,10 +110,8 @@ theorem Circuit.relabel_evalOutputs
       circuit.eval interpretation input := by
   funext output
   unfold Circuit.relabel LooseCircuit.evalOutputs Circuit.eval
-  apply Line.eval_mapWires
-  intro wire
   exact Wire.value_permutation permutation input
-    (circuit.program.eval interpretation input) wire
+    (circuit.program.eval interpretation input) (circuit.outputs output)
 
 /-! ## Acyclicity and unique valuations -/
 
@@ -377,7 +373,7 @@ theorem Circuit.card_irredundantFunctions_mul_factorial_le
     (interpretation : Interpretation σ U)
     (n g m : Nat) :
     (Circuit.irredundantFunctions interpretation n g m).card * g.factorial ≤
-      σ.lineCount (n + g) ^ (g + m) := by
+      σ.lineCount (n + g) ^ g * (n + g) ^ m := by
   classical
   have encoded := Fintype.card_le_of_injective
     (Circuit.sharpEncoding (n := n) (g := g) (m := m) interpretation)
@@ -391,7 +387,7 @@ theorem Circuit.card_irredundantFunctions_mul_factorial_le
 def Signature.sharpCount
     (σ : Signature) [Fintype σ.Op]
     (n g m : Nat) : Nat :=
-  σ.lineCount (n + g) ^ (g + m) / g.factorial
+  (σ.lineCount (n + g) ^ g * (n + g) ^ m) / g.factorial
 
 theorem Circuit.card_irredundantFunctions_le_sharpCount
     [Fintype σ.Op] [Fintype U]

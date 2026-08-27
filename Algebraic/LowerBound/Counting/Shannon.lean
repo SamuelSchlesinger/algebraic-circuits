@@ -26,7 +26,8 @@ noncomputable def Signature.stirlingExponent
     (σ : Signature) [Fintype σ.Op]
     (n m G : Nat) : Real :=
   Real.log (G + 1) +
-    (G + m) * Real.log (σ.lineCount (n + G)) -
+    G * Real.log (σ.lineCount (n + G)) +
+      m * Real.log (n + G) -
       ((G : Real) * Real.log G - G)
 
 namespace Shannon
@@ -64,7 +65,9 @@ theorem Signature.finalTerm_le_exp_stirling
   unfold Signature.finalTerm Signature.stirlingExponent
   apply (Real.log_le_iff_le_exp (by positivity)).mp
   rw [Real.log_div (by positivity) (by positivity),
-    Real.log_mul (by positivity) (by positivity), Real.log_pow]
+    Real.log_mul (by positivity) (by positivity),
+    Real.log_mul (by positivity) (by positivity),
+    Real.log_pow, Real.log_pow]
   norm_cast
   have stirling := Nat.cast_mul_log_sub_le_log_factorial positive
   linarith
@@ -300,6 +303,35 @@ private theorem stirlingExponent_le
   have exponentNonnegative : (0 : Real) ≤ G + m := by positivity
   have lineContribution :=
     mul_le_mul_of_nonneg_left lineLog exponentNonnegative
+  have wiresLeLines : n + G ≤ σ.lineCount (n + G) :=
+    maximum.wires_le_lineCount (by omega) (n + G)
+  have wiresPositive : 0 < n + G := by omega
+  have linesPositive : 0 < σ.lineCount (n + G) :=
+    wiresPositive.trans_le wiresLeLines
+  have wireLog : Real.log (n + G) ≤
+      Real.log (σ.lineCount (n + G)) := by
+    exact Real.strictMonoOn_log.monotoneOn
+      (by
+        simpa only [Set.mem_Ioi] using
+          add_pos_of_nonneg_of_pos (Nat.cast_nonneg n)
+            (by exact_mod_cast gatePositive : (0 : Real) < G))
+      (by
+        have positive : (0 : Real) < σ.lineCount (n + G) := by
+          exact_mod_cast linesPositive
+        simpa only [Set.mem_Ioi] using positive)
+      (by exact_mod_cast wiresLeLines)
+  have combinedContribution :
+      (G : Real) * Real.log (σ.lineCount (n + G)) +
+          (m : Real) * Real.log (n + G) ≤
+        ((G : Real) + m) * (c + r * Real.log G) := by
+    calc
+      (G : Real) * Real.log (σ.lineCount (n + G)) +
+            (m : Real) * Real.log (n + G) ≤
+          (G : Real) * Real.log (σ.lineCount (n + G)) +
+            (m : Real) * Real.log (σ.lineCount (n + G)) := by
+        gcongr
+      _ = ((G : Real) + m) * Real.log (σ.lineCount (n + G)) := by ring
+      _ ≤ ((G : Real) + m) * (c + r * Real.log G) := lineContribution
   have logGate : Real.log G ≤ G :=
     Real.log_le_self (by positivity)
   have extraLog :
@@ -320,7 +352,8 @@ private theorem stirlingExponent_le
   norm_num only [Nat.cast_one]
   calc
     Real.log (G + 1) +
-          (G + m) * Real.log (σ.lineCount (n + G)) -
+          G * Real.log (σ.lineCount (n + G)) +
+          m * Real.log (n + G) -
             (G * Real.log G - G) ≤
         (G + 1) + (G + m) * (c + r * Real.log G) -
           (G * Real.log G - G) := by
@@ -414,7 +447,8 @@ private theorem eventually_stirlingExponent_le_target_sub_budget
   unfold Signature.stirlingExponent at exponentBound
   change
     Real.log (G + 1) +
-          (G + m) * Real.log (σ.lineCount (n + G)) -
+          G * Real.log (σ.lineCount (n + G)) +
+          m * Real.log (n + G) -
           (G * Real.log G - G) ≤
       ((m * q ^ n : Nat) : Real) * Real.log q - G
   have gapTimesGate :

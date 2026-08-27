@@ -12,4 +12,79 @@ structure Homomorphism (i₁ : Interpretation σ U₁) (i₂ : Interpretation σ
     ∀ (op : σ.Op) (input : Fin (σ.Arity op) → U₁),
       map (i₁ op input) = i₂ op (map ∘ input)
 
+namespace Homomorphism
+
+@[ext] theorem ext
+    {source : Interpretation σ U₁}
+    {target : Interpretation σ U₂}
+    {left right : Homomorphism source target}
+    (map_eq : left.map = right.map) : left = right := by
+  cases left
+  cases right
+  cases map_eq
+  rfl
+
+/-- The identity map is a homomorphism. -/
+def id (interpretation : Interpretation σ U) :
+    Homomorphism interpretation interpretation where
+  map := _root_.id
+  homomorphic := by
+    intro op input
+    rfl
+
+/-- Compose homomorphisms in the direction of their underlying maps. -/
+def comp
+    {i₁ : Interpretation σ U₁}
+    {i₂ : Interpretation σ U₂}
+    {i₃ : Interpretation σ U₃}
+    (outer : Homomorphism i₂ i₃)
+    (inner : Homomorphism i₁ i₂) : Homomorphism i₁ i₃ where
+  map := outer.map ∘ inner.map
+  homomorphic := by
+    intro op input
+    rw [Function.comp_apply, inner.homomorphic, outer.homomorphic]
+    congr 1
+
+@[simp] theorem id_map
+    (interpretation : Interpretation σ U) :
+    (Homomorphism.id interpretation).map = _root_.id := rfl
+
+@[simp] theorem comp_map
+    {i₁ : Interpretation σ U₁}
+    {i₂ : Interpretation σ U₂}
+    {i₃ : Interpretation σ U₃}
+    (outer : Homomorphism i₂ i₃)
+    (inner : Homomorphism i₁ i₂) :
+    (outer.comp inner).map = outer.map ∘ inner.map := rfl
+
+@[simp] theorem id_comp
+    {source : Interpretation σ U₁}
+    {target : Interpretation σ U₂}
+    (homomorphism : Homomorphism source target) :
+    (Homomorphism.id target).comp homomorphism = homomorphism := by
+  apply Homomorphism.ext
+  rfl
+
+@[simp] theorem comp_id
+    {source : Interpretation σ U₁}
+    {target : Interpretation σ U₂}
+    (homomorphism : Homomorphism source target) :
+    homomorphism.comp (Homomorphism.id source) = homomorphism := by
+  apply Homomorphism.ext
+  rfl
+
+theorem comp_assoc
+    {i₁ : Interpretation σ U₁}
+    {i₂ : Interpretation σ U₂}
+    {i₃ : Interpretation σ U₃}
+    {i₄ : Interpretation σ U₄}
+    (outer : Homomorphism i₃ i₄)
+    (middle : Homomorphism i₂ i₃)
+    (inner : Homomorphism i₁ i₂) :
+    (outer.comp middle).comp inner = outer.comp (middle.comp inner) := by
+  apply Homomorphism.ext
+  rfl
+
+end Homomorphism
+
 end Algebraic

@@ -2,35 +2,47 @@ import Algebraic.Program
 
 namespace Algebraic
 
-/-- A straight-line program followed by a terminal layer of output gates. -/
+/-- A straight-line program with designated output wires. -/
 structure Circuit (σ : Signature) (n g m : Nat) where
   /-- The internal gates of the circuit. -/
   program : Program σ n g
-  /-- The terminal gate computing each output. -/
-  outputs : Fin m → Line σ n g
+  /-- The input or internal-gate wire carrying each output. -/
+  outputs : Fin m → Wire n g
 
-/-- Every internal and output gate in a circuit has at most `r` arguments. -/
+/-- The zero-gate identity circuit, whose outputs are its inputs. -/
+def Circuit.id (σ : Signature) (n : Nat) : Circuit σ n 0 n where
+  program := .empty
+  outputs := fun input => Wire.input input
+
+/-- Every gate in a circuit has at most `r` arguments. -/
 def Circuit.FanInAtMost (c : Circuit σ n g m) (r : Nat) : Prop :=
-  c.program.FanInAtMost r ∧ ∀ k, σ.Arity (c.outputs k).op ≤ r
+  c.program.FanInAtMost r
 
-/-- The total number of internal and output gates in a circuit. -/
+/-- The number of gates in a circuit. Designating outputs is free. -/
 def Circuit.size (_ : Circuit σ n g m) : Nat :=
-  g + m
+  g
 
-/-- The depth of every terminal output gate in a circuit. -/
+/-- The depth of every designated output wire in a circuit. -/
 def Circuit.outputDepths (c : Circuit σ n g m) : Fin m → Nat :=
-  fun k => (c.outputs k).depth c.program.wireDepths
+  c.program.wireDepths ∘ c.outputs
 
-/-- The maximum depth of a terminal output gate in a circuit. -/
+/-- The maximum depth of a designated output wire in a circuit. -/
 def Circuit.depth (c : Circuit σ n g m) : Nat :=
   Fin.foldl m (fun depth k => max depth (c.outputDepths k)) 0
 
-/-- Evaluate the terminal output gates of a circuit. -/
+/-- Read the designated output wires after evaluating the program. -/
 def Circuit.eval
   (c : Circuit σ n g m)
   (i : Interpretation σ U)
   (x : Fin n → U) : Fin m → U :=
-  fun k => (c.outputs k).eval i x (c.program.eval i x)
+  c.program.trace i x ∘ c.outputs
+
+@[simp] theorem Circuit.eval_id
+    (interpretation : Interpretation σ U)
+    (input : Fin n → U) :
+    (Circuit.id σ n).eval interpretation input = input := by
+  funext output
+  exact Program.trace_input .empty interpretation input output
 
 /-- Evaluating a circuit commutes with a homomorphism. -/
 theorem Circuit.map_eval
@@ -41,17 +53,16 @@ theorem Circuit.map_eval
   (x : Fin n → U₁) :
   h.map ∘ c.eval i₁ x = c.eval i₂ (h.map ∘ x) := by
   funext k
-  simp only [Circuit.eval, Function.comp_apply]
-  rw [(c.outputs k).map_eval h x, c.program.map_eval h x]
+  exact congrFun (c.program.map_trace h x) (c.outputs k)
 
-/-- All internal and output gate values, in that order. -/
+/-- All internal-gate values followed by the designated output values. -/
 def Circuit.computation
   (c : Circuit σ n g m)
   (i : Interpretation σ U)
   (x : Fin n → U) : Fin (g + m) → U :=
   Fin.addCases (c.program.eval i x) (c.eval i x)
 
-/-- The input, internal-gate, and output-gate values, in that order. -/
+/-- The input and internal-gate values followed by the designated outputs. -/
 def Circuit.trace
   (c : Circuit σ n g m)
   (i : Interpretation σ U)

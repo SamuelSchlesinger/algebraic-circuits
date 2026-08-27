@@ -16,38 +16,42 @@ private theorem Line.card_inputSupport_le_depth
     (wireSupport : Wire n g → Finset (Fin n))
     (wireDepths : Wire n g → Nat)
     (r : Nat)
-    (positive : 1 ≤ r)
     (arity : σ.Arity line.op ≤ r)
     (wireBound : ∀ wire,
-      (wireSupport wire).card ≤ r ^ wireDepths wire) :
-    (line.inputSupport wireSupport).card ≤ r ^ line.depth wireDepths := by
+      (wireSupport wire).card ≤ (max 1 r) ^ wireDepths wire) :
+    (line.inputSupport wireSupport).card ≤
+      (max 1 r) ^ line.depth wireDepths := by
+  have positive : 1 ≤ max 1 r := Nat.le_max_left 1 r
   let maxDepth := Fin.foldl (σ.Arity line.op)
     (fun result argument => max result (wireDepths (line.wires argument))) 0
   have argumentBound (argument : Fin (σ.Arity line.op)) :
-      (wireSupport (line.wires argument)).card ≤ r ^ maxDepth :=
+      (wireSupport (line.wires argument)).card ≤
+        (max 1 r) ^ maxDepth :=
     (wireBound (line.wires argument)).trans <|
-      Nat.pow_le_pow_right (by omega) <|
+      Nat.pow_le_pow_right positive <|
         Fin.le_foldl_max
           (fun argument => wireDepths (line.wires argument)) 0 argument
   calc
     (line.inputSupport wireSupport).card ≤
-        σ.Arity line.op * r ^ maxDepth := by
+        σ.Arity line.op * (max 1 r) ^ maxDepth := by
       simpa [Line.inputSupport] using
         Finset.card_biUnion_le_card_mul
           (Finset.univ : Finset (Fin (σ.Arity line.op)))
           (fun argument => wireSupport (line.wires argument))
-          (r ^ maxDepth) (fun argument _ => argumentBound argument)
-    _ ≤ r * r ^ maxDepth := Nat.mul_le_mul_right (r ^ maxDepth) arity
-    _ = r ^ line.depth wireDepths := by
+          ((max 1 r) ^ maxDepth) (fun argument _ => argumentBound argument)
+    _ ≤ (max 1 r) * (max 1 r) ^ maxDepth :=
+      Nat.mul_le_mul_right ((max 1 r) ^ maxDepth)
+        (arity.trans (Nat.le_max_right 1 r))
+    _ = (max 1 r) ^ line.depth wireDepths := by
       simp [Line.depth, maxDepth, Nat.pow_succ, Nat.mul_comm]
 
 private theorem Program.card_gateSupport_le_depth
     (program : Program σ n g)
     (r : Nat)
-    (positive : 1 ≤ r)
     (bounded : program.FanInAtMost r)
     (k : Fin g) :
-    (program.gateSupport k).card ≤ r ^ program.depths k := by
+    (program.gateSupport k).card ≤
+      (max 1 r) ^ program.depths k := by
   induction program with
   | empty => exact Fin.elim0 k
   | @gate g program line ih =>
@@ -58,8 +62,7 @@ private theorem Program.card_gateSupport_le_depth
           Fin.addCases (fun k => {k}) program.gateSupport
         let wireDepths : Wire n g → Nat :=
           Fin.addCases (fun _ => 0) program.depths
-        apply line.card_inputSupport_le_depth wireSupport wireDepths r positive
-          lineBounded
+        apply line.card_inputSupport_le_depth wireSupport wireDepths r lineBounded
         intro wire
         refine Fin.addCases ?_ ?_ wire
         · intro i
@@ -69,51 +72,43 @@ private theorem Program.card_gateSupport_le_depth
       · simp only [Program.gateSupport, Program.depths, Fin.lastCases_castSucc]
         exact ih programBounded j
 
-private theorem Circuit.card_inputSupport_le_depth_of_pos
+private theorem Circuit.card_inputSupport_le_depth_aux
     (c : Circuit σ n g m)
     (r : Nat)
-    (positive : 1 ≤ r)
     (bounded : c.FanInAtMost r) :
-    c.inputSupport.card ≤ m * r ^ c.depth := by
-  obtain ⟨programBounded, outputsBounded⟩ := bounded
+    c.inputSupport.card ≤ m * (max 1 r) ^ c.depth := by
+  have positive : 1 ≤ max 1 r := Nat.le_max_left 1 r
   have outputBound (output : Fin m) :
-      (c.outputSupport output).card ≤ r ^ c.outputDepths output := by
-    let line := c.outputs output
-    let wireSupport : Wire n g → Finset (Fin n) := c.program.wireSupport
-    let wireDepths : Wire n g → Nat := c.program.wireDepths
-    change (line.inputSupport wireSupport).card ≤ r ^ line.depth wireDepths
-    apply line.card_inputSupport_le_depth wireSupport wireDepths r positive
-      (outputsBounded output)
-    intro wire
+      (c.outputSupport output).card ≤
+        (max 1 r) ^ c.outputDepths output := by
+    let wire := c.outputs output
+    change (c.program.wireSupport wire).card ≤
+      (max 1 r) ^ c.program.wireDepths wire
     refine Fin.addCases ?_ ?_ wire
     · intro i
-      simp [wireSupport, wireDepths, Program.wireDepths]
+      simp [Program.wireSupport, Program.wireDepths]
     · intro j
-      simpa [wireSupport, wireDepths, Program.wireSupport,
-        Program.wireDepths] using
-        c.program.card_gateSupport_le_depth r positive programBounded j
+      simpa [Program.wireSupport, Program.wireDepths] using
+        c.program.card_gateSupport_le_depth r bounded j
   have supportBound := Finset.card_biUnion_le_card_mul
-    (Finset.univ : Finset (Fin m)) c.outputSupport (r ^ c.depth)
+    (Finset.univ : Finset (Fin m)) c.outputSupport ((max 1 r) ^ c.depth)
     (fun output _ => (outputBound output).trans <|
-      Nat.pow_le_pow_right (by omega) (Fin.le_foldl_max c.outputDepths 0 output))
+      Nat.pow_le_pow_right positive
+        (Fin.le_foldl_max c.outputDepths 0 output))
   simpa [Circuit.inputSupport] using supportBound
 
-/-- A fan-in-`r` circuit has at most `m * r ^ c.depth` supporting inputs. -/
+/-- A fan-in-`r` circuit has at most `m * (max 1 r) ^ c.depth` supporting
+inputs. The maximum accounts for direct output wires when `r = 0`. -/
 theorem Circuit.card_inputSupport_le_depth
     (c : Circuit σ n g m)
     {r : Nat}
     (bounded : c.FanInAtMost r) :
-    c.inputSupport.card ≤ m * r ^ c.depth := by
-  by_cases positive : 1 ≤ r
-  · exact c.card_inputSupport_le_depth_of_pos r positive bounded
-  · have zero : r = 0 := by omega
-    subst r
-    rw [c.inputSupport_eq_empty_of_fanIn_zero bounded]
-    simp
+    c.inputSupport.card ≤ m * (max 1 r) ^ c.depth := by
+  exact c.card_inputSupport_le_depth_aux r bounded
 
 /-- If a circuit has fan-in at most `r`, computes `target`, and every input in
 `selected` is essential to `target`, then `selected` has at most
-`m * r ^ c.depth` elements. -/
+`m * (max 1 r) ^ c.depth` elements. -/
 theorem Circuit.essential_le_depth
     (c : Circuit σ n g m)
     {interpretation : Interpretation σ U}
@@ -123,7 +118,7 @@ theorem Circuit.essential_le_depth
     (computes : c.Computes interpretation target)
     (essential : ∀ k ∈ selected, EssentialAt target k)
     (bounded : c.FanInAtMost r) :
-    selected.card ≤ m * r ^ c.depth := by
+    selected.card ≤ m * (max 1 r) ^ c.depth := by
   have targetDepends := computes.dependsOnlyOn
   exact (Finset.card_le_card fun k hk =>
     (essential k hk).mem_support targetDepends).trans

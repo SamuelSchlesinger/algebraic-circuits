@@ -24,13 +24,13 @@ private def Program.reachableInputs :
       program.reachableInputs opened
 
 private def Circuit.frontier (c : Circuit σ n g m) : Finset (Wire n g) :=
-  Finset.univ.biUnion fun output => Finset.univ.image (c.outputs output).wires
+  Finset.univ.image c.outputs
 
 @[simp] private theorem Circuit.mem_frontier
     {c : Circuit σ n g m}
     {wire : Wire n g} :
     wire ∈ c.frontier ↔
-      ∃ output argument, (c.outputs output).wires argument = wire := by
+      ∃ output, c.outputs output = wire := by
   simp [Circuit.frontier]
 
 private def Circuit.reachableInputs (c : Circuit σ n g m) : Finset (Fin n) :=
@@ -87,12 +87,12 @@ private theorem Circuit.inputSupport_subset_reachableInputs
   apply c.program.support_subset_reachableInputs c.frontier
   simp only [Circuit.mem_inputSupport, Finset.mem_biUnion,
     Circuit.mem_frontier] at present ⊢
-  grind
+  obtain ⟨output, supported⟩ := present
+  exact ⟨c.outputs output, ⟨output, rfl⟩, supported⟩
 
 private theorem Program.card_reachableInputs_le
     (program : Program σ n g)
-    (r : Nat)
-    (positive : 1 ≤ r) :
+    (r : Nat) :
     ∀ (_bounded : program.FanInAtMost r) (frontier : Finset (Wire n g)),
       (program.reachableInputs frontier).card ≤
         frontier.card + (r - 1) * g := by
@@ -138,8 +138,9 @@ private theorem Program.card_reachableInputs_le
             _ ≤ (frontier.erase (Fin.last (n + g))).card + r :=
               Nat.add_le_add priorEraseBound lineBound
             _ = frontier.card - 1 + r := by rw [erased]
-            _ = frontier.card + (r - 1) := by
-              have : 1 ≤ frontier.card := Finset.one_le_card.mpr ⟨_, lastSelected⟩
+            _ ≤ frontier.card + (r - 1) := by
+              have frontierPositive : 1 ≤ frontier.card :=
+                Finset.one_le_card.mpr ⟨_, lastSelected⟩
               omega
         · have openedEq : opened = prior := by
             simp [opened, lastSelected]
@@ -156,39 +157,18 @@ private theorem Program.card_reachableInputs_le
 private theorem Circuit.card_reachableInputs_le_size
     (c : Circuit σ n g m)
     (r : Nat)
-    (positive : 1 ≤ r)
     (bounded : c.FanInAtMost r) :
     c.reachableInputs.card ≤ m + (r - 1) * c.size := by
-  obtain ⟨programBounded, outputsBounded⟩ := bounded
-  have frontierBound : c.frontier.card ≤ m * r := by
-    have bound := Finset.card_biUnion_le_card_mul
-      (Finset.univ : Finset (Fin m))
-      (fun output => Finset.univ.image (c.outputs output).wires) r
-      (fun output _ => by
-        calc
-          (Finset.univ.image (c.outputs output).wires).card ≤
-              (Finset.univ : Finset (Fin (σ.Arity (c.outputs output).op))).card :=
-            Finset.card_image_le
-          _ = σ.Arity (c.outputs output).op := by simp
-          _ ≤ r := outputsBounded output)
-    simpa [Circuit.frontier] using bound
-  have programBound := c.program.card_reachableInputs_le r positive
-    programBounded c.frontier
-  have outputBudget : m * r = m + (r - 1) * m := by
-    have r_eq : r = (r - 1) + 1 := by omega
-    calc
-      m * r = m * ((r - 1) + 1) := congrArg (fun k => m * k) r_eq
-      _ = m + (r - 1) * m := by
-        simp only [Nat.mul_add, Nat.mul_one]
-        rw [Nat.mul_comm m (r - 1)]
-        exact Nat.add_comm _ _
+  have frontierBound : c.frontier.card ≤ m := by
+    simpa [Circuit.frontier] using
+      (Finset.card_image_le :
+        (Finset.univ.image c.outputs).card ≤
+          (Finset.univ : Finset (Fin m)).card)
+  have programBound := c.program.card_reachableInputs_le r bounded c.frontier
   calc
     c.reachableInputs.card ≤ c.frontier.card + (r - 1) * g := programBound
-    _ ≤ m * r + (r - 1) * g := Nat.add_le_add_right frontierBound _
-    _ = m + (r - 1) * c.size := by
-      rw [outputBudget]
-      simp only [Circuit.size, Nat.mul_add]
-      omega
+    _ ≤ m + (r - 1) * g := Nat.add_le_add_right frontierBound _
+    _ = m + (r - 1) * c.size := rfl
 
 /-- A fan-in-`r` circuit has at most `m + (r - 1) * c.size`
 supporting inputs. -/
@@ -197,13 +177,8 @@ theorem Circuit.card_inputSupport_le_size
     {r : Nat}
     (bounded : c.FanInAtMost r) :
     c.inputSupport.card ≤ m + (r - 1) * c.size := by
-  by_cases positive : 1 ≤ r
-  · exact (Finset.card_le_card c.inputSupport_subset_reachableInputs).trans
-      (c.card_reachableInputs_le_size r positive bounded)
-  · have zero : r = 0 := by omega
-    subst r
-    rw [c.inputSupport_eq_empty_of_fanIn_zero bounded]
-    simp
+  exact (Finset.card_le_card c.inputSupport_subset_reachableInputs).trans
+    (c.card_reachableInputs_le_size r bounded)
 
 /-- If a circuit has fan-in at most `r`, computes `target`, and every input in
 `selected` is essential to `target`, then `selected` has at most

@@ -7,6 +7,15 @@ import Algebraic.Circuit
 import Algebraic.Semantics
 import Algebraic.Support
 import Algebraic.Cost
+import Algebraic.Substitution
+import Algebraic.Translation
+import Algebraic.Translation.Optimal
+import Algebraic.Translation.Category
+import Algebraic.Translation.Metric
+import Algebraic.Translation.Block
+import Algebraic.Simulation
+import Algebraic.Complexity
+import Algebraic.Analysis
 import Algebraic.Restriction
 import Algebraic.Reduction
 import Algebraic.Compaction

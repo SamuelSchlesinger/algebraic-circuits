@@ -5,10 +5,11 @@ import Mathlib.Data.Fintype.OfMap
 # The De Morgan basis
 
 The basis contains Boolean constants, a structural identity gate, unary
-negation, and binary conjunction and disjunction. Identity models a direct
-output wire in the library's terminal-output representation. `binaryCost`
-implements the standard gate-elimination cost model in which only the binary
-gates are charged.
+negation, and binary conjunction and disjunction. The circuit representation
+has free wire outputs; identity remains useful only when a proof explicitly
+materializes an output as a final program gate. `binaryCost` implements the
+standard gate-elimination cost model in which only the binary gates are
+charged.
 -/
 
 namespace Algebraic

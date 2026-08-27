@@ -265,32 +265,11 @@ theorem Circuit.outputFunction_mem_depthFunctions
     circuit.outputFunction interpretation output ∈
       Depth.functions interpretation n (circuit.outputDepths output) := by
   classical
-  let line := circuit.outputs output
-  let wireDepths := circuit.program.wireDepths
-  let maxDepth := Fin.foldl (σ.Arity line.op)
-    (fun result argument =>
-      max result (wireDepths (line.wires argument))) 0
-  let arguments : Fin (σ.Arity line.op) → ScalarFunction U n :=
-    fun argument =>
-      circuit.program.wireFunction interpretation (line.wires argument)
-  have argumentPresent (argument : Fin (σ.Arity line.op)) :
-      arguments argument ∈ Depth.functions interpretation n maxDepth := by
-    apply Depth.functions_mono interpretation n
-      (Fin.le_foldl_max
-        (fun argument => wireDepths (line.wires argument)) 0 argument)
-    simpa [arguments, wireDepths] using
-      circuit.program.wireFunction_mem_depthFunctions interpretation
-        (line.wires argument)
-  have operationPresent := Depth.applyOperation_mem_functions_succ
-    interpretation maxDepth line.op arguments argumentPresent
-  change circuit.outputFunction interpretation output ∈
-    Depth.functions interpretation n (line.depth wireDepths)
-  rw [show line.depth wireDepths = maxDepth + 1 by rfl]
-  unfold Depth.applyOperation at operationPresent
-  simp only [arguments] at operationPresent
-  unfold Program.wireFunction Program.trace at operationPresent
-  unfold Circuit.outputFunction Circuit.eval
-  simpa [line, Line.eval, Function.comp_def] using operationPresent
+  change circuit.program.wireFunction interpretation (circuit.outputs output) ∈
+    Depth.functions interpretation n
+      (circuit.program.wireDepths (circuit.outputs output))
+  exact circuit.program.wireFunction_mem_depthFunctions interpretation
+    (circuit.outputs output)
 
 /-- Multi-output targets assembled from scalar functions available by `depth`. -/
 noncomputable def Depth.targets

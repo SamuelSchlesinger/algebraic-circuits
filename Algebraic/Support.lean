@@ -77,22 +77,21 @@ def Program.wireSupport
     Fin.addCases_right, Fin.lastCases_last]
   rfl
 
-/-- The input support of every output gate in a circuit. -/
+/-- The input support of every designated output wire in a circuit. -/
 def Circuit.outputSupport
     (c : Circuit σ n g m) : Fin m → Finset (Fin n) :=
-  fun k => (c.outputs k).inputSupport c.program.wireSupport
+  c.program.wireSupport ∘ c.outputs
 
 /-- The union of the input supports of a circuit's outputs. -/
 def Circuit.inputSupport (c : Circuit σ n g m) : Finset (Fin n) :=
   Finset.univ.biUnion c.outputSupport
 
-/-- An input supports a circuit exactly when it supports an argument of an output gate. -/
+/-- An input supports a circuit exactly when it supports a designated output wire. -/
 @[simp] theorem Circuit.mem_inputSupport
     {c : Circuit σ n g m}
     {input : Fin n} :
     input ∈ c.inputSupport ↔
-      ∃ output argument,
-        input ∈ c.program.wireSupport ((c.outputs output).wires argument) := by
+      ∃ output, input ∈ c.program.wireSupport (c.outputs output) := by
   simp [Circuit.inputSupport, Circuit.outputSupport]
 
 /-- Program gates agree whenever their supporting inputs agree. -/
@@ -163,16 +162,9 @@ theorem Circuit.eval_dependsOnlyOn
     DependsOnlyOn (c.eval interpretation) c.inputSupport := by
   intro left right agree
   funext output
-  simp only [Circuit.eval]
-  unfold Line.eval
-  congr 1
-  funext argument
-  simp only [Function.comp_apply]
-  let line := c.outputs output
-  simpa only [Program.trace] using
-    c.program.trace_congr interpretation left right (line.wires argument)
-      (fun i hi =>
-        agree i (Circuit.mem_inputSupport.mpr ⟨output, argument, hi⟩))
+  apply c.program.trace_congr interpretation left right (c.outputs output)
+  intro input present
+  exact agree input (Circuit.mem_inputSupport.mpr ⟨output, present⟩)
 
 /-- A computed function depends only on the circuit's structural input support. -/
 theorem Circuit.Computes.dependsOnlyOn
@@ -184,16 +176,5 @@ theorem Circuit.Computes.dependsOnlyOn
   intro left right agree
   rw [← computes left, ← computes right]
   exact c.eval_dependsOnlyOn interpretation left right agree
-
-/-- A fan-in-zero circuit has no supporting inputs. -/
-theorem Circuit.inputSupport_eq_empty_of_fanIn_zero
-    (c : Circuit σ n g m)
-    (bounded : c.FanInAtMost 0) :
-    c.inputSupport = ∅ := by
-  apply Finset.eq_empty_iff_forall_notMem.mpr
-  intro input present
-  rw [Circuit.mem_inputSupport] at present
-  obtain ⟨output, argument, _⟩ := present
-  exact Nat.not_lt_zero _ (argument.isLt.trans_le (bounded.2 output))
 
 end Algebraic
