@@ -9,6 +9,7 @@ import Algebraic.Support
 import Algebraic.Cost
 import Algebraic.Basis.Arithmetic
 import Algebraic.Basis.Arithmetic.Expression
+import Algebraic.Basis.Arithmetic.Power
 import Algebraic.Substitution
 import Algebraic.Translation
 import Algebraic.Translation.Optimal
