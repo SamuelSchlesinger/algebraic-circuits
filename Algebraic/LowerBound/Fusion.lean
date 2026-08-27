@@ -11,6 +11,8 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.MonomialSubstit
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Unit
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Collision
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Addition
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Polynomial
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Clique
 import Algebraic.LowerBound.Fusion.Arithmetic
 import Algebraic.LowerBound.Fusion.Arithmetic.Degree
 import Algebraic.LowerBound.Fusion.SumOfTerms
