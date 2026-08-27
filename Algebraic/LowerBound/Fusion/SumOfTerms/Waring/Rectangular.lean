@@ -340,6 +340,14 @@ theorem target_rank_ge
     LinearMap.range_id, rank_top, rank_fun']
   simp
 
+/-- Among the rectangular splits, the middle layer maximizes the raw target
+rank.  Off-center splits are useful only when they improve the corresponding
+local interaction-rank bound. -/
+theorem targetRank_le_middle
+    (degree split : Nat) :
+    Nat.choose degree split ≤ Nat.choose degree (degree / 2) :=
+  Nat.choose_le_middle split degree
+
 /-- Every charged degree-`d` power has rectangular feature rank at most one. -/
 theorem term_rank_le_one
     {K : Type}
