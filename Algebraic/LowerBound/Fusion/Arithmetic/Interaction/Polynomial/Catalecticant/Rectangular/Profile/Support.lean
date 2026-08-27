@@ -36,10 +36,7 @@ def occurrenceProduct
     (index : Fin
       (Rectangular.Decomposition.multiplicationOccurrences constant degree
         circuit).length) : MvPolynomial (Fin degree) K :=
-  let arguments :=
-    (Rectangular.Decomposition.multiplicationOccurrences constant degree
-      circuit).get index
-  arguments (0 : Fin 2) * arguments (1 : Fin 2)
+  Rectangular.Decomposition.multiplicationOutput constant degree circuit index
 
 /-- A split-by-occurrence family of finite sets covering every nonzero row. -/
 def RowsAtOccurrences

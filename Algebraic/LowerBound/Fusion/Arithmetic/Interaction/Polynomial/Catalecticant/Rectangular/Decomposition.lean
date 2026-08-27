@@ -128,6 +128,18 @@ def multiplicationOccurrences
     (MvPolynomial.X : Fin degree → MvPolynomial (Fin degree) K)
     circuit
 
+/-- Polynomial produced at one evaluated multiplication occurrence. -/
+def multiplicationOutput
+    [Field K]
+    (constant : C → K)
+    (degree : Nat)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) degree g 1)
+    (index : Fin (multiplicationOccurrences constant degree circuit).length) :
+    MvPolynomial (Fin degree) K :=
+  let arguments :=
+    (multiplicationOccurrences constant degree circuit).get index
+  arguments (0 : Fin 2) * arguments (1 : Fin 2)
+
 /-- A nonuniform decomposition budget for every multiplication occurrence. -/
 def AtOccurrences
     [Field K]
