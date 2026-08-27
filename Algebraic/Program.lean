@@ -4,6 +4,32 @@ import Algebraic.Homomorphism
 import Mathlib.Data.Fin.SuccPred
 import Mathlib.Logic.Equiv.Defs
 
+/-!
+# Straight-line programs
+
+A program is a topologically ordered sequence of gates. Each gate is a `Line`:
+an operation symbol together with the wires supplying its arguments, where a
+`Wire` is either one of the `n` original inputs or the output of an earlier
+gate. Programs are indexed by their gate count, so `Program σ n g` has exactly
+`g` gates and every gate reads only from wires that precede it.
+
+This file defines
+
+* wires, the input-fixing wire renamings `Wire.Renaming`, and the standard
+  ways to build them (identity, composition, `castSucc`, `skipLast`,
+  `appendLast`, and permutations);
+* lines, their evaluation and depth, and `Line.mapWires` together with the
+  transport lemmas `Line.eval_mapWires` and `Line.eval_mapRenaming`;
+* programs, their evaluation `Program.eval`, the input-and-gate valuation
+  `Program.trace`, gate depths, and the bounded-fan-in predicate
+  `Program.FanInAtMost`;
+* the scalar views `Program.gateFunction` and `Program.wireFunction`, and the
+  widened line collection `Program.lines` with `Program.lines_eval`.
+
+Evaluation of lines and programs commutes with homomorphisms
+(`Line.map_eval`, `Program.map_eval`, `Program.map_trace`).
+-/
+
 namespace Algebraic
 
 /-- A wire is either an original input or the output of an earlier gate. -/

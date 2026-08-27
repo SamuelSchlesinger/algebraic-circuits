@@ -94,8 +94,11 @@ every source wire. -/
 structure ProgramCompilation
     (translation : BlockTranslation σ τ k)
     (source : Program σ n g) where
+  /-- The number of target gates in the compiled program. -/
   gateCount : Nat
+  /-- The compiled target program, over `k` target inputs per source input. -/
   program : Program τ (n * k) gateCount
+  /-- The block of `k` target wires representing each source wire. -/
   wires : Wire n g → Fin k → Wire (n * k) gateCount
 
 /-- Compile a source program through a block translation. -/

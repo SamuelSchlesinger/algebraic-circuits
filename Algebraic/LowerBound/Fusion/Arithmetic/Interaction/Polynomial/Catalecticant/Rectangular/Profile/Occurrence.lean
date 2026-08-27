@@ -1,6 +1,7 @@
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Profile
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Decomposition
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Rank.Occurrence
+import Mathlib.Data.Nat.Choose.Sum
 
 /-!
 # Split-by-occurrence rectangular rank budgets
@@ -83,6 +84,27 @@ def weightedGateBudget
     (budget : Fin (degree + 1) → Fin occurrenceCount → Nat)
     (index : Fin occurrenceCount) : Nat :=
   ∑ split, weight split * budget split index
+
+/-- Unit weight on every rectangular split makes the target profile exactly
+`2^degree`. -/
+@[simp] theorem weightedTargetRank_one
+    (degree : Nat) :
+    weightedTargetRank degree (fun _ ↦ 1) = 2 ^ degree := by
+  unfold weightedTargetRank
+  simp only [one_mul]
+  rw [Fin.sum_univ_eq_sum_range]
+  exact Nat.sum_range_choose degree
+
+/-- With unit split weights, one gate's aggregate budget is the plain sum of
+its budgets over all splits. -/
+@[simp] theorem weightedGateBudget_one
+    (degree : Nat)
+    {occurrenceCount : Nat}
+    (budget : Fin (degree + 1) → Fin occurrenceCount → Nat)
+    (index : Fin occurrenceCount) :
+    weightedGateBudget degree (fun _ ↦ 1) budget index =
+      ∑ split, budget split index := by
+  simp [weightedGateBudget]
 
 /-- Weighted sum of all target-rank constraints is bounded by the sum of the
 weighted budgets over actual gates. -/
@@ -183,6 +205,59 @@ theorem weighted_ceilDiv_lowerBound
         (weightedTargetRank_le_cost_mul_gateBudget constant degree
           degreeAtLeastTwo circuit constructs weight budget bound gateBudget
           aggregateBound))
+
+/-- Summing all rectangular splits gives the explicit target `2^degree`. -/
+theorem allSplits_le_cost_mul_gateBudget
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (degree : Nat)
+    (degreeAtLeastTwo : 2 ≤ degree)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) degree g 1)
+    (constructs : (problem K degree).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar ↦ MvPolynomial.C (constant scalar))))
+    (budget : Fin (degree + 1) →
+      Fin (Rectangular.Decomposition.multiplicationOccurrences constant degree
+        circuit).length → Nat)
+    (bound : IndexedBound constant degree degreeAtLeastTwo circuit budget)
+    (gateBudget : Nat)
+    (aggregateBound : ∀ index,
+      (∑ split, budget split index) ≤ gateBudget) :
+    2 ^ degree ≤
+      circuit.cost (Algebraic.Arithmetic.multiplicationCost (K := C)) *
+        gateBudget := by
+  simpa using
+    weightedTargetRank_le_cost_mul_gateBudget constant degree degreeAtLeastTwo
+      circuit constructs (fun _ ↦ 1) budget bound gateBudget
+      (by simpa using aggregateBound)
+
+/-- Explicit all-splits ceiling-divided multiplication lower bound. -/
+theorem allSplits_ceilDiv_lowerBound
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (degree : Nat)
+    (degreeAtLeastTwo : 2 ≤ degree)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) degree g 1)
+    (constructs : (problem K degree).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar ↦ MvPolynomial.C (constant scalar))))
+    (budget : Fin (degree + 1) →
+      Fin (Rectangular.Decomposition.multiplicationOccurrences constant degree
+        circuit).length → Nat)
+    (bound : IndexedBound constant degree degreeAtLeastTwo circuit budget)
+    (gateBudget : Nat)
+    (gateBudgetPositive : 0 < gateBudget)
+    (aggregateBound : ∀ index,
+      (∑ split, budget split index) ≤ gateBudget) :
+    2 ^ degree ⌈/⌉ gateBudget ≤
+      circuit.cost
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) := by
+  simpa using
+    weighted_ceilDiv_lowerBound constant degree degreeAtLeastTwo circuit
+      constructs (fun _ ↦ 1) budget bound gateBudget gateBudgetPositive
+      (by simpa using aggregateBound)
 
 /-- Concentration form: some actual multiplication gate carries at least the
 ceiling-average weighted profile budget. -/

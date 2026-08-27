@@ -142,6 +142,7 @@ end Translation
 /-- A signature regarded as an object whose translations are observed over
 the carrier `U`. -/
 structure ObservedSignature (U : Type u) where
+  /-- The underlying signature. -/
   signature : Signature
 
 /-- A morphism of observed signatures is an observational equivalence class

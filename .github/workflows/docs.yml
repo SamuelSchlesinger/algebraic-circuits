@@ -1,0 +1,93 @@
+name: Documentation
+
+# Builds the doc-gen4 API reference and publishes it to GitHub Pages.
+#
+# Deployment uses the "GitHub Actions" Pages source. Until Pages is enabled for
+# the repository (Settings → Pages → Source: GitHub Actions) the `deploy` job is
+# skipped and the workflow only verifies that the site builds.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - .github/workflows/docs.yml
+      - Algebraic/**
+      - Algebraic.lean
+      - docbuild/**
+      - lakefile.toml
+      - lake-manifest.json
+      - lean-toolchain
+      - scripts/build_docs.sh
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: docs-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    outputs:
+      pages-enabled: ${{ steps.pages.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build library
+        uses: leanprover/lean-action@v1
+        with:
+          build-args: --wfail
+
+      # doc-gen4 stores the extracted documentation of every module (including
+      # the Mathlib modules this library imports) in a SQLite database plus
+      # per-module marker files that Lake uses for incremental rebuilds.
+      # Restoring them turns the multi-hour Mathlib extraction into a no-op.
+      - name: Restore documentation database
+        uses: actions/cache@v4
+        with:
+          path: |
+            docbuild/.lake/build/api-docs.db
+            docbuild/.lake/build/doc-data
+          key: doc-gen4-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'docbuild/lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: |
+            doc-gen4-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'docbuild/lake-manifest.json') }}-
+
+      - name: Build documentation site
+        run: scripts/build_docs.sh
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Check whether GitHub Pages is enabled
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/pages" --silent 2>/dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GitHub Pages is not enabled for ${GITHUB_REPOSITORY}; the site was built but not deployed. Enable it under Settings → Pages with source 'GitHub Actions'."
+          fi
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    if: github.event_name != 'pull_request' && needs.build.outputs.pages-enabled == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

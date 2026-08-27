@@ -1,6 +1,18 @@
 import Algebraic.Signature
 import Algebraic.Interpretation
 
+/-!
+# Homomorphisms of interpretations
+
+A homomorphism between two interpretations of the same signature is a map of
+carriers that commutes with every operation. Homomorphisms have identities and
+compose, and these satisfy the usual category laws up to `Homomorphism.ext`.
+
+The main use of homomorphisms in this library is that evaluation of lines,
+programs, and circuits commutes with them (`Line.map_eval`, `Program.map_eval`,
+`Program.map_trace`, and `Circuit.map_eval`).
+-/
+
 namespace Algebraic
 
 /-- A map that preserves every operation in a pair of interpretations. -/

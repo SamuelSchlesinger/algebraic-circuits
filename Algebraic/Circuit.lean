@@ -1,5 +1,21 @@
 import Algebraic.Program
 
+/-!
+# Circuits
+
+A circuit is a straight-line `Program` together with a choice of output wires.
+Any input or internal-gate wire may be designated as an output, and designating
+an output is free: projections and duplicated outputs cost no gates. The size
+of a circuit is its gate count and its depth is the maximum depth of a
+designated output wire.
+
+This file defines evaluation (`Circuit.eval`), the flattened views
+`Circuit.computation` and `Circuit.trace`, the zero-gate identity circuit
+`Circuit.id`, and the structural bounded-fan-in predicate
+`Circuit.FanInAtMost`. Evaluation commutes with homomorphisms
+(`Circuit.map_eval`).
+-/
+
 namespace Algebraic
 
 /-- A straight-line program with designated output wires. -/

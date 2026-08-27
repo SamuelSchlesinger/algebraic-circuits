@@ -128,6 +128,61 @@ theorem weighted_ceilDiv_lowerBound
       covered)
     gateBudget gateBudgetPositive aggregateBound
 
+/-- Unit weight on every split gives the explicit all-splits target
+`2^degree`. -/
+theorem allSplits_ceilDiv_lowerBound
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (degree : Nat)
+    (degreeAtLeastTwo : 2 ≤ degree)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) degree g 1)
+    (constructs : (problem K degree).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar ↦ MvPolynomial.C (constant scalar))))
+    (budget : Fin (degree + 1) →
+      Fin (Rectangular.Decomposition.multiplicationOccurrences constant degree
+        circuit).length → Nat)
+    (covered : AtOccurrences constant degree circuit budget)
+    (gateBudget : Nat)
+    (gateBudgetPositive : 0 < gateBudget)
+    (aggregateBound : ∀ index,
+      (∑ split, budget split index) ≤ gateBudget) :
+    2 ^ degree ⌈/⌉ gateBudget ≤
+      circuit.cost
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) :=
+  Occurrence.allSplits_ceilDiv_lowerBound constant degree degreeAtLeastTwo
+    circuit constructs budget
+    (indexedBound_of_atOccurrences constant degree degreeAtLeastTwo circuit
+      budget covered)
+    gateBudget gateBudgetPositive aggregateBound
+
+/-- At even degree, the all-splits target is exactly `4^n`. -/
+theorem evenDegree_allSplits_ceilDiv_lowerBound
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (nPositive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (constructs : (problem K (2 * n)).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar ↦ MvPolynomial.C (constant scalar))))
+    (budget : Fin (2 * n + 1) →
+      Fin (Rectangular.Decomposition.multiplicationOccurrences constant (2 * n)
+        circuit).length → Nat)
+    (covered : AtOccurrences constant (2 * n) circuit budget)
+    (gateBudget : Nat)
+    (gateBudgetPositive : 0 < gateBudget)
+    (aggregateBound : ∀ index,
+      (∑ split, budget split index) ≤ gateBudget) :
+    4 ^ n ⌈/⌉ gateBudget ≤
+      circuit.cost
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) := by
+  simpa [pow_mul] using
+    allSplits_ceilDiv_lowerBound constant (2 * n) (by omega) circuit
+      constructs budget covered gateBudget gateBudgetPositive aggregateBound
+
 /-- Positive target weight forces one gate to carry at least the
 ceiling-average rectangle-cover budget. -/
 theorem exists_gateBudget_ge_weightedTarget_ceilDiv

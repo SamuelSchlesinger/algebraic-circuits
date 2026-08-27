@@ -316,6 +316,31 @@ theorem weighted_ceilDiv_lowerBound
     (canonicalIndexedBound constant degree degreeAtLeastTwo circuit)
     gateBudget gateBudgetPositive aggregateBound
 
+/-- Exact row/column support budgets across all splits yield the explicit
+target `2^degree`. -/
+theorem allSplits_ceilDiv_lowerBound
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (degree : Nat)
+    (degreeAtLeastTwo : 2 ≤ degree)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) degree g 1)
+    (constructs : (problem K degree).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar ↦ MvPolynomial.C (constant scalar))))
+    (gateBudget : Nat)
+    (gateBudgetPositive : 0 < gateBudget)
+    (aggregateBound : ∀ index,
+      (∑ split, canonicalBudget constant degree circuit split index) ≤
+        gateBudget) :
+    2 ^ degree ⌈/⌉ gateBudget ≤
+      circuit.cost
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) :=
+  Occurrence.allSplits_ceilDiv_lowerBound constant degree degreeAtLeastTwo
+    circuit constructs (canonicalBudget constant degree circuit)
+    (canonicalIndexedBound constant degree degreeAtLeastTwo circuit)
+    gateBudget gateBudgetPositive aggregateBound
+
 /-- Some actual gate carries at least the ceiling-average weighted support
 budget whenever the weighted target is positive. -/
 theorem exists_gateBudget_ge_weightedTarget_ceilDiv
