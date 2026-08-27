@@ -1,5 +1,6 @@
 import Algebraic.LowerBound.Fusion.Framework
 import Algebraic.LowerBound.Fusion.Counting
+import Algebraic.LowerBound.Fusion.Arithmetic.ExactSupport
 import Algebraic.LowerBound.Fusion.Arithmetic.BoundedFailure
 import Algebraic.LowerBound.Fusion.Arithmetic.Support
 import Algebraic.LowerBound.Fusion.Arithmetic.MonotonePolynomial
@@ -15,6 +16,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Additio
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.PositiveConstants
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Weighted
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Weighted.Addition
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Weighted.NNRat
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Unit
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Collision
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Addition
