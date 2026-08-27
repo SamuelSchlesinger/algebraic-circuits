@@ -21,7 +21,7 @@ inductive Op
   deriving DecidableEq
 
 /-- Arity of a meet/join operation. -/
-def arity : Op → Nat
+@[reducible] def arity : Op → Nat
   | .meet => 2
   | .join count => count
 

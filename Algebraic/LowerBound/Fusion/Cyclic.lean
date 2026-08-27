@@ -378,5 +378,43 @@ theorem cyclic_pairCover_lowerBound
   rw [← pairCoverOfCyclic_cost problem admissible circuit constructs]
   exact coverLowerBound (pairCoverOfCyclic problem admissible circuit constructs)
 
+/-- Least AND cost of a binary AND/OR cyclic construction. -/
+noncomputable def andOrCyclicComplexity
+    (problem : SetProblem Γ) : ℕ∞ :=
+  ⨅ g : Nat,
+    ⨅ circuit : CyclicCircuit AndOr.signature problem.inputCount g,
+      ⨅ _constructs : circuit.Constructs
+          (problem := problem) (AndOr.setInterpretation Γ),
+        (circuit.cost AndOr.andCost : ℕ∞)
+
+/-- Every concrete binary cyclic construction upper-bounds its complexity. -/
+theorem andOrCyclicComplexity_le
+    (problem : SetProblem Γ)
+    (circuit : CyclicCircuit AndOr.signature problem.inputCount g)
+    (constructs : circuit.Constructs
+      (problem := problem) (AndOr.setInterpretation Γ)) :
+    andOrCyclicComplexity problem ≤
+      (circuit.cost AndOr.andCost : ℕ∞) := by
+  unfold andOrCyclicComplexity
+  exact iInf_le_of_le g <| iInf_le_of_le circuit <|
+    iInf_le_of_le constructs le_rfl
+
+/-- Pair-cover complexity is no larger than binary cyclic AND complexity. -/
+theorem pairCoverComplexity_le_andOrCyclicComplexity
+    (problem : SetProblem Γ) :
+    pairCoverComplexity problem SemifilterClass.all ≤
+      andOrCyclicComplexity problem := by
+  unfold andOrCyclicComplexity
+  refine le_iInf fun g => ?_
+  refine le_iInf fun circuit => ?_
+  refine le_iInf fun constructs => ?_
+  calc
+    pairCoverComplexity problem SemifilterClass.all ≤
+        ((pairCoverOfCyclic problem SemifilterClass.all
+          circuit constructs).cost : ℕ∞) :=
+      pairCoverComplexity_le problem SemifilterClass.all _
+    _ = (circuit.cost AndOr.andCost : ℕ∞) := by
+      rw [pairCoverOfCyclic_cost]
+
 end Fusion
 end Algebraic

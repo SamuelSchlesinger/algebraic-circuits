@@ -27,7 +27,7 @@ instance : Fintype Op :=
     cases op <;> simp)
 
 /-- Both AND/OR operations have arity two. -/
-def arity (_ : Op) : Nat := 2
+@[reducible] def arity (_ : Op) : Nat := 2
 
 @[simp] theorem arity_and : arity .and = 2 := rfl
 @[simp] theorem arity_or : arity .or = 2 := rfl
@@ -128,7 +128,7 @@ noncomputable def membershipHomomorphism
       homomorphic := by
         intro op input
         cases op <;>
-          simp [membership, setInterpretation, boolInterpretation] <;> rfl }
+          simp [membership, setInterpretation, boolInterpretation] }
 
 @[simp] theorem membershipHomomorphism_map
     (point : Γ)

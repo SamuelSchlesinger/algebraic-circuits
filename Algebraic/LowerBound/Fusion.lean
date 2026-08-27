@@ -6,6 +6,8 @@ import Algebraic.LowerBound.Fusion.Cyclic
 import Algebraic.LowerBound.Fusion.Cyclic.Closure
 import Algebraic.LowerBound.Fusion.Cyclic.JoinMeet
 import Algebraic.LowerBound.Fusion.Cyclic.Compiler
+import Algebraic.LowerBound.Fusion.Cyclic.LowerJoinMeet
+import Algebraic.LowerBound.Fusion.Cyclic.Complete
 import Algebraic.LowerBound.Fusion.Boolean
 import Algebraic.LowerBound.Fusion.Pullback
 import Algebraic.LowerBound.Fusion.Conondeterministic
