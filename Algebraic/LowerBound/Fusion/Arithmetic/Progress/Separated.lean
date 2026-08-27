@@ -26,26 +26,26 @@ namespace Separated
 
 noncomputable section
 
-/-- Exponent vectors for monomials in `variableCount` variables. -/
-abbrev Exponent (variableCount : Nat) := Fin variableCount →₀ ℕ
+/-- Exponent vectors for monomials over an arbitrary variable type. -/
+abbrev Exponent (Variable : Type u) := Variable →₀ ℕ
 
 /-- `selected` is separated inside `ambient`: whenever an ambient monomial
 divides the product of two selected monomials, it is one of that pair. -/
 def IsSeparated
-    (ambient selected : Finset (Exponent variableCount)) : Prop :=
+    (ambient selected : Finset (Exponent Variable)) : Prop :=
   selected ⊆ ambient ∧
     ∀ left ∈ selected, ∀ right ∈ selected, ∀ middle ∈ ambient,
       middle ≤ left + right → middle = left ∨ middle = right
 
 theorem IsSeparated.subset
-    {ambient selected : Finset (Exponent variableCount)}
+    {ambient selected : Finset (Exponent Variable)}
     (separated : IsSeparated ambient selected) :
     selected ⊆ ambient :=
   separated.1
 
 /-- Schnorr's separation number for a finite monomial support. -/
 def separationNumber
-    (ambient : Finset (Exponent variableCount)) : Nat :=
+    (ambient : Finset (Exponent Variable)) : Nat :=
   by
     classical
     exact ambient.powerset.sup fun selected =>
@@ -54,7 +54,7 @@ def separationNumber
 /-- Every separated candidate supplies a lower bound on the separation
 number. -/
 theorem candidate_card_sub_one_le
-    {ambient selected : Finset (Exponent variableCount)}
+    {ambient selected : Finset (Exponent Variable)}
     (separated : IsSeparated ambient selected) :
     selected.card - 1 ≤ separationNumber ambient := by
   classical
@@ -69,7 +69,7 @@ theorem candidate_card_sub_one_le
 
 /-- The separation number never exceeds support cardinality minus one. -/
 theorem separationNumber_le_card_sub_one
-    (ambient : Finset (Exponent variableCount)) :
+    (ambient : Finset (Exponent Variable)) :
     separationNumber ambient ≤ ambient.card - 1 := by
   classical
   unfold separationNumber
@@ -83,7 +83,7 @@ theorem separationNumber_le_card_sub_one
 /-- If the entire support is separated, its separation number is exactly its
 cardinality minus one. -/
 theorem separationNumber_eq_card_sub_one
-    {ambient : Finset (Exponent variableCount)}
+    {ambient : Finset (Exponent Variable)}
     (separated : IsSeparated ambient ambient) :
     separationNumber ambient = ambient.card - 1 := by
   apply Nat.le_antisymm
@@ -92,7 +92,7 @@ theorem separationNumber_eq_card_sub_one
 
 /-- A singleton support is separated. -/
 theorem isSeparated_singleton
-    (exponent : Exponent variableCount) :
+    (exponent : Exponent Variable) :
     IsSeparated {exponent} {exponent} := by
   constructor
   · exact Finset.Subset.rfl
@@ -103,7 +103,7 @@ theorem isSeparated_singleton
     exact Or.inl (middleEqual.trans leftEqual.symm)
 
 @[simp] theorem separationNumber_singleton
-    (exponent : Exponent variableCount) :
+    (exponent : Exponent Variable) :
     separationNumber {exponent} = 0 := by
   rw [separationNumber_eq_card_sub_one (isSeparated_singleton exponent)]
   simp
@@ -124,8 +124,8 @@ def polynomialValue
 /-- A certificate that separated sets can be pulled back across one support
 transformation with a bounded loss in cardinality. -/
 structure Pullback
-    (source : Finset (Exponent sourceVariableCount))
-    (target : Finset (Exponent targetVariableCount))
+    (source : Finset (Exponent SourceVar))
+    (target : Finset (Exponent TargetVar))
     (loss : Nat) : Prop where
   pullback : ∀ selected,
     IsSeparated target selected →
@@ -135,8 +135,8 @@ structure Pullback
 /-- A pullback certificate implies the corresponding separation-number
 inequality. -/
 theorem Pullback.separationNumber_le
-    {source : Finset (Exponent sourceVariableCount)}
-    {target : Finset (Exponent targetVariableCount)}
+    {source : Finset (Exponent SourceVar)}
+    {target : Finset (Exponent TargetVar)}
     {loss : Nat}
     (pullback : Pullback source target loss) :
     separationNumber target ≤ separationNumber source + loss := by
