@@ -133,51 +133,16 @@ theorem target_rank_le_sum_indexedBudget
     (localBound : IndexedBound certificate circuit budget) :
     LinearMap.rank (certificate.feature problem.target) ≤
       ∑ index, (budget index : Cardinal) := by
-  classical
   let atoms := circuitAtoms circuit
     (Algebraic.Arithmetic.interpretation constant) problem.inputs
   let interactionFeature : Fin (interactions certificate atoms).length →
       (A →ₗ[K] B) :=
     fun index => (interactions certificate atoms).get index
-  have targetMem : certificate.feature problem.target ∈
-      Submodule.span K (Set.range interactionFeature) := by
-    simpa [generatedSubmodule, interactionFeature, atoms] using
+  apply Rank.linearMap_rank_le_sum_of_mem_span
+    (certificate.feature problem.target) interactionFeature budget
+  · simpa [generatedSubmodule, interactionFeature, atoms] using
       targetFeature_mem_circuitSubmodule certificate circuit constructs
-  have targetMemImage : certificate.feature problem.target ∈
-      Submodule.span K
-        (interactionFeature ''
-          (Finset.univ : Finset
-            (Fin (interactions certificate atoms).length))) := by
-    simpa [Set.image_univ] using targetMem
-  obtain ⟨coefficients, coefficientsSpec⟩ :=
-    (Submodule.mem_span_image_finset_iff_exists_fun
-      (R := K) (v := interactionFeature)).mp targetMemImage
-  rw [← coefficientsSpec]
-  calc
-    LinearMap.rank
-        (∑ index, coefficients index • interactionFeature index) ≤
-      ∑ index,
-        LinearMap.rank (coefficients index • interactionFeature index) := by
-          simpa using LinearMap.rank_finsetSum_le
-            (Finset.univ : Finset
-              ((Finset.univ : Finset
-                (Fin (interactions certificate atoms).length)) : Type))
-            (fun index => coefficients index • interactionFeature index)
-    _ ≤ ∑ index :
-          ((Finset.univ : Finset
-            (Fin (interactions certificate atoms).length)) : Type),
-          (budget index : Cardinal) := by
-      apply Finset.sum_le_sum
-      intro index _
-      exact (Rank.linearMap_rank_smul_le
-        (coefficients index) (interactionFeature index)).trans
-          (localBound index)
-    _ = ∑ index, (budget index : Cardinal) := by
-      simpa only [Finset.univ_eq_attach] using
-        (Finset.sum_attach
-          (Finset.univ : Finset
-            (Fin (interactions certificate atoms).length))
-          (fun index => (budget index : Cardinal)))
+  · exact localBound
 
 /-- Natural-number form of the nonuniform indexed-budget inequality. -/
 theorem targetRank_le_sum_indexedBudget

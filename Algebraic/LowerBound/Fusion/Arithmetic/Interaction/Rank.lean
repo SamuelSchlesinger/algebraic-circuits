@@ -53,6 +53,46 @@ theorem linearMap_rank_smul_le
     LinearMap.rank (scalar • map) ≤ LinearMap.rank map :=
   Submodule.rank_mono (LinearMap.range_smul_le_range map scalar)
 
+/-- The rank of a linear map in the span of a finite family is at most the
+sum of any pointwise rank budgets for that family.  This is the
+linear-algebraic core of nonuniform Fusion bounds; circuit-specific modules
+only need to supply the finite family and prove the span invariant. -/
+theorem linearMap_rank_le_sum_of_mem_span
+    {ι : Type z}
+    [Fintype ι]
+    (target : A →ₗ[K] B)
+    (family : ι → A →ₗ[K] B)
+    (budget : ι → Nat)
+    (targetMem : target ∈ Submodule.span K (Set.range family))
+    (localBound : ∀ index, LinearMap.rank (family index) ≤ budget index) :
+    LinearMap.rank target ≤ ∑ index, (budget index : Cardinal) := by
+  classical
+  have targetMemImage : target ∈
+      Submodule.span K
+        (family '' (Finset.univ : Finset ι)) := by
+    simpa [Set.image_univ] using targetMem
+  obtain ⟨coefficients, coefficientsSpec⟩ :=
+    (Submodule.mem_span_image_finset_iff_exists_fun
+      (R := K) (v := family)).mp targetMemImage
+  rw [← coefficientsSpec]
+  calc
+    LinearMap.rank (∑ index, coefficients index • family index) ≤
+        ∑ index, LinearMap.rank
+          (coefficients index • family index) := by
+      simpa using LinearMap.rank_finsetSum_le
+        (Finset.univ : Finset (↥(Finset.univ : Finset ι)))
+        (fun index => coefficients index • family index)
+    _ ≤ ∑ index : ↥(Finset.univ : Finset ι),
+          (budget index : Cardinal) := by
+      apply Finset.sum_le_sum
+      intro index _
+      exact (linearMap_rank_smul_le
+        (coefficients index) (family index)).trans (localBound index)
+    _ = ∑ index, (budget index : Cardinal) := by
+      simpa only [Finset.univ_eq_attach] using
+        (Finset.sum_attach (Finset.univ : Finset ι)
+          (fun index => (budget index : Cardinal)))
+
 /-- Every interaction retained from an atom list satisfies the certificate's
 local rank bound. -/
 theorem Certificate.rank_le_of_mem_interactions
