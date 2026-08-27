@@ -161,6 +161,107 @@ theorem Cover.witnessCard_le_sum_failures
     _ ≤ (cover.atoms.map fun atom => (atom.failures model).card).sum :=
       model.failureUnion_card_le_sum cover.atoms
 
+/-- A failure estimate only for the atoms in one cover suffices for the
+counting argument.  This circuit-local form is useful for restricted models
+whose width, degree, homogeneity, or liveness promise need not hold for every
+semantic atom of the ambient interpretation. -/
+theorem Cover.witnessCard_le_mul_cost_of_local
+    {σ : Signature}
+    {U : Type u}
+    {operationCost : OperationCost σ}
+    {interpretation : Interpretation σ U}
+    {problem : Problem U}
+    {model : Model operationCost interpretation problem}
+    [Fintype model.Witness]
+    (cover : Cover model)
+    (capacity : Nat)
+    (localBound : ∀ atom ∈ cover.atoms,
+      (atom.failures model).card ≤
+        capacity * atom.cost operationCost) :
+    Fintype.card model.Witness ≤ capacity * cover.cost := by
+  have failureSumLe : ∀ atoms : List (Atom σ U),
+      (∀ atom ∈ atoms,
+        (atom.failures model).card ≤
+          capacity * atom.cost operationCost) →
+      (atoms.map fun atom => (atom.failures model).card).sum ≤
+        (atoms.map fun atom =>
+          capacity * atom.cost operationCost).sum := by
+    intro atoms
+    induction atoms with
+    | nil => simp
+    | cons atom atoms inductionHypothesis =>
+        intro atomsLocal
+        simp only [List.map_cons, List.sum_cons]
+        apply Nat.add_le_add
+        · exact atomsLocal atom (by simp)
+        · apply inductionHypothesis
+          intro other present
+          exact atomsLocal other (by simp [present])
+  have capacitySum (atoms : List (Atom σ U)) :
+      (atoms.map fun atom =>
+        capacity * atom.cost operationCost).sum =
+          capacity * Atom.listCost atoms operationCost := by
+    induction atoms with
+    | nil => simp
+    | cons atom atoms inductionHypothesis =>
+        simp only [List.map_cons, List.sum_cons, Atom.listCost]
+        rw [Nat.mul_add, inductionHypothesis]
+        simp [Atom.listCost]
+  calc
+    Fintype.card model.Witness ≤
+        (cover.atoms.map fun atom => (atom.failures model).card).sum :=
+      cover.witnessCard_le_sum_failures
+    _ ≤ (cover.atoms.map fun atom =>
+        capacity * atom.cost operationCost).sum :=
+      failureSumLe cover.atoms localBound
+    _ = capacity * cover.cost := capacitySum cover.atoms
+
+/-- Divide a circuit-local failure estimate by a positive capacity. -/
+theorem Cover.ceilDiv_witnessCard_le_cost_of_local
+    {σ : Signature}
+    {U : Type u}
+    {operationCost : OperationCost σ}
+    {interpretation : Interpretation σ U}
+    {problem : Problem U}
+    {model : Model operationCost interpretation problem}
+    [Fintype model.Witness]
+    (cover : Cover model)
+    (capacity : Nat)
+    (positive : 0 < capacity)
+    (localBound : ∀ atom ∈ cover.atoms,
+      (atom.failures model).card ≤
+        capacity * atom.cost operationCost) :
+    Fintype.card model.Witness ⌈/⌉ capacity ≤ cover.cost :=
+  (ceilDiv_le_iff_le_mul positive).2
+    (cover.witnessCard_le_mul_cost_of_local capacity localBound)
+
+/-- A bounded-failure estimate on the semantic atoms extracted from one
+constructing circuit transfers directly to its operation cost. -/
+theorem Model.ceilDiv_witnessCard_le_circuitCost_of_local
+    {σ : Signature}
+    {U : Type u}
+    {operationCost : OperationCost σ}
+    {interpretation : Interpretation σ U}
+    {problem : Problem U}
+    (model : Model operationCost interpretation problem)
+    [Fintype model.Witness]
+    (capacity : Nat)
+    (positive : 0 < capacity)
+    (circuit : Circuit σ problem.inputCount g 1)
+    (constructs : problem.Constructs circuit interpretation)
+    (localBound : ∀ atom ∈
+      circuitAtoms circuit interpretation problem.inputs,
+      (atom.failures model).card ≤
+        capacity * atom.cost operationCost) :
+    Fintype.card model.Witness ⌈/⌉ capacity ≤
+      circuit.cost operationCost := by
+  let cover := coverOfCircuit model circuit constructs
+  calc
+    Fintype.card model.Witness ⌈/⌉ capacity ≤ cover.cost :=
+      cover.ceilDiv_witnessCard_le_cost_of_local capacity positive localBound
+    _ = circuit.cost operationCost :=
+      coverOfCircuit_cost model circuit constructs
+
 /--
 A reusable certificate that each atom destroys only boundedly many witnesses
 per unit of operation cost.

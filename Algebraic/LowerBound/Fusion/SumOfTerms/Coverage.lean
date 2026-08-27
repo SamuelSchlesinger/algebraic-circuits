@@ -1,5 +1,6 @@
 import Algebraic.LowerBound.Fusion.Counting
 import Algebraic.Basis.SumOfTerms
+import Algebraic.Basis.FiniteSupport
 
 /-!
 # Coverage fusion for finite monomial supports
@@ -21,19 +22,14 @@ namespace Fusion
 namespace SumOfTerms
 namespace Coverage
 
-/-- A finite monomial support, with union used as semantic addition. -/
-structure FiniteSupport (M : Type u) where
-  /-- Monomials present with nonzero coefficient. -/
-  monomials : Finset M
-  deriving DecidableEq
-
-instance [DecidableEq M] : Add (FiniteSupport M) where
-  add left right := ⟨left.monomials ∪ right.monomials⟩
+/-- Compatibility name for the reusable finite-support carrier. -/
+abbrev FiniteSupport (M : Type u) := Algebraic.FiniteSupport M
 
 @[simp] theorem monomials_add
     [DecidableEq M]
     (left right : FiniteSupport M) :
-    (left + right).monomials = left.monomials ∪ right.monomials := rfl
+    (left + right).monomials = left.monomials ∪ right.monomials :=
+  Algebraic.FiniteSupport.monomials_add left right
 
 @[simp] theorem mem_add
     [DecidableEq M]
@@ -41,7 +37,7 @@ instance [DecidableEq M] : Add (FiniteSupport M) where
     (left right : FiniteSupport M) :
     monomial ∈ (left + right).monomials ↔
       monomial ∈ left.monomials ∨ monomial ∈ right.monomials := by
-  simp
+  exact Algebraic.FiniteSupport.mem_add monomial left right
 
 /-- Construct a target support from charged terms, with no free inputs. -/
 abbrev problem
