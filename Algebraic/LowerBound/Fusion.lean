@@ -7,6 +7,8 @@ import Algebraic.LowerBound.Fusion.SumOfTerms
 import Algebraic.LowerBound.Fusion.SumOfTerms.Rank
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring
+import Algebraic.LowerBound.Fusion.SumOfTerms.Coverage
+import Algebraic.LowerBound.Fusion.SumOfTerms.Rectangle
 import Algebraic.LowerBound.Fusion.Semifilter
 import Algebraic.LowerBound.Fusion.Cyclic
 import Algebraic.LowerBound.Fusion.Cyclic.Closure
