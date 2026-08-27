@@ -9,6 +9,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Multiple
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Linear
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Linear.Quotient
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial
+import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Quotient
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Mixing
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Squarefree
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Squarefree.Mixing
