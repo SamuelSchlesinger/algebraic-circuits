@@ -66,6 +66,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Degree
 import Algebraic.LowerBound.Fusion.SumOfTerms
 import Algebraic.LowerBound.Fusion.SumOfTerms.Rank
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank
+import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Support
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Rectangular
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Rectangular.Translation.Binary
