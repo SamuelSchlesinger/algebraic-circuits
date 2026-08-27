@@ -127,6 +127,17 @@ abbrev SemifilterClass (problem : SetProblem Γ) :=
 /-- The unrestricted class of all semi-filters. -/
 def SemifilterClass.all (_ : Semifilter (Problem.Outside problem)) : Prop := True
 
+/-- A semi-ultrafilter accepts either a set or its complement.  Unlike an
+ultrafilter, it is not required to be closed under intersections. -/
+def Semifilter.IsUltra
+    (filter : Semifilter U) : Prop :=
+  ∀ set : Set U, set ∈ filter ∨ setᶜ ∈ filter
+
+/-- The selectable class of all semi-ultrafilters. -/
+def SemifilterClass.ultra
+    (filter : Semifilter (Problem.Outside problem)) : Prop :=
+  filter.IsUltra
+
 /-- A target point and an admissible semi-filter above that point. -/
 structure SemifilterWitness
     (problem : SetProblem Γ)

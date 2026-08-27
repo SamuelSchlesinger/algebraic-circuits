@@ -59,6 +59,21 @@ theorem Semifilter.twoPoint_preservesPair_of_left_iff
   · exact Or.inl ⟨bothLeft.1, leftPresent⟩
   · exact Or.inr ⟨bothLeft.2, rightPresent⟩
 
+/-- Every two-point semi-filter is already a semi-ultrafilter: membership of
+the first point decides between a set and its complement. -/
+theorem Semifilter.twoPoint_isUltra
+    (left right : U) :
+    (Semifilter.twoPoint left right).IsUltra := by
+  intro set
+  by_cases present : left ∈ set
+  · left
+    rw [Semifilter.mem_twoPoint]
+    exact Or.inl present
+  · right
+    rw [Semifilter.mem_twoPoint]
+    left
+    simpa using present
+
 namespace Neq
 
 /-- Ambient space for an `N` by `N` bipartite graph. -/
@@ -133,14 +148,18 @@ noncomputable section
 
 /-- Boolean membership code assigned to a vertex by a pair cover. -/
 def coverCode
-    (cover : PairCover (problem N) SemifilterClass.all)
+    {admissible : SemifilterClass (problem N)}
+    (cover : PairCover (problem N) admissible)
     (vertex : Fin N) : Fin cover.pairs.length → Bool :=
   fun index => AndOr.membership (diagonal vertex)
     (cover.pairs.get index).1
 
 /-- A cover of all semi-filters assigns distinct codes to distinct vertices. -/
 theorem coverCode_injective
-    (cover : PairCover (problem N) SemifilterClass.all) :
+    {admissible : SemifilterClass (problem N)}
+    (canonicalAdmissible : ∀ left right : Fin N,
+      left ≠ right → admissible (canonicalFilter left right))
+    (cover : PairCover (problem N) admissible) :
     Function.Injective (coverCode cover) := by
   classical
   intro left right codesEqual
@@ -148,7 +167,7 @@ theorem coverCode_injective
   have targetPresent : (left, right) ∈ (problem N).target := by
     simpa [target] using different
   have somePairFails := cover.isCover (left, right) targetPresent
-    (canonicalFilter left right) (by trivial)
+    (canonicalFilter left right) (canonicalAdmissible left right different)
       (canonicalFilter_above left right)
   apply somePairFails
   intro pair pairPresent
@@ -159,13 +178,30 @@ theorem coverCode_injective
   exact (AndOr.membership_points_eq_iff
     (diagonal left) (diagonal right) _).mp bitEqual
 
-/-- Information-theoretic form of the canonical semi-filter lower bound. -/
-theorem card_le_two_pow_cost
-    (cover : PairCover (problem N) SemifilterClass.all) :
+/-- Information-theoretic lower bound for every witness class containing the
+canonical semi-filters. -/
+theorem card_le_two_pow_cost_of_canonical
+    {admissible : SemifilterClass (problem N)}
+    (canonicalAdmissible : ∀ left right : Fin N,
+      left ≠ right → admissible (canonicalFilter left right))
+    (cover : PairCover (problem N) admissible) :
     N ≤ 2 ^ cover.cost := by
   have cardinality := Fintype.card_le_of_injective
-    (coverCode cover) (coverCode_injective cover)
+    (coverCode cover) (coverCode_injective canonicalAdmissible cover)
   simpa [PairCover.cost] using cardinality
+
+/-- Information-theoretic form of the full semi-filter lower bound. -/
+theorem card_le_two_pow_cost
+    (cover : PairCover (problem N) SemifilterClass.all) :
+    N ≤ 2 ^ cover.cost :=
+  card_le_two_pow_cost_of_canonical (fun _ _ _ => trivial) cover
+
+/-- Every canonical semi-filter for the inequality graph is a
+semi-ultrafilter. -/
+theorem canonicalFilter_isUltra
+    (left right : Fin N) :
+    (canonicalFilter left right).IsUltra :=
+  Semifilter.twoPoint_isUltra _ _
 
 /-- Every pair cover of the `2 ^ n`-vertex inequality graph has at least `n`
 pairs. -/
@@ -174,6 +210,15 @@ theorem pairCover_cost_lowerBound
     n ≤ cover.cost := by
   apply (Nat.pow_le_pow_iff_right (by decide : 2 ≤ 2)).mp
   exact card_le_two_pow_cost cover
+
+/-- The same lower bound already holds when covers only need to exclude
+semi-ultrafilters. -/
+theorem ultraPairCover_cost_lowerBound
+    (cover : PairCover (problem (2 ^ n)) SemifilterClass.ultra) :
+    n ≤ cover.cost := by
+  apply (Nat.pow_le_pow_iff_right (by decide : 2 ≤ 2)).mp
+  exact card_le_two_pow_cost_of_canonical
+    (fun left right _ => canonicalFilter_isUltra left right) cover
 
 /-- The full semi-filter cover complexity of the inequality graph is at least
 `n`. -/
@@ -185,6 +230,16 @@ theorem le_pairCoverComplexity (n : Nat) :
   intro cover
   exact_mod_cast pairCover_cost_lowerBound cover
 
+/-- Semi-ultrafilter cover complexity of the inequality graph is also at least
+`n`. -/
+theorem le_ultraPairCoverComplexity (n : Nat) :
+    (n : ℕ∞) ≤ pairCoverComplexity
+      (problem (2 ^ n)) SemifilterClass.ultra := by
+  unfold pairCoverComplexity
+  apply le_iInf
+  intro cover
+  exact_mod_cast ultraPairCover_cost_lowerBound cover
+
 /-- Any row/column construction of the `2 ^ n`-vertex inequality graph uses
 at least `n` AND gates, even with free OR gates. -/
 theorem and_lowerBound
@@ -195,6 +250,17 @@ theorem and_lowerBound
     n ≤ circuit.cost AndOr.andCost :=
   pairCover_lowerBound (problem (2 ^ n)) SemifilterClass.all
     pairCover_cost_lowerBound circuit constructs
+
+/-- The `n`-AND lower bound can be proved using only semi-ultrafilter
+witnesses. -/
+theorem and_lowerBound_via_ultra
+    (circuit : Circuit AndOr.signature
+      ((2 ^ n) + (2 ^ n)) g 1)
+    (constructs : (problem (2 ^ n)).Constructs circuit
+      (AndOr.setInterpretation (Ground (2 ^ n)))) :
+    n ≤ circuit.cost AndOr.andCost :=
+  pairCover_lowerBound (problem (2 ^ n)) SemifilterClass.ultra
+    ultraPairCover_cost_lowerBound circuit constructs
 
 end
 
