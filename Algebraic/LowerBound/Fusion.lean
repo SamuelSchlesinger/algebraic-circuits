@@ -26,6 +26,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Clique
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Clique.PositiveConstants
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Clique.NaturalConstants
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Clique.NNRat
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Clique.Exact
 import Algebraic.LowerBound.Fusion.Arithmetic
 import Algebraic.LowerBound.Fusion.Arithmetic.Degree
 import Algebraic.LowerBound.Fusion.SumOfTerms
