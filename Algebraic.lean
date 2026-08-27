@@ -14,6 +14,7 @@ import Algebraic.Translation.Optimal
 import Algebraic.Translation.Category
 import Algebraic.Translation.Metric
 import Algebraic.Translation.Block
+import Algebraic.Translation.Contextual
 import Algebraic.Simulation
 import Algebraic.Complexity
 import Algebraic.Analysis
