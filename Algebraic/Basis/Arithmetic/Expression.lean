@@ -30,6 +30,26 @@ namespace Expression
   | .add left right | .mul left right =>
       gateCount left + gateCount right + 1
 
+/-- Weighted number of binary arithmetic nodes.  Constants are free, matching
+`Arithmetic.weightedCost`; tree compilation realizes this cost exactly. -/
+@[reducible] def weightedCost
+    (addition multiplication : Nat) : Expression C n → Nat
+  | .input _ | .constant _ => 0
+  | .add left right =>
+      weightedCost addition multiplication left +
+        weightedCost addition multiplication right + addition
+  | .mul left right =>
+      weightedCost addition multiplication left +
+        weightedCost addition multiplication right + multiplication
+
+/-- Number of multiplication nodes in an expression. -/
+@[reducible] def multiplicationCount : Expression C n → Nat :=
+  weightedCost 0 1
+
+/-- Number of addition nodes in an expression. -/
+@[reducible] def additionCount : Expression C n → Nat :=
+  weightedCost 1 0
+
 /-- Evaluate an expression in an arbitrary arithmetic carrier. -/
 def eval
     [Add R]
@@ -99,6 +119,41 @@ def circuit (expression : Expression C n) :
     Circuit (Arithmetic.signature C) n expression.gateCount 1 where
   program := (compile expression).program
   outputs := fun _ => (compile expression).output
+
+/-- Tree compilation preserves every binary arithmetic weighting exactly. -/
+theorem compile_weightedCost
+    (addition multiplication : Nat)
+    (expression : Expression C n) :
+    (compile expression).program.cost
+        (Arithmetic.weightedCost addition multiplication) =
+      expression.weightedCost addition multiplication := by
+  induction expression with
+  | input index => rfl
+  | constant value => rfl
+  | add left right leftIH rightIH =>
+      simp [compile, weightedCost, leftIH, rightIH,
+        Arithmetic.weightedCost]
+  | mul left right leftIH rightIH =>
+      simp [compile, weightedCost, leftIH, rightIH,
+        Arithmetic.weightedCost]
+
+/-- Exact multiplicative complexity of a compiled expression. -/
+@[simp] theorem circuit_multiplicationCost
+    (expression : Expression C n) :
+    (circuit expression).cost (Arithmetic.multiplicationCost (K := C)) =
+      expression.multiplicationCount := by
+  simpa [circuit, Circuit.cost, multiplicationCount,
+    Arithmetic.multiplicationCost] using
+      compile_weightedCost 0 1 expression
+
+/-- Exact additive complexity of a compiled expression. -/
+@[simp] theorem circuit_additionCost
+    (expression : Expression C n) :
+    (circuit expression).cost (Arithmetic.additionCost (K := C)) =
+      expression.additionCount := by
+  simpa [circuit, Circuit.cost, additionCount,
+    Arithmetic.additionCost] using
+      compile_weightedCost 1 0 expression
 
 /-- Tree compilation preserves expression evaluation. -/
 theorem compile_trace

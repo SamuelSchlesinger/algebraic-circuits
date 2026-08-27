@@ -64,6 +64,100 @@ def additionExpression
   .add (.input (Fin.natAdd (2 * n) (0 : Fin 2)))
     (.input (Fin.natAdd (2 * n) (1 : Fin 2)))
 
+/-- A right-associated expression sum has the sum of its subtree costs plus
+one addition charge per list entry (including the final addition to zero). -/
+theorem weightedCost_expressionSum
+    [Zero K]
+    (addition multiplication : Nat)
+    (expressions : List
+      (Algebraic.Arithmetic.Expression K variableCount)) :
+    (expressionSum expressions).weightedCost addition multiplication =
+      (expressions.map
+        (Algebraic.Arithmetic.Expression.weightedCost addition multiplication)).sum +
+        addition * expressions.length := by
+  induction expressions with
+  | nil => rfl
+  | cons expression expressions inductionHypothesis =>
+      simp [expressionSum, Algebraic.Arithmetic.Expression.weightedCost,
+        inductionHypothesis, Nat.mul_succ]
+      omega
+
+/-- Naive power compilation repeats the base tree once per exponent step and
+adds one multiplication node at that step. -/
+theorem weightedCost_expressionPower
+    [One K]
+    (addition multiplication : Nat)
+    (base : Algebraic.Arithmetic.Expression K variableCount)
+    (exponent : Nat) :
+    (expressionPower base exponent).weightedCost addition multiplication =
+      exponent * (base.weightedCost addition multiplication + multiplication) := by
+  induction exponent with
+  | zero => simp [expressionPower, Algebraic.Arithmetic.Expression.weightedCost]
+  | succ exponent inductionHypothesis =>
+      simp [expressionPower, Algebraic.Arithmetic.Expression.weightedCost,
+        inductionHypothesis, Nat.succ_mul]
+      omega
+
+/-- Exact number of multiplications in a compiled linear-form gadget. -/
+@[simp] theorem multiplicationCount_linearFormExpression
+    [Zero K]
+    (term : Term K n) :
+    (linearFormExpression term).multiplicationCount = 2 * n := by
+  rw [linearFormExpression]
+  simp [Algebraic.Arithmetic.Expression.multiplicationCount,
+    Algebraic.Arithmetic.Expression.weightedCost,
+    weightedCost_expressionSum, Function.comp_apply, List.sum_ofFn]
+
+/-- Exact number of additions in a compiled linear-form gadget. -/
+@[simp] theorem additionCount_linearFormExpression
+    [Zero K]
+    (term : Term K n) :
+    (linearFormExpression term).additionCount = 2 * n := by
+  rw [linearFormExpression]
+  simp [Algebraic.Arithmetic.Expression.additionCount,
+    Algebraic.Arithmetic.Expression.weightedCost,
+    weightedCost_expressionSum, Function.comp_apply, List.sum_ofFn]
+
+/-- Multiplicative cost of one naive compiled Waring-term gadget. -/
+def termMultiplicationCount (n : Nat) : Nat :=
+  (2 * n) * (2 * n + 1) + 1
+
+/-- Additive cost of one naive compiled Waring-term gadget. -/
+def termAdditionCount (n : Nat) : Nat :=
+  (2 * n) * (2 * n)
+
+/-- Exact multiplicative cost of a Waring-term expression. -/
+@[simp] theorem multiplicationCount_termExpression
+    [Zero K]
+    [One K]
+    (term : Term K n) :
+    (termExpression term).multiplicationCount = termMultiplicationCount n := by
+  simp [termExpression, Algebraic.Arithmetic.Expression.multiplicationCount,
+    Algebraic.Arithmetic.Expression.weightedCost,
+    weightedCost_expressionPower, termMultiplicationCount]
+
+/-- Exact additive cost of a Waring-term expression. -/
+@[simp] theorem additionCount_termExpression
+    [Zero K]
+    [One K]
+    (term : Term K n) :
+    (termExpression term).additionCount = termAdditionCount n := by
+  simp [termExpression, Algebraic.Arithmetic.Expression.additionCount,
+    Algebraic.Arithmetic.Expression.weightedCost,
+    weightedCost_expressionPower, termAdditionCount]
+
+/-- The source-addition gadget uses no multiplication gates. -/
+@[simp] theorem multiplicationCount_additionExpression
+    [Zero K]
+    (n : Nat) :
+    (additionExpression (K := K) n).multiplicationCount = 0 := rfl
+
+/-- The source-addition gadget uses exactly one addition gate. -/
+@[simp] theorem additionCount_additionExpression
+    [Zero K]
+    (n : Nat) :
+    (additionExpression (K := K) n).additionCount = 1 := rfl
+
 /-- Evaluation of a right-associated expression sum. -/
 theorem eval_expressionSum
     [Semiring R]
@@ -147,6 +241,96 @@ def translation
         (additionExpression (K := K) n)
     | .term term => Algebraic.Arithmetic.Expression.circuit
         (termExpression term)
+
+/-- Pulling target multiplication cost through the Waring translation charges
+each source term by the exact naive term-gadget multiplication count and makes
+source addition free. -/
+theorem pullCost_multiplicationCost
+    [Semiring K]
+    (n : Nat) :
+    (translation (K := K) n).pullCost
+        (Algebraic.Arithmetic.multiplicationCost (K := K)) =
+      Algebraic.SumOfTerms.weightedCost 0 (termMultiplicationCount n) := by
+  funext operation
+  cases operation with
+  | add =>
+      simp [ContextualTranslation.pullCost, translation]
+  | term term =>
+      simp [ContextualTranslation.pullCost, translation]
+
+/-- Pulling target addition cost through the Waring translation charges one
+for every source addition and charges each term by its exact internal
+addition count. -/
+theorem pullCost_additionCost
+    [Semiring K]
+    (n : Nat) :
+    (translation (K := K) n).pullCost
+        (Algebraic.Arithmetic.additionCost (K := K)) =
+      Algebraic.SumOfTerms.weightedCost 1 (termAdditionCount n) := by
+  funext operation
+  cases operation with
+  | add =>
+      simp [ContextualTranslation.pullCost, translation]
+  | term term =>
+      simp [ContextualTranslation.pullCost, translation]
+
+/-- Exact multiplication cost of contextual Waring compilation. -/
+theorem compile_multiplicationCost
+    [Semiring K]
+    (n : Nat)
+    (circuit : Circuit
+      (Algebraic.SumOfTerms.signature (Term K n)) 0 g m) :
+    ((translation (K := K) n).compile circuit).cost
+        (Algebraic.Arithmetic.multiplicationCost (K := K)) =
+      circuit.cost
+        (Algebraic.SumOfTerms.weightedCost 0 (termMultiplicationCount n)) := by
+  rw [ContextualTranslation.compile_cost, pullCost_multiplicationCost]
+
+/-- Closed multiplication-cost formula: the naive compiler pays the same
+quadratic gadget cost for every Waring term and nothing for source addition. -/
+theorem compile_multiplicationCost_eq_termCost
+    [Semiring K]
+    (n : Nat)
+    (circuit : Circuit
+      (Algebraic.SumOfTerms.signature (Term K n)) 0 g m) :
+    ((translation (K := K) n).compile circuit).cost
+        (Algebraic.Arithmetic.multiplicationCost (K := K)) =
+      termMultiplicationCount n *
+        circuit.cost
+          (Algebraic.SumOfTerms.termCost (T := Term K n)) := by
+  rw [compile_multiplicationCost,
+    Algebraic.SumOfTerms.circuit_cost_weightedCost]
+  simp
+
+/-- Exact addition cost of contextual Waring compilation. -/
+theorem compile_additionCost
+    [Semiring K]
+    (n : Nat)
+    (circuit : Circuit
+      (Algebraic.SumOfTerms.signature (Term K n)) 0 g m) :
+    ((translation (K := K) n).compile circuit).cost
+        (Algebraic.Arithmetic.additionCost (K := K)) =
+      circuit.cost
+        (Algebraic.SumOfTerms.weightedCost 1 (termAdditionCount n)) := by
+  rw [ContextualTranslation.compile_cost, pullCost_additionCost]
+
+/-- Closed addition-cost formula: source additions remain single additions,
+while each Waring term contributes its internal quadratic addition cost. -/
+theorem compile_additionCost_eq_sourceCosts
+    [Semiring K]
+    (n : Nat)
+    (circuit : Circuit
+      (Algebraic.SumOfTerms.signature (Term K n)) 0 g m) :
+    ((translation (K := K) n).compile circuit).cost
+        (Algebraic.Arithmetic.additionCost (K := K)) =
+      circuit.cost
+          (Algebraic.SumOfTerms.additionCost (T := Term K n)) +
+        termAdditionCount n *
+          circuit.cost
+            (Algebraic.SumOfTerms.termCost (T := Term K n)) := by
+  rw [compile_additionCost,
+    Algebraic.SumOfTerms.circuit_cost_weightedCost]
+  simp
 
 /-- Pulling ordinary polynomial semantics through the contextual translation
 recovers Waring sum-of-terms semantics exactly. -/

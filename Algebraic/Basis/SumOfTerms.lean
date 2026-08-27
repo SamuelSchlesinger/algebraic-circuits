@@ -43,14 +43,71 @@ def interpretation
   | .add, input => input (0 : Fin 2) + input (1 : Fin 2)
   | .term term, _ => termValue term
 
+/-- Charge source additions and dictionary terms independently. -/
+def weightedCost
+    (addition term : Nat) : OperationCost (signature T)
+  | .add => addition
+  | .term _ => term
+
 /-- Charge one for each dictionary term and make addition free. -/
-def termCost : OperationCost (signature T)
-  | .add => 0
-  | .term _ => 1
+def termCost : OperationCost (signature T) :=
+  weightedCost 0 1
+
+/-- Charge source additions and make dictionary terms free. -/
+def additionCost : OperationCost (signature T) :=
+  weightedCost 1 0
+
+/-- Charge every source operation once. -/
+def gateCost : OperationCost (signature T) :=
+  weightedCost 1 1
+
+@[simp] theorem weightedCost_add
+    (addition term : Nat) :
+    weightedCost (T := T) addition term .add = addition := rfl
+
+@[simp] theorem weightedCost_term
+    (addition term : Nat)
+    (value : T) :
+    weightedCost addition term (.term value) = term := rfl
 
 @[simp] theorem termCost_add : termCost (T := T) .add = 0 := rfl
 
 @[simp] theorem termCost_term (term : T) : termCost (.term term) = 1 := rfl
+
+@[simp] theorem additionCost_add : additionCost (T := T) .add = 1 := rfl
+
+@[simp] theorem additionCost_term (term : T) :
+    additionCost (.term term) = 0 := rfl
+
+@[simp] theorem gateCost_add : gateCost (T := T) .add = 1 := rfl
+
+@[simp] theorem gateCost_term (term : T) : gateCost (.term term) = 1 := rfl
+
+/-- Weighted source cost decomposes exactly into addition count and dictionary
+term count. -/
+theorem program_cost_weightedCost
+    (program : Program (signature T) n g)
+    (addition term : Nat) :
+    program.cost (weightedCost addition term) =
+      addition * program.cost (additionCost (T := T)) +
+        term * program.cost (termCost (T := T)) := by
+  induction program with
+  | empty => simp
+  | gate program line inductionHypothesis =>
+      cases line with
+      | mk op wires =>
+          cases op <;>
+            simp [Program.cost, inductionHypothesis, Nat.mul_add] <;>
+            omega
+
+/-- Circuit form of exact weighted source-cost decomposition. -/
+theorem circuit_cost_weightedCost
+    (circuit : Circuit (signature T) n g m)
+    (addition term : Nat) :
+    circuit.cost (weightedCost addition term) =
+      addition * circuit.cost (additionCost (T := T)) +
+        term * circuit.cost (termCost (T := T)) :=
+  program_cost_weightedCost circuit.program addition term
 
 end SumOfTerms
 end Algebraic
