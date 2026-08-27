@@ -5,6 +5,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.BoundedFailure
 import Algebraic.LowerBound.Fusion.Arithmetic.Support
 import Algebraic.LowerBound.Fusion.Arithmetic.MonotonePolynomial
 import Algebraic.LowerBound.Fusion.Arithmetic.MonotonePolynomial.Layer
+import Algebraic.LowerBound.Fusion.Arithmetic.MonotonePolynomial.Exact
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.General
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated
