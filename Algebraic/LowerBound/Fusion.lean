@@ -1,6 +1,7 @@
 import Algebraic.LowerBound.Fusion.Framework
 import Algebraic.LowerBound.Fusion.Semifilter
 import Algebraic.LowerBound.Fusion.Boolean
+import Algebraic.LowerBound.Fusion.Neq
 
 /-!
 # Fusion lower bounds

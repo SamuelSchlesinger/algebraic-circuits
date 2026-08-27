@@ -94,6 +94,16 @@ theorem membership_eq_iff
   classical
   simp [membership]
 
+/-- Equality of characteristic values at two points is equivalence of their
+membership in the set. -/
+theorem membership_points_eq_iff
+    (left right : Γ)
+    (set : Set Γ) :
+    membership left set = membership right set ↔
+      (left ∈ set ↔ right ∈ set) := by
+  classical
+  simp [membership]
+
 @[simp] theorem membership_setOf_bool_eq_true
     (point : Γ)
     (value : Γ → Bool) :
