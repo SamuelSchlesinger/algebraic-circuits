@@ -22,6 +22,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalectica
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Support
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Block
+import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Cover
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Degree
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Decomposition
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Profile
@@ -30,6 +31,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalectica
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Profile.Occurrence
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Profile.Support
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Profile.Block
+import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Profile.Cover
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Degree
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Decomposition
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Mixing
@@ -72,6 +74,7 @@ import Algebraic.LowerBound.Fusion.SumOfTerms.Rank
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Support
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Block
+import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank.Cover
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Rectangular
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Rectangular.Translation.Binary
