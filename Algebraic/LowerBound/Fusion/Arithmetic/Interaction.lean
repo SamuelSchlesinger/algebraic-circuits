@@ -1,5 +1,6 @@
 import Algebraic.LowerBound.Fusion.Framework
 import Algebraic.Basis.Arithmetic
+import Algebraic.LowerBound.Fusion.Arithmetic.Atoms
 import Mathlib.LinearAlgebra.Finsupp.LinearCombination
 
 /-!
@@ -195,6 +196,34 @@ def interactions
     (atoms : List (Atom (Algebraic.Arithmetic.signature C) U)) :
     interactions certificate (⟨.constant scalar, arguments⟩ :: atoms) =
       interactions certificate atoms := rfl
+
+/-- Extracting interactions is the same ordered projection as first
+extracting multiplication occurrences and then mapping the certificate's
+interaction function.  In particular, this preserves repeated semantic
+multiplications as distinct occurrences. -/
+theorem interactions_eq_map_multiplicationArguments
+    {constant : C → U}
+    {problem : Problem U}
+    (certificate : Certificate (K := K) (Q := Q) constant problem)
+    (atoms : List (Atom (Algebraic.Arithmetic.signature C) U)) :
+    interactions certificate atoms =
+      (multiplicationArguments atoms).map fun arguments =>
+        certificate.interaction
+          (arguments (0 : Fin 2)) (arguments (1 : Fin 2)) := by
+  induction atoms with
+  | nil => rfl
+  | cons atom atoms inductionHypothesis =>
+      cases atom with
+      | mk op arguments =>
+          cases op with
+          | add =>
+              change Fin 2 → U at arguments
+              simpa using inductionHypothesis
+          | mul =>
+              change Fin 2 → U at arguments
+              simp [inductionHypothesis]
+          | constant scalar =>
+              simpa using inductionHypothesis
 
 /-- The number of extracted interactions is exactly multiplication cost. -/
 theorem interactions_length

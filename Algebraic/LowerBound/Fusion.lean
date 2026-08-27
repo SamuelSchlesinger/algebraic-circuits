@@ -2,6 +2,7 @@ import Algebraic.LowerBound.Fusion.Framework
 import Algebraic.LowerBound.Fusion.Substitution
 import Algebraic.LowerBound.Fusion.Contextual
 import Algebraic.LowerBound.Fusion.Counting
+import Algebraic.LowerBound.Fusion.Arithmetic.Atoms
 import Algebraic.LowerBound.Fusion.Arithmetic.ExactSupport
 import Algebraic.LowerBound.Fusion.Arithmetic.BoundedFailure
 import Algebraic.LowerBound.Fusion.Arithmetic.Combined
@@ -9,6 +10,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Interaction
 import Algebraic.LowerBound.Fusion.Arithmetic.Expression
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Rank
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Rank.Local
+import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Rank.Occurrence
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Multiple
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Linear
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Linear.Quotient

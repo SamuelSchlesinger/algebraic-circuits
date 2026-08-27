@@ -1,5 +1,6 @@
 import Algebraic.Basis.Arithmetic
 import Algebraic.LowerBound.Fusion.Arithmetic.BoundedFailure
+import Algebraic.LowerBound.Fusion.Arithmetic.Atoms
 import Mathlib.Data.Fintype.Card
 
 /-!
@@ -21,6 +22,8 @@ theorem gives an exact multiplicative-complexity lower bound.
 namespace Algebraic
 namespace Fusion
 namespace Dyadic
+
+open Algebraic.Fusion.Arithmetic
 
 /-- A natural-valued arithmetic measure with degree-like local bounds. -/
 structure Measure
@@ -259,72 +262,6 @@ noncomputable def failureRules
     (target_ge : 2 ^ levels ≤ measure.value problem.target) :
     (failureRules measure problem levels input_le_one target_ge).capacity = 1 := by
   simp [failureRules]
-
-/-- Retain the arguments of multiplication atoms and discard all free
-addition and constant atoms. -/
-def Atom.mulArguments?
-    (atom : Atom (Arithmetic.signature K) R) : Option (Fin 2 → R) :=
-  match atom with
-  | ⟨.add, _⟩ => none
-  | ⟨.mul, arguments⟩ => some arguments
-  | ⟨.constant _, _⟩ => none
-
-/-- Multiplication configurations contained in a list of arithmetic atoms. -/
-def multiplicationArguments
-    (atoms : List (Atom (Arithmetic.signature K) R)) :
-    List (Fin 2 → R) :=
-  atoms.filterMap Atom.mulArguments?
-
-omit [Add R] [Mul R] in
-@[simp] theorem multiplicationArguments_cons_add
-    (arguments : Fin 2 → R)
-    (atoms : List (Atom (Arithmetic.signature K) R)) :
-    multiplicationArguments
-      ((⟨.add, arguments⟩ : Atom (Arithmetic.signature K) R) :: atoms) =
-        multiplicationArguments atoms := rfl
-
-omit [Add R] [Mul R] in
-@[simp] theorem multiplicationArguments_cons_mul
-    (arguments : Fin 2 → R)
-    (atoms : List (Atom (Arithmetic.signature K) R)) :
-    multiplicationArguments
-      ((⟨.mul, arguments⟩ : Atom (Arithmetic.signature K) R) :: atoms) =
-        arguments :: multiplicationArguments atoms := rfl
-
-omit [Add R] [Mul R] in
-@[simp] theorem multiplicationArguments_cons_constant
-    (scalar : K)
-    (arguments : Fin (Arithmetic.arity (.constant scalar)) → R)
-    (atoms : List (Atom (Arithmetic.signature K) R)) :
-    multiplicationArguments
-      ((⟨.constant scalar, arguments⟩ :
-        Atom (Arithmetic.signature K) R) :: atoms) =
-          multiplicationArguments atoms := rfl
-
-omit [Add R] [Mul R] in
-/-- The number of retained multiplication atoms is exactly their weighted
-cost. -/
-theorem multiplicationArguments_length
-    (atoms : List (Atom (Arithmetic.signature K) R)) :
-    (multiplicationArguments atoms).length =
-      Atom.listCost atoms (Arithmetic.multiplicationCost (K := K)) := by
-  induction atoms with
-  | nil => rfl
-  | cons atom atoms inductionHypothesis =>
-      cases atom with
-      | mk op arguments =>
-          cases op with
-          | add =>
-              change Fin 2 → R at arguments
-              rw [multiplicationArguments_cons_add]
-              simpa [Atom.listCost, Atom.cost] using inductionHypothesis
-          | mul =>
-              change Fin 2 → R at arguments
-              rw [multiplicationArguments_cons_mul]
-              simp [Atom.listCost, Atom.cost, inductionHypothesis,
-                Nat.add_comm]
-          | constant scalar =>
-              simpa [Atom.listCost, Atom.cost] using inductionHypothesis
 
 /-- Every dyadic witness has an unpreserved multiplication in a fusion
 cover. -/

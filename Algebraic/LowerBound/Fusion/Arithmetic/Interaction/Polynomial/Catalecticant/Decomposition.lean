@@ -1,4 +1,5 @@
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Degree
+import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Rank.Occurrence
 
 /-!
 # Locally decomposable critical layers
@@ -193,6 +194,135 @@ theorem featureDecomposition_rank_le
       exact SumOfTerms.Waring.term_rank_le_one (terms index)
     _ = termCount := by simp
 
+/-- Evaluated multiplication-gate occurrences for the squarefree
+catalecticant problem. -/
+def multiplicationOccurrences
+    [Field K]
+    (constant : C → K)
+    (n : Nat)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1) :
+    List (Fin 2 → MvPolynomial (Fin (2 * n)) K) :=
+  circuitMultiplicationArguments
+    (fun scalar => MvPolynomial.C (constant scalar))
+    (MvPolynomial.X : Fin (2 * n) →
+      MvPolynomial (Fin (2 * n)) K)
+    circuit
+
+/-- A possibly different Waring-decomposition budget for every multiplication
+gate occurrence.  Equal semantic products at distinct gates retain distinct
+indices and may receive different budgets. -/
+def AtOccurrences
+    [Field K]
+    (constant : C → K)
+    (n : Nat)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (budget : Fin (multiplicationOccurrences constant n circuit).length → Nat) :
+    Prop :=
+  ∀ index,
+    let arguments := (multiplicationOccurrences constant n circuit).get index
+    AtMost n (budget index)
+      (arguments (0 : Fin 2) * arguments (1 : Fin 2))
+
+/-- A semantic Waring budget depending on multiplication arguments.  Its list
+sum still charges repeated occurrences separately. -/
+def ArgumentAtMost
+    [Field K]
+    (constant : C → K)
+    (n : Nat)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (budget :
+      (Fin 2 → MvPolynomial (Fin (2 * n)) K) → Nat) : Prop :=
+  ∀ arguments,
+    arguments ∈ multiplicationOccurrences constant n circuit →
+    AtMost n (budget arguments)
+      (arguments (0 : Fin 2) * arguments (1 : Fin 2))
+
+/-- Occurrence-local Waring decompositions induce the generic
+occurrence-indexed rank budget. -/
+theorem occurrenceIndexedBound_of_atOccurrences
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (budget : Fin (multiplicationOccurrences constant n circuit).length → Nat)
+    (restricted : AtOccurrences constant n circuit budget) :
+    Rank.Occurrence.IndexedBound (certificate constant n positive) circuit
+      budget := by
+  intro index
+  change LinearMap.rank (SumOfTerms.Waring.feature K n
+    (((multiplicationOccurrences constant n circuit).get index) (0 : Fin 2) *
+      ((multiplicationOccurrences constant n circuit).get index)
+        (1 : Fin 2))) ≤ budget index
+  exact feature_rank_le n (budget index) _ (restricted index)
+
+/-- Semantic argument-local Waring decompositions induce the generic
+argument-dependent rank budget. -/
+theorem argumentBound_of_argumentAtMost
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (budget :
+      (Fin 2 → MvPolynomial (Fin (2 * n)) K) → Nat)
+    (restricted : ArgumentAtMost constant n circuit budget) :
+    Rank.Occurrence.ArgumentBound (certificate constant n positive) circuit
+      budget := by
+  intro arguments present
+  change LinearMap.rank (SumOfTerms.Waring.feature K n
+    (arguments (0 : Fin 2) * arguments (1 : Fin 2))) ≤ budget arguments
+  exact feature_rank_le n (budget arguments) _
+    (restricted arguments (by
+      simpa [multiplicationOccurrences] using present))
+
+/-- Weighted catalecticant Fusion bound indexed directly by multiplication
+gate occurrences. -/
+theorem centralBinom_le_sum_occurrenceBudget
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (constructs : (problem K n).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar => MvPolynomial.C (constant scalar))))
+    (budget : Fin (multiplicationOccurrences constant n circuit).length → Nat)
+    (restricted : AtOccurrences constant n circuit budget) :
+    Nat.centralBinom n ≤ ∑ index, budget index :=
+  Rank.Occurrence.targetRank_le_sum_indexedBudget
+    (certificate constant n positive) (Nat.centralBinom n)
+    (SumOfTerms.Waring.target_rank_ge n) circuit constructs budget
+    (occurrenceIndexedBound_of_atOccurrences constant n positive circuit budget
+      restricted)
+
+/-- Argument-dependent weighted catalecticant bound, expressed as a list sum
+over the evaluated multiplication gates. -/
+theorem centralBinom_le_sum_argumentBudget
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (constructs : (problem K n).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar => MvPolynomial.C (constant scalar))))
+    (budget :
+      (Fin 2 → MvPolynomial (Fin (2 * n)) K) → Nat)
+    (restricted : ArgumentAtMost constant n circuit budget) :
+    Nat.centralBinom n ≤
+      ((multiplicationOccurrences constant n circuit).map budget).sum := by
+  simpa [multiplicationOccurrences] using
+    Rank.Occurrence.targetRank_le_sum_argumentBudget
+      (certificate constant n positive) (Nat.centralBinom n)
+      (SumOfTerms.Waring.target_rank_ge n) circuit constructs budget
+      (argumentBound_of_argumentAtMost constant n positive circuit budget
+        restricted)
+
 /-- Nonuniform Waring-feature decomposition budget for the actual retained
 interaction occurrences of one evaluated circuit. -/
 def IndexedAtMost
@@ -280,6 +410,36 @@ def AtMultiplications
             MvPolynomial (Fin (2 * n)) K) →
     AtMost n termCount
       (arguments (0 : Fin 2) * arguments (1 : Fin 2))
+
+/-- A uniform atom-level restriction yields the corresponding constant
+per-occurrence budget. -/
+theorem atOccurrences_const_of_atMultiplications
+    [Field K]
+    (constant : C → K)
+    (n : Nat)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (termCount : Nat)
+    (restricted : AtMultiplications constant n circuit termCount) :
+    AtOccurrences constant n circuit (fun _ => termCount) := by
+  intro index
+  let arguments := (multiplicationOccurrences constant n circuit).get index
+  apply restricted arguments
+  apply (mem_multiplicationArguments arguments _).mp
+  simp [arguments, multiplicationOccurrences, circuitMultiplicationArguments]
+
+/-- The same uniform restriction yields a constant semantic argument budget. -/
+theorem argumentAtMost_const_of_atMultiplications
+    [Field K]
+    (constant : C → K)
+    (n : Nat)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (termCount : Nat)
+    (restricted : AtMultiplications constant n circuit termCount) :
+    ArgumentAtMost constant n circuit (fun _ => termCount) := by
+  intro arguments present
+  apply restricted arguments
+  apply (mem_multiplicationArguments arguments _).mp
+  simpa [multiplicationOccurrences, circuitMultiplicationArguments] using present
 
 /-- Local `r`-term decompositions imply the atom-level catalecticant rank
 bound `r`. -/
