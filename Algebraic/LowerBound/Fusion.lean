@@ -59,6 +59,7 @@ import Algebraic.LowerBound.Fusion.SumOfTerms
 import Algebraic.LowerBound.Fusion.SumOfTerms.Rank
 import Algebraic.LowerBound.Fusion.SumOfTerms.MatrixRank
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring
+import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Rectangular
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Translation
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Restriction
 import Algebraic.LowerBound.Fusion.SumOfTerms.Coverage
