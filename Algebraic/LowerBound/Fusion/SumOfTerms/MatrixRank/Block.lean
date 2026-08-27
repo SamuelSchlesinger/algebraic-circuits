@@ -124,6 +124,46 @@ theorem Decomposition.rank_toLin'_le_rankBudget
     _ = decomposition.rankBudget := by
       simp [Decomposition.rankBudget]
 
+/-- Empty decomposition of the zero matrix. -/
+def Decomposition.zero : Decomposition (0 : Matrix I J K) where
+  blockCount := 0
+  block := Fin.elim0
+  sum_eq := by simp
+
+@[simp] theorem Decomposition.zero_rankBudget :
+    (Decomposition.zero (K := K) (I := I) (J := J)).rankBudget = 0 := by
+  simp [Decomposition.rankBudget, Decomposition.zero]
+
+/-- Concatenate decompositions to represent the sum of their matrices. -/
+abbrev Decomposition.add
+    {left right : Matrix I J K}
+    (leftDecomposition : Decomposition left)
+    (rightDecomposition : Decomposition right) :
+    Decomposition (left + right) where
+  blockCount := leftDecomposition.blockCount + rightDecomposition.blockCount
+  block := Fin.addCases leftDecomposition.block rightDecomposition.block
+  sum_eq := by
+    rw [Fin.sum_univ_add]
+    simp only [Fin.addCases_left, Fin.addCases_right]
+    rw [leftDecomposition.sum_eq, rightDecomposition.sum_eq]
+
+@[simp] theorem Decomposition.add_rankBudget
+    {left right : Matrix I J K}
+    (leftDecomposition : Decomposition left)
+    (rightDecomposition : Decomposition right) :
+    (leftDecomposition.add rightDecomposition).rankBudget =
+      leftDecomposition.rankBudget + rightDecomposition.rankBudget := by
+  have splitSum :
+      (∑ index : Fin
+          (leftDecomposition.blockCount + rightDecomposition.blockCount),
+        ((Fin.addCases leftDecomposition.block rightDecomposition.block
+          index : Piece K I J)).rankBudget) =
+        (∑ index, (leftDecomposition.block index).rankBudget) +
+          ∑ index, (rightDecomposition.block index).rankBudget := by
+    rw [Fin.sum_univ_add]
+    simp only [Fin.addCases_left, Fin.addCases_right]
+  simpa only [Decomposition.rankBudget, Decomposition.add] using splitSum
+
 /-- Every matrix has the one-block decomposition given by its exact row and
 column supports. -/
 def Decomposition.single (matrix : Matrix I J K) : Decomposition matrix where
