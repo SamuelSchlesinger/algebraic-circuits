@@ -44,6 +44,57 @@ def CircuitBound
         (Algebraic.Arithmetic.interpretation constant) problem.inputs) →
     LinearMap.rank interaction ≤ interactionRank
 
+/-- Equivalent-to-use atom-level formulation: bound the interaction created
+by every multiplication atom in the evaluated circuit. -/
+def MultiplicationBound
+    {constant : C → U}
+    {problem : Problem U}
+    (certificate : Interaction.Certificate (K := K)
+      (Q := A →ₗ[K] B) constant problem)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C)
+      problem.inputCount g 1)
+    (interactionRank : Nat) : Prop :=
+  ∀ arguments : Fin 2 → U,
+    (⟨.mul, arguments⟩ :
+      Atom (Algebraic.Arithmetic.signature C) U) ∈
+        circuitAtoms circuit
+          (Algebraic.Arithmetic.interpretation constant) problem.inputs →
+    LinearMap.rank
+      (certificate.interaction
+        (arguments (0 : Fin 2)) (arguments (1 : Fin 2))) ≤ interactionRank
+
+/-- An atom-level multiplication bound implies the filtered-list circuit
+bound used by the rank theorem. -/
+theorem CircuitBound.of_multiplicationBound
+    {constant : C → U}
+    {problem : Problem U}
+    (certificate : Interaction.Certificate (K := K)
+      (Q := A →ₗ[K] B) constant problem)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C)
+      problem.inputCount g 1)
+    (interactionRank : Nat)
+    (bound : MultiplicationBound certificate circuit interactionRank) :
+    CircuitBound certificate circuit interactionRank := by
+  intro interaction present
+  change interaction ∈
+    (circuitAtoms circuit
+      (Algebraic.Arithmetic.interpretation constant)
+      problem.inputs).filterMap (Atom.interaction? certificate) at present
+  rw [List.mem_filterMap] at present
+  obtain ⟨atom, atomPresent, interactionEqual⟩ := present
+  cases atom with
+  | mk op arguments =>
+      cases op with
+      | add =>
+          simp [Atom.interaction?] at interactionEqual
+      | mul =>
+          change Fin 2 → U at arguments
+          simp only [Atom.interaction?] at interactionEqual
+          rw [← Option.some.inj interactionEqual]
+          exact bound arguments atomPresent
+      | constant scalar =>
+          simp [Atom.interaction?] at interactionEqual
+
 /-- Under a circuit-local rank bound, the target feature rank is at most the
 number of multiplication gates times the local bound. -/
 theorem target_rank_le_mul_multiplicationCost

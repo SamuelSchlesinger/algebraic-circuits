@@ -146,6 +146,92 @@ def LocalRankAtMost
   Rank.Local.CircuitBound (certificate constant n positive) circuit
     interactionRank
 
+/-- Atom-level version of the local restriction: directly bound the
+catalecticant rank of each multiplication output. -/
+def MultiplicationOutputRankAtMost
+    [Field K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (interactionRank : Nat) : Prop :=
+  Rank.Local.MultiplicationBound (certificate constant n positive) circuit
+    interactionRank
+
+/-- Atom-level multiplication-output bounds imply the filtered local-rank
+condition. -/
+theorem localRankAtMost_of_multiplicationOutputRankAtMost
+    [Field K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (interactionRank : Nat)
+    (bound : MultiplicationOutputRankAtMost constant n positive circuit
+      interactionRank) :
+    LocalRankAtMost constant n positive circuit interactionRank :=
+  Rank.Local.CircuitBound.of_multiplicationBound
+    (certificate constant n positive) circuit interactionRank bound
+
+/-- A concrete ordinary-circuit subclass: every multiplication output is
+either invisible to the middle catalecticant or is one scalar multiple of a
+`2n`-th power of a linear form. -/
+def PowerOrInvisibleAtMultiplications
+    [Field K]
+    (constant : C → K)
+    (n : Nat)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1) : Prop :=
+  ∀ arguments : Fin 2 → MvPolynomial (Fin (2 * n)) K,
+    (⟨.mul, arguments⟩ : Atom (Algebraic.Arithmetic.signature C)
+      (MvPolynomial (Fin (2 * n)) K)) ∈
+        circuitAtoms circuit
+          (Algebraic.Arithmetic.interpretation
+            (fun scalar => MvPolynomial.C (constant scalar)))
+          (MvPolynomial.X : Fin (2 * n) →
+            MvPolynomial (Fin (2 * n)) K) →
+    SumOfTerms.Waring.feature K n
+        (arguments (0 : Fin 2) * arguments (1 : Fin 2)) = 0 ∨
+      ∃ term : SumOfTerms.Waring.Term K n,
+        arguments (0 : Fin 2) * arguments (1 : Fin 2) =
+          SumOfTerms.Waring.termValue term
+
+/-- Power-or-invisible multiplication outputs have local catalecticant rank
+at most one. -/
+theorem multiplicationOutputRankAtMost_one_of_powerOrInvisible
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (restricted : PowerOrInvisibleAtMultiplications constant n circuit) :
+    MultiplicationOutputRankAtMost constant n positive circuit 1 := by
+  intro arguments present
+  change LinearMap.rank
+    (SumOfTerms.Waring.feature K n
+      (arguments (0 : Fin 2) * arguments (1 : Fin 2))) ≤ 1
+  rcases restricted arguments present with invisible | ⟨term, powerTerm⟩
+  · rw [invisible]
+    simp
+  · rw [powerTerm]
+    exact SumOfTerms.Waring.term_rank_le_one term
+
+/-- Power-or-invisible multiplication outputs satisfy the filtered rank-one
+condition used by the lower bound. -/
+theorem localRankAtMost_one_of_powerOrInvisible
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (restricted : PowerOrInvisibleAtMultiplications constant n circuit) :
+    LocalRankAtMost constant n positive circuit 1 :=
+  localRankAtMost_of_multiplicationOutputRankAtMost constant n positive
+    circuit 1
+      (multiplicationOutputRankAtMost_one_of_powerOrInvisible constant n
+        positive circuit restricted)
+
 /-- General local-rank tradeoff for the squarefree target. -/
 theorem centralBinom_ceilDiv_lowerBound
     [Field K]
@@ -213,6 +299,26 @@ theorem rankOne_multiplication_lowerBound
   simpa using centralBinom_ceilDiv_lowerBound constant n positive 1
     (by simp) circuit constructs localBound
 
+/-- Every power-or-invisible ordinary arithmetic circuit for the squarefree
+target needs central-binomial multiplication cost. -/
+theorem powerOrInvisible_multiplication_lowerBound
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (constructs : (problem K n).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar => MvPolynomial.C (constant scalar))))
+    (restricted : PowerOrInvisibleAtMultiplications constant n circuit) :
+    Nat.centralBinom n ≤
+      circuit.cost
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) :=
+  rankOne_multiplication_lowerBound constant n positive circuit constructs
+    (localRankAtMost_one_of_powerOrInvisible constant n positive circuit
+      restricted)
+
 /-- Explicit exponential single-output multiplication lower bound for locally
 rank-one arithmetic circuits. -/
 theorem four_pow_lt_mul_multiplicationCost
@@ -252,6 +358,27 @@ theorem four_pow_lt_mul_size
       (Nat.mul_le_mul_left n
         ((Combined.circuit_multiplicationCost_le_gateCost circuit).trans
           (Combined.circuit_gateCost_le_size circuit)))
+
+/-- Explicit exponential single-output size lower bound for the concrete
+power-or-invisible ordinary arithmetic circuit subclass. -/
+theorem powerOrInvisible_four_pow_lt_mul_size
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (n_big : 4 ≤ n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (constructs : (problem K n).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar => MvPolynomial.C (constant scalar))))
+    (restricted : PowerOrInvisibleAtMultiplications constant n circuit) :
+    4 ^ n < n * circuit.size :=
+  (Nat.four_pow_lt_mul_centralBinom n n_big).trans_le
+    (Nat.mul_le_mul_left n
+      ((powerOrInvisible_multiplication_lowerBound constant n (by omega)
+        circuit constructs restricted).trans
+          ((Combined.circuit_multiplicationCost_le_gateCost circuit).trans
+            (Combined.circuit_gateCost_le_size circuit))))
 
 end
 end Catalecticant
