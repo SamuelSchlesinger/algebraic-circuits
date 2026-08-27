@@ -39,6 +39,27 @@ theorem Circuit.cost_add
       circuit.cost left + circuit.cost right := by
   exact circuit.program.cost_add left right
 
+/-- Pointwise domination of operation costs implies domination of program
+costs. -/
+theorem Program.cost_mono
+    (program : Program sigma n g)
+    (left right : OperationCost sigma)
+    (bounded : ∀ op, left op ≤ right op) :
+    program.cost left ≤ program.cost right := by
+  induction program with
+  | empty => exact Nat.le_refl 0
+  | gate program line inductionHypothesis =>
+      exact Nat.add_le_add inductionHypothesis (bounded line.op)
+
+/-- Pointwise domination of operation costs implies domination of circuit
+costs. -/
+theorem Circuit.cost_mono
+    (circuit : Circuit sigma n g m)
+    (left right : OperationCost sigma)
+    (bounded : ∀ op, left op ≤ right op) :
+    circuit.cost left ≤ circuit.cost right := by
+  exact circuit.program.cost_mono left right bounded
+
 end CostAlgebra
 
 namespace Fusion
@@ -66,6 +87,34 @@ theorem circuit_gateCost_eq_additionCost_add_multiplicationCost
           (Algebraic.Arithmetic.multiplicationCost (K := K)) := by
   rw [gateCost_eq_additionCost_add_multiplicationCost]
   exact circuit.cost_add _ _
+
+/-- Addition-only cost is bounded by total arithmetic-gate cost. -/
+theorem circuit_additionCost_le_gateCost
+    (circuit : Circuit (Algebraic.Arithmetic.signature K) n g m) :
+    circuit.cost (Algebraic.Arithmetic.additionCost (K := K)) ≤
+      circuit.cost (Algebraic.Arithmetic.gateCost (K := K)) := by
+  apply circuit.cost_mono
+  intro op
+  cases op <;> simp
+
+/-- Multiplication-only cost is bounded by total arithmetic-gate cost. -/
+theorem circuit_multiplicationCost_le_gateCost
+    (circuit : Circuit (Algebraic.Arithmetic.signature K) n g m) :
+    circuit.cost (Algebraic.Arithmetic.multiplicationCost (K := K)) ≤
+      circuit.cost (Algebraic.Arithmetic.gateCost (K := K)) := by
+  apply circuit.cost_mono
+  intro op
+  cases op <;> simp
+
+/-- Total nonconstant arithmetic-gate cost is bounded by circuit size;
+constant gates account for the possible gap. -/
+theorem circuit_gateCost_le_size
+    (circuit : Circuit (Algebraic.Arithmetic.signature K) n g m) :
+    circuit.cost (Algebraic.Arithmetic.gateCost (K := K)) ≤ circuit.size := by
+  rw [← circuit.cost_unit]
+  apply circuit.cost_mono
+  intro op
+  cases op <;> simp [OperationCost.unit]
 
 /-- Independent lower bounds for additions and multiplications add to a lower
 bound for all nonconstant arithmetic gates. -/

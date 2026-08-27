@@ -174,6 +174,36 @@ theorem circuit_gate_lowerBound
     (circuit_multiplication_lowerBound constant two_le width positiveWidth
       circuit constructs widthBound)
 
+/-- The combined lower bound also applies to raw circuit size, which may
+additionally count scalar-constant gates. -/
+theorem circuit_size_lowerBound
+    (constant : K → R)
+    (two_le : 2 ≤ cliqueSize)
+    (width : Nat)
+    (positiveWidth : 0 < width)
+    (circuit : Circuit
+      (Algebraic.Arithmetic.signature K)
+        (vertexCount * vertexCount) g 1)
+    (constructs :
+      ({ inputCount := vertexCount * vertexCount,
+          inputs := MvPolynomial.X,
+          target := polynomial R vertexCount cliqueSize } :
+        Problem (MvPolynomial (Fin (vertexCount * vertexCount)) R)).Constructs
+          circuit
+          (General.polynomialInterpretation constant
+            (Fin (vertexCount * vertexCount))))
+    (widthBound : MonotonePolynomial.Exact.MultiplicationSupportWidthAtMost
+      constant circuit
+      (MvPolynomial.X : Fin (vertexCount * vertexCount) →
+        MvPolynomial (Fin (vertexCount * vertexCount)) R)
+      width) :
+    (Nat.choose vertexCount cliqueSize - 1) +
+        (Nat.choose vertexCount cliqueSize ⌈/⌉ (width * width)) ≤
+      circuit.size := by
+  exact (circuit_gate_lowerBound constant two_le width positiveWidth
+    circuit constructs widthBound).trans
+      (Combined.circuit_gateCost_le_size circuit)
+
 /-- Middle-layer specialization of the combined total-gate lower bound. -/
 theorem central_circuit_gate_lowerBound
     (constant : K → R)
@@ -206,6 +236,91 @@ theorem central_circuit_gate_lowerBound
   simpa [Nat.centralBinom] using
     circuit_gate_lowerBound constant two_le width positiveWidth
       circuit constructs widthBound
+
+/-- The middle-layer clique family yields an explicit exponential
+support-width versus total-gate tradeoff. -/
+theorem central_four_pow_lt_mul_width_sq_gateCost
+    (constant : K → R)
+    (halfVertices : Nat)
+    (halfVerticesBig : 4 ≤ halfVertices)
+    (width : Nat)
+    (positiveWidth : 0 < width)
+    (circuit : Circuit
+      (Algebraic.Arithmetic.signature K)
+        ((2 * halfVertices) * (2 * halfVertices)) g 1)
+    (constructs :
+      ({ inputCount := (2 * halfVertices) * (2 * halfVertices),
+          inputs := MvPolynomial.X,
+          target := polynomial R (2 * halfVertices) halfVertices } :
+        Problem
+          (MvPolynomial
+            (Fin ((2 * halfVertices) * (2 * halfVertices))) R)).Constructs
+          circuit
+          (General.polynomialInterpretation constant
+            (Fin ((2 * halfVertices) * (2 * halfVertices)))))
+    (widthBound : MonotonePolynomial.Exact.MultiplicationSupportWidthAtMost
+      constant circuit
+      (MvPolynomial.X : Fin ((2 * halfVertices) * (2 * halfVertices)) →
+        MvPolynomial
+          (Fin ((2 * halfVertices) * (2 * halfVertices))) R)
+      width) :
+    4 ^ halfVertices <
+      halfVertices * ((width * width) *
+        circuit.cost (Algebraic.Arithmetic.gateCost (K := K))) := by
+  have capacityPositive : 0 < width * width :=
+    Nat.mul_pos positiveWidth positiveWidth
+  have centralLeMultiplication : Nat.centralBinom halfVertices ≤
+      (width * width) *
+        circuit.cost
+          (Algebraic.Arithmetic.multiplicationCost (K := K)) :=
+    (ceilDiv_le_iff_le_mul capacityPositive).1 (by
+      simpa [Nat.centralBinom] using
+        circuit_multiplication_lowerBound constant
+          (by omega : 2 ≤ halfVertices) width positiveWidth
+          circuit constructs widthBound)
+  have centralLeGate : Nat.centralBinom halfVertices ≤
+      (width * width) *
+        circuit.cost (Algebraic.Arithmetic.gateCost (K := K)) :=
+    centralLeMultiplication.trans
+      (Nat.mul_le_mul_left (width * width)
+        (Combined.circuit_multiplicationCost_le_gateCost circuit))
+  exact
+    (Nat.four_pow_lt_mul_centralBinom halfVertices halfVerticesBig).trans_le
+      (Nat.mul_le_mul_left halfVertices centralLeGate)
+
+/-- Raw circuit size satisfies the same exponential support-width tradeoff. -/
+theorem central_four_pow_lt_mul_width_sq_size
+    (constant : K → R)
+    (halfVertices : Nat)
+    (halfVerticesBig : 4 ≤ halfVertices)
+    (width : Nat)
+    (positiveWidth : 0 < width)
+    (circuit : Circuit
+      (Algebraic.Arithmetic.signature K)
+        ((2 * halfVertices) * (2 * halfVertices)) g 1)
+    (constructs :
+      ({ inputCount := (2 * halfVertices) * (2 * halfVertices),
+          inputs := MvPolynomial.X,
+          target := polynomial R (2 * halfVertices) halfVertices } :
+        Problem
+          (MvPolynomial
+            (Fin ((2 * halfVertices) * (2 * halfVertices))) R)).Constructs
+          circuit
+          (General.polynomialInterpretation constant
+            (Fin ((2 * halfVertices) * (2 * halfVertices)))))
+    (widthBound : MonotonePolynomial.Exact.MultiplicationSupportWidthAtMost
+      constant circuit
+      (MvPolynomial.X : Fin ((2 * halfVertices) * (2 * halfVertices)) →
+        MvPolynomial
+          (Fin ((2 * halfVertices) * (2 * halfVertices))) R)
+      width) :
+    4 ^ halfVertices <
+      halfVertices * ((width * width) * circuit.size) := by
+  exact (central_four_pow_lt_mul_width_sq_gateCost constant halfVertices
+    halfVerticesBig width positiveWidth circuit constructs widthBound).trans_le
+      (Nat.mul_le_mul_left halfVertices
+        (Nat.mul_le_mul_left (width * width)
+          (Combined.circuit_gateCost_le_size circuit)))
 
 end Bounds
 
