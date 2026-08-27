@@ -7,6 +7,10 @@ import Algebraic.LowerBound.Fusion.Arithmetic.MonotonePolynomial.Layer
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Expansion
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.MonomialSubstitution
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Unit
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Collision
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Addition
 import Algebraic.LowerBound.Fusion.Arithmetic
 import Algebraic.LowerBound.Fusion.Arithmetic.Degree
 import Algebraic.LowerBound.Fusion.SumOfTerms

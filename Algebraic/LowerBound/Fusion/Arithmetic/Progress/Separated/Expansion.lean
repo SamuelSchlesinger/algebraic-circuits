@@ -127,6 +127,36 @@ theorem support_bind₁
   intro exponent present
   exact support_bind₁_monomial_coeff substitution polynomial exponent present
 
+/-- Expand a substituted polynomial as the finite sum of the contributions
+of its supported source monomials. -/
+theorem bind₁_eq_sum
+    [DecidableEq SourceVar]
+    (substitution : SourceVar → MvPolynomial TargetVar ℕ)
+    (polynomial : MvPolynomial SourceVar ℕ) :
+    MvPolynomial.bind₁ substitution polynomial =
+      ∑ exponent ∈ polynomial.support,
+        MvPolynomial.bind₁ substitution
+          (MvPolynomial.monomial exponent
+            (MvPolynomial.coeff exponent polynomial)) := by
+  conv_lhs => rw [polynomial.as_sum]
+  simp only [map_sum]
+
+/-- Coefficients after substitution are sums of the coefficients contributed
+by the supported source monomials. -/
+theorem coeff_bind₁_eq_sum
+    [DecidableEq SourceVar]
+    (substitution : SourceVar → MvPolynomial TargetVar ℕ)
+    (polynomial : MvPolynomial SourceVar ℕ)
+    (target : TargetVar →₀ ℕ) :
+    MvPolynomial.coeff target
+        (MvPolynomial.bind₁ substitution polynomial) =
+      ∑ exponent ∈ polynomial.support,
+        MvPolynomial.coeff target
+          (MvPolynomial.bind₁ substitution
+            (MvPolynomial.monomial exponent
+              (MvPolynomial.coeff exponent polynomial))) := by
+  rw [bind₁_eq_sum, MvPolynomial.coeff_sum]
+
 /-- Membership in one source-monomial expansion. -/
 def IsNeighbor
     (substitution : SourceVar → MvPolynomial TargetVar ℕ)
@@ -162,6 +192,149 @@ theorem mem_support_bind₁_of_neighbor
     target ∈ (MvPolynomial.bind₁ substitution polynomial).support := by
   rw [support_bind₁, Finset.mem_biUnion]
   exact ⟨source, sourcePresent, neighbor⟩
+
+/-- The coefficient contributed by one source monomial factors as its source
+coefficient times the coefficient in its coefficient-one expansion. -/
+theorem coeff_bind₁_monomial_coeff
+    (substitution : SourceVar → MvPolynomial TargetVar ℕ)
+    (polynomial : MvPolynomial SourceVar ℕ)
+    (source : SourceVar →₀ ℕ)
+    (target : TargetVar →₀ ℕ) :
+    MvPolynomial.coeff target
+        (MvPolynomial.bind₁ substitution
+          (MvPolynomial.monomial source
+            (MvPolynomial.coeff source polynomial))) =
+      MvPolynomial.coeff source polynomial *
+        MvPolynomial.coeff target
+          (monomialExpansion substitution source) := by
+  have monomialFactorization :
+      MvPolynomial.monomial source
+          (MvPolynomial.coeff source polynomial) =
+        MvPolynomial.C (MvPolynomial.coeff source polynomial) *
+          MvPolynomial.monomial source 1 := by
+    symm
+    simpa using
+      (MvPolynomial.C_mul_monomial
+        (σ := SourceVar) (R := Nat)
+        (a := MvPolynomial.coeff source polynomial)
+        (s := source) (a' := 1))
+  rw [monomialFactorization, map_mul]
+  simp only [MvPolynomial.bind₁_C_right]
+  change MvPolynomial.coeff target
+      (MvPolynomial.C (MvPolynomial.coeff source polynomial) *
+        monomialExpansion substitution source) = _
+  exact MvPolynomial.coeff_C_mul target
+    (MvPolynomial.coeff source polynomial)
+    (monomialExpansion substitution source)
+
+/-- A coefficient-one target monomial has a unique source origin.  This is
+the collision-rigidity fact needed by coefficient-sensitive versions of the
+separation method. -/
+theorem exists_unique_source_of_coeff_eq_one
+    [DecidableEq SourceVar]
+    [DecidableEq TargetVar]
+    (substitution : SourceVar → MvPolynomial TargetVar ℕ)
+    (polynomial : MvPolynomial SourceVar ℕ)
+    (target : TargetVar →₀ ℕ)
+    (coefficientOne : MvPolynomial.coeff target
+      (MvPolynomial.bind₁ substitution polynomial) = 1) :
+    ∃ source ∈ polynomial.support,
+      MvPolynomial.coeff source polynomial = 1 ∧
+        MvPolynomial.coeff target
+            (monomialExpansion substitution source) = 1 ∧
+          IsNeighbor substitution source target ∧
+          ∀ other ∈ polynomial.support,
+            IsNeighbor substitution other target → other = source := by
+  classical
+  let contribution := fun source =>
+    MvPolynomial.coeff target
+      (MvPolynomial.bind₁ substitution
+        (MvPolynomial.monomial source
+          (MvPolynomial.coeff source polynomial)))
+  have contributionSum :
+      ∑ source ∈ polynomial.support, contribution source = 1 := by
+    simpa [contribution] using
+      (coeff_bind₁_eq_sum substitution polynomial target).symm.trans
+        coefficientOne
+  have contributionSumNe :
+      (∑ source ∈ polynomial.support, contribution source) ≠ 0 := by
+    omega
+  obtain ⟨source, sourcePresent, sourceNonzero⟩ :=
+    Finset.exists_ne_zero_of_sum_ne_zero contributionSumNe
+  have sourceLeSum : contribution source ≤
+      ∑ other ∈ polynomial.support, contribution other :=
+    Finset.single_le_sum (fun _ _ => Nat.zero_le _) sourcePresent
+  have sourceOne : contribution source = 1 := by
+    omega
+  have sourceCoefficientOne : MvPolynomial.coeff source polynomial = 1 := by
+    have contributionFactor :=
+      coeff_bind₁_monomial_coeff substitution polynomial source target
+    change contribution source =
+      MvPolynomial.coeff source polynomial *
+        MvPolynomial.coeff target
+          (monomialExpansion substitution source) at contributionFactor
+    have productOne : MvPolynomial.coeff source polynomial *
+        MvPolynomial.coeff target
+          (monomialExpansion substitution source) = 1 := by
+      rw [← contributionFactor, sourceOne]
+    exact Nat.eq_one_of_dvd_one
+      ⟨MvPolynomial.coeff target (monomialExpansion substitution source),
+        productOne.symm⟩
+  have expansionCoefficientOne :
+      MvPolynomial.coeff target
+        (monomialExpansion substitution source) = 1 := by
+    have contributionFactor :=
+      coeff_bind₁_monomial_coeff substitution polynomial source target
+    change contribution source =
+      MvPolynomial.coeff source polynomial *
+        MvPolynomial.coeff target
+          (monomialExpansion substitution source) at contributionFactor
+    have productOne : MvPolynomial.coeff source polynomial *
+        MvPolynomial.coeff target
+          (monomialExpansion substitution source) = 1 := by
+      rw [← contributionFactor, sourceOne]
+    exact Nat.eq_one_of_dvd_one
+      ⟨MvPolynomial.coeff source polynomial, by
+        rw [Nat.mul_comm]
+        exact productOne.symm⟩
+  have sourceNeighbor : IsNeighbor substitution source target := by
+    have actualPresent : target ∈
+        (MvPolynomial.bind₁ substitution
+          (MvPolynomial.monomial source
+            (MvPolynomial.coeff source polynomial))).support :=
+      MvPolynomial.mem_support_iff.mpr sourceNonzero
+    rw [support_bind₁_monomial_coeff substitution polynomial source
+      sourcePresent] at actualPresent
+    exact actualPresent
+  refine ⟨source, sourcePresent, sourceCoefficientOne,
+    expansionCoefficientOne, sourceNeighbor, ?_⟩
+  intro other otherPresent otherNeighbor
+  by_contra different
+  have actualOtherPresent : target ∈
+      (MvPolynomial.bind₁ substitution
+        (MvPolynomial.monomial other
+          (MvPolynomial.coeff other polynomial))).support := by
+    rw [support_bind₁_monomial_coeff substitution polynomial other
+      otherPresent]
+    exact otherNeighbor
+  have otherNonzero : contribution other ≠ 0 :=
+    MvPolynomial.mem_support_iff.mp actualOtherPresent
+  have sourceDifferent : source ≠ other := Ne.symm different
+  have pairLe : contribution source + contribution other ≤
+      ∑ exponent ∈ polynomial.support, contribution exponent := by
+    calc
+      contribution source + contribution other =
+          ∑ exponent ∈ ({source, other} : Finset (SourceVar →₀ ℕ)),
+            contribution exponent := by
+        simp [sourceDifferent]
+      _ ≤ ∑ exponent ∈ polynomial.support, contribution exponent :=
+        Finset.sum_le_sum_of_subset (by
+          intro exponent exponentPresent
+          simp only [Finset.mem_insert, Finset.mem_singleton] at exponentPresent
+          rcases exponentPresent with rfl | rfl
+          · exact sourcePresent
+          · exact otherPresent)
+  omega
 
 /-- Expansion turns addition of exponent vectors into multiplication of
 their expansion polynomials. -/
