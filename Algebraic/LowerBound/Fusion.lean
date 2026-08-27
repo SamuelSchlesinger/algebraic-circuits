@@ -16,6 +16,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Additio
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.PositiveConstants
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Weighted
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Weighted.Addition
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Weighted.Exact
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Weighted.NNRat
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Unit
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Collision
