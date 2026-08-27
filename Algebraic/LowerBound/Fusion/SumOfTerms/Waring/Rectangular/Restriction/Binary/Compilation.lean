@@ -230,6 +230,23 @@ theorem compiled_profile_lowerBound
     (compiled_decompositionAtMultiplications_one degree degreeAtLeastTwo
       circuit)
 
+/-- The rank-one profile specializes exactly to the middle rectangular split. -/
+theorem compiled_middle_lowerBound
+    [Field K]
+    [CharZero K]
+    (degree : Nat)
+    (degreeAtLeastTwo : 2 ≤ degree)
+    (circuit : Circuit
+      (Algebraic.SumOfTerms.signature (Term K degree)) 0 g 1)
+    (constructs : (Rectangular.problem K degree).Constructs circuit
+      (Algebraic.SumOfTerms.interpretation
+        (termValue (K := K) (degree := degree)))) :
+    Nat.choose degree (degree / 2) ≤
+      ((Translation.Binary.translation (K := K) degree).compile circuit).cost
+        (Algebraic.Arithmetic.multiplicationCost (K := K)) := by
+  simpa using compiled_profile_lowerBound degree degreeAtLeastTwo circuit
+    constructs
+
 /-- Exact source-term tradeoff at an arbitrary rectangular split. -/
 theorem choose_le_termCost_mul_sourceTermCost
     [Field K]

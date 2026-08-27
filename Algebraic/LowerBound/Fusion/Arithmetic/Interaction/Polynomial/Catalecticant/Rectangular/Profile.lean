@@ -57,6 +57,30 @@ theorem split_le_certifiedLowerBound
   exact Finset.le_sup (f := fun index : Fin (degree + 1) ↦
     Nat.choose degree index.1 ⌈/⌉ localRank index) (Finset.mem_univ split)
 
+/-- For a positive constant local-rank bound, optimizing over all rectangular
+splits is exactly the middle-layer bound. -/
+theorem certifiedLowerBound_const_eq_middle
+    (degree interactionRank : Nat)
+    (rankPositive : 0 < interactionRank) :
+    certifiedLowerBound degree (fun _ ↦ interactionRank) =
+      Nat.choose degree (degree / 2) ⌈/⌉ interactionRank := by
+  apply le_antisymm
+  · unfold certifiedLowerBound
+    apply Finset.sup_le
+    intro split _
+    exact (gc_mul_ceilDiv rankPositive).monotone_l
+      (SumOfTerms.Waring.Rectangular.targetRank_le_middle degree split.1)
+  · let middle : Fin (degree + 1) := ⟨degree / 2, by omega⟩
+    simpa [middle] using
+      split_le_certifiedLowerBound degree (fun _ ↦ interactionRank) middle
+
+/-- Rank-one profiles recover the raw middle binomial coefficient. -/
+@[simp] theorem certifiedLowerBound_one
+    (degree : Nat) :
+    certifiedLowerBound degree (fun _ ↦ 1) =
+      Nat.choose degree (degree / 2) := by
+  simpa using certifiedLowerBound_const_eq_middle degree 1 (by simp)
+
 /-- A profile hypothesis recovers the rectangular Fusion lower bound at each
 chosen split. -/
 theorem split_lowerBound
