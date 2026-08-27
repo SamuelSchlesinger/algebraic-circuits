@@ -56,6 +56,30 @@ def termExpression
   .mul (.constant term.scale)
     (expressionPower (linearFormExpression term) (2 * n))
 
+/-- Power expression whose base arrives on one shared input wire.  Unlike
+`termExpression`, tree compilation of this expression does not duplicate the
+linear-form computation. -/
+def sharedPowerExpression
+    [One K]
+    (exponent : Nat) : Algebraic.Arithmetic.Expression K 1 :=
+  expressionPower (.input 0) exponent
+
+/-- Final scalar multiplication after a shared power computation. -/
+def scaleExpression
+    (scale : K) : Algebraic.Arithmetic.Expression K 1 :=
+  .mul (.constant scale) (.input 0)
+
+/-- DAG-style Waring-term gadget: compute the linear form once, feed its
+single output to a power chain, and apply the term scale once at the end. -/
+def sharedTermCircuit
+    [Zero K]
+    [One K]
+    (term : Term K n) :=
+  (Algebraic.Arithmetic.Expression.circuit (scaleExpression term.scale)).comp
+    ((Algebraic.Arithmetic.Expression.circuit
+      (sharedPowerExpression (K := K) (2 * n))).comp
+      (Algebraic.Arithmetic.Expression.circuit (linearFormExpression term)))
+
 /-- Arithmetic expression implementing the source addition gate after the
 `2n` shared context inputs. -/
 def additionExpression
@@ -126,6 +150,14 @@ def termMultiplicationCount (n : Nat) : Nat :=
 def termAdditionCount (n : Nat) : Nat :=
   (2 * n) * (2 * n)
 
+/-- Multiplicative cost of one shared-linear-form Waring-term gadget. -/
+def sharedTermMultiplicationCount (n : Nat) : Nat :=
+  4 * n + 1
+
+/-- Additive cost of one shared-linear-form Waring-term gadget. -/
+def sharedTermAdditionCount (n : Nat) : Nat :=
+  2 * n
+
 /-- Exact multiplicative cost of a Waring-term expression. -/
 @[simp] theorem multiplicationCount_termExpression
     [Zero K]
@@ -157,6 +189,31 @@ def termAdditionCount (n : Nat) : Nat :=
     [Zero K]
     (n : Nat) :
     (additionExpression (K := K) n).additionCount = 1 := rfl
+
+/-- Exact multiplication cost of the shared term gadget. -/
+@[simp] theorem sharedTermCircuit_multiplicationCost
+    [Zero K]
+    [One K]
+    (term : Term K n) :
+    (sharedTermCircuit term).cost
+        (Algebraic.Arithmetic.multiplicationCost (K := K)) =
+      sharedTermMultiplicationCount n := by
+  simp [sharedTermCircuit, sharedPowerExpression, scaleExpression,
+    Algebraic.Arithmetic.Expression.multiplicationCount,
+    weightedCost_expressionPower, sharedTermMultiplicationCount]
+  ring
+
+/-- Exact addition cost of the shared term gadget. -/
+@[simp] theorem sharedTermCircuit_additionCost
+    [Zero K]
+    [One K]
+    (term : Term K n) :
+    (sharedTermCircuit term).cost
+        (Algebraic.Arithmetic.additionCost (K := K)) =
+      sharedTermAdditionCount n := by
+  simp [sharedTermCircuit, sharedPowerExpression, scaleExpression,
+    Algebraic.Arithmetic.Expression.additionCount,
+    weightedCost_expressionPower, sharedTermAdditionCount]
 
 /-- Evaluation of a right-associated expression sum. -/
 theorem eval_expressionSum
@@ -225,6 +282,31 @@ theorem eval_termExpression
   rw [eval_linearFormExpression]
   rfl
 
+/-- The shared term gadget computes exactly the charged Waring term. -/
+theorem eval_sharedTermCircuit
+    [CommSemiring K]
+    (term : Term K n) :
+    (sharedTermCircuit term).eval
+        (Algebraic.Arithmetic.interpretation
+          (MvPolynomial.C : K → MvPolynomial (Fin (2 * n)) K))
+        (MvPolynomial.X : Fin (2 * n) → MvPolynomial (Fin (2 * n)) K) 0 =
+      termValue term := by
+  simp only [sharedTermCircuit, Circuit.eval_comp,
+    Algebraic.Arithmetic.Expression.circuit_eval,
+    sharedPowerExpression, scaleExpression,
+    Algebraic.Arithmetic.Expression.eval]
+  rw [eval_expressionPower
+    (MvPolynomial.C : K → MvPolynomial (Fin (2 * n)) K)
+    ((Algebraic.Arithmetic.Expression.circuit
+      (linearFormExpression term)).eval
+        (Algebraic.Arithmetic.interpretation MvPolynomial.C)
+        MvPolynomial.X)
+    MvPolynomial.C_1]
+  simp only [Algebraic.Arithmetic.Expression.eval]
+  rw [Algebraic.Arithmetic.Expression.circuit_eval,
+    eval_linearFormExpression]
+  rfl
+
 /-- Contextual compilation of Waring sum-of-terms syntax into the ordinary
 arithmetic basis. -/
 def translation
@@ -241,6 +323,22 @@ def translation
         (additionExpression (K := K) n)
     | .term term => Algebraic.Arithmetic.Expression.circuit
         (termExpression term)
+
+/-- Contextual Waring translation using the shared-linear-form DAG gadget for
+each term. -/
+def sharedTranslation
+    [Semiring K]
+    (n : Nat) :
+    ContextualTranslation
+      (Algebraic.SumOfTerms.signature (Term K n))
+      (Algebraic.Arithmetic.signature K) (2 * n) where
+  gateCount
+    | .add => (additionExpression (K := K) n).gateCount
+    | .term term => (sharedTermCircuit term).size
+  operation
+    | .add => Algebraic.Arithmetic.Expression.circuit
+        (additionExpression (K := K) n)
+    | .term term => sharedTermCircuit term
 
 /-- Pulling target multiplication cost through the Waring translation charges
 each source term by the exact naive term-gadget multiplication count and makes
@@ -273,6 +371,43 @@ theorem pullCost_additionCost
       simp [ContextualTranslation.pullCost, translation]
   | term term =>
       simp [ContextualTranslation.pullCost, translation]
+
+/-- The shared translation charges each source term by `4n+1`
+multiplications. -/
+theorem sharedPullCost_multiplicationCost
+    [Semiring K]
+    (n : Nat) :
+    (sharedTranslation (K := K) n).pullCost
+        (Algebraic.Arithmetic.multiplicationCost (K := K)) =
+      Algebraic.SumOfTerms.weightedCost 0
+        (sharedTermMultiplicationCount n) := by
+  funext operation
+  cases operation with
+  | add =>
+      simp [ContextualTranslation.pullCost, sharedTranslation]
+  | term term =>
+      change (sharedTermCircuit term).cost
+        (Algebraic.Arithmetic.multiplicationCost (K := K)) =
+          sharedTermMultiplicationCount n
+      exact sharedTermCircuit_multiplicationCost term
+
+/-- The shared translation charges each term by `2n` internal additions and
+preserves source additions one-for-one. -/
+theorem sharedPullCost_additionCost
+    [Semiring K]
+    (n : Nat) :
+    (sharedTranslation (K := K) n).pullCost
+        (Algebraic.Arithmetic.additionCost (K := K)) =
+      Algebraic.SumOfTerms.weightedCost 1 (sharedTermAdditionCount n) := by
+  funext operation
+  cases operation with
+  | add =>
+      simp [ContextualTranslation.pullCost, sharedTranslation]
+  | term term =>
+      change (sharedTermCircuit term).cost
+        (Algebraic.Arithmetic.additionCost (K := K)) =
+          sharedTermAdditionCount n
+      exact sharedTermCircuit_additionCost term
 
 /-- Exact multiplication cost of contextual Waring compilation. -/
 theorem compile_multiplicationCost
@@ -332,6 +467,40 @@ theorem compile_additionCost_eq_sourceCosts
     Algebraic.SumOfTerms.circuit_cost_weightedCost]
   simp
 
+/-- Closed multiplication-cost formula for shared Waring compilation. -/
+theorem sharedCompile_multiplicationCost_eq_termCost
+    [Semiring K]
+    (n : Nat)
+    (circuit : Circuit
+      (Algebraic.SumOfTerms.signature (Term K n)) 0 g m) :
+    ((sharedTranslation (K := K) n).compile circuit).cost
+        (Algebraic.Arithmetic.multiplicationCost (K := K)) =
+      sharedTermMultiplicationCount n *
+        circuit.cost
+          (Algebraic.SumOfTerms.termCost (T := Term K n)) := by
+  rw [ContextualTranslation.compile_cost,
+    sharedPullCost_multiplicationCost,
+    Algebraic.SumOfTerms.circuit_cost_weightedCost]
+  simp
+
+/-- Closed addition-cost formula for shared Waring compilation. -/
+theorem sharedCompile_additionCost_eq_sourceCosts
+    [Semiring K]
+    (n : Nat)
+    (circuit : Circuit
+      (Algebraic.SumOfTerms.signature (Term K n)) 0 g m) :
+    ((sharedTranslation (K := K) n).compile circuit).cost
+        (Algebraic.Arithmetic.additionCost (K := K)) =
+      circuit.cost
+          (Algebraic.SumOfTerms.additionCost (T := Term K n)) +
+        sharedTermAdditionCount n *
+          circuit.cost
+            (Algebraic.SumOfTerms.termCost (T := Term K n)) := by
+  rw [ContextualTranslation.compile_cost,
+    sharedPullCost_additionCost,
+    Algebraic.SumOfTerms.circuit_cost_weightedCost]
+  simp
+
 /-- Pulling ordinary polynomial semantics through the contextual translation
 recovers Waring sum-of-terms semantics exactly. -/
 theorem pull_polynomial
@@ -374,6 +543,49 @@ theorem pull_polynomial
       simpa [Algebraic.SumOfTerms.interpretation] using
         eval_termExpression term
 
+/-- Pulling polynomial semantics through the shared-linear-form translation
+recovers Waring semantics exactly. -/
+theorem sharedPull_polynomial
+    [CommSemiring K]
+    (n : Nat) :
+    (sharedTranslation (K := K) n).pull
+        (Algebraic.Arithmetic.interpretation
+          (MvPolynomial.C : K → MvPolynomial (Fin (2 * n)) K))
+        (MvPolynomial.X : Fin (2 * n) → MvPolynomial (Fin (2 * n)) K) =
+      Algebraic.SumOfTerms.interpretation (termValue (K := K) (n := n)) := by
+  funext operation arguments
+  cases operation with
+  | add =>
+      rw [ContextualTranslation.pull]
+      simp only [sharedTranslation]
+      simp only [Algebraic.SumOfTerms.arity] at arguments ⊢
+      rw [Algebraic.Arithmetic.Expression.circuit_eval]
+      simp [additionExpression,
+        Algebraic.Arithmetic.Expression.eval,
+        ContextualTranslation.appendInputs,
+        Algebraic.SumOfTerms.interpretation]
+  | term term =>
+      rw [ContextualTranslation.pull]
+      simp only [sharedTranslation]
+      simp only [Algebraic.SumOfTerms.arity] at arguments ⊢
+      have inputEq :
+          ContextualTranslation.appendInputs
+              (MvPolynomial.X : Fin (2 * n) →
+                MvPolynomial (Fin (2 * n)) K)
+              arguments =
+            (MvPolynomial.X : Fin (2 * n) →
+              MvPolynomial (Fin (2 * n)) K) := by
+        funext index
+        exact Fin.addCases (fun context => by
+            rw [ContextualTranslation.appendInputs_context]
+            congr 1)
+          (fun impossible => Fin.elim0 impossible) index
+      rw [inputEq]
+      change (sharedTermCircuit term).eval
+        (Algebraic.Arithmetic.interpretation MvPolynomial.C)
+        MvPolynomial.X 0 = termValue term
+      exact eval_sharedTermCircuit term
+
 /-- Contextual compilation preserves every Waring circuit's polynomial
 outputs. -/
 theorem compile_eval
@@ -394,6 +606,39 @@ theorem compile_eval
       (MvPolynomial.X : Fin (2 * n) → MvPolynomial (Fin (2 * n)) K)
       (fun input => Fin.elim0 input)
   rw [pull_polynomial] at compiled
+  have inputEq :
+      ContextualTranslation.appendInputs
+          (MvPolynomial.X : Fin (2 * n) → MvPolynomial (Fin (2 * n)) K)
+          (fun input : Fin 0 => Fin.elim0 input) =
+        (MvPolynomial.X : Fin (2 * n) → MvPolynomial (Fin (2 * n)) K) := by
+    funext index
+    exact Fin.addCases (fun context => by
+        rw [ContextualTranslation.appendInputs_context]
+        congr 1)
+      (fun impossible => Fin.elim0 impossible) index
+  rw [inputEq] at compiled
+  exact compiled
+
+/-- Shared-linear-form contextual compilation preserves every Waring
+circuit's polynomial outputs. -/
+theorem sharedCompile_eval
+    [CommSemiring K]
+    (n : Nat)
+    (circuit : Circuit
+      (Algebraic.SumOfTerms.signature (Term K n)) 0 g m) :
+    ((sharedTranslation (K := K) n).compile circuit).eval
+        (Algebraic.Arithmetic.interpretation
+          (MvPolynomial.C : K → MvPolynomial (Fin (2 * n)) K))
+        (MvPolynomial.X : Fin (2 * n) → MvPolynomial (Fin (2 * n)) K) =
+      circuit.eval
+        (Algebraic.SumOfTerms.interpretation (termValue (K := K) (n := n)))
+        (fun input => Fin.elim0 input) := by
+  have compiled := (sharedTranslation (K := K) n).compile_eval circuit
+      (Algebraic.Arithmetic.interpretation
+        (MvPolynomial.C : K → MvPolynomial (Fin (2 * n)) K))
+      (MvPolynomial.X : Fin (2 * n) → MvPolynomial (Fin (2 * n)) K)
+      (fun input => Fin.elim0 input)
+  rw [sharedPull_polynomial] at compiled
   have inputEq :
       ContextualTranslation.appendInputs
           (MvPolynomial.X : Fin (2 * n) → MvPolynomial (Fin (2 * n)) K)
