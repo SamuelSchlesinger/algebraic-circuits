@@ -1,0 +1,87 @@
+import Algebraic.Basis.Arithmetic
+
+/-!
+# Combining arithmetic gate lower bounds
+
+Arithmetic Fusion arguments often expose independent certificates for
+addition and multiplication gates.  This module supplies the small reusable
+cost algebra needed to combine such certificates into one lower bound for the
+total number of nonconstant arithmetic gates.
+
+The underlying statement is signature-generic: cost is additive in the
+operation-cost function.  The arithmetic specialization then observes that
+`gateCost` is the pointwise sum of `additionCost` and `multiplicationCost`.
+-/
+
+namespace Algebraic
+
+section CostAlgebra
+
+variable {sigma : Signature}
+
+/-- Program cost is additive in the operation-cost function. -/
+theorem Program.cost_add
+    (program : Program sigma n g)
+    (left right : OperationCost sigma) :
+    program.cost (fun op => left op + right op) =
+      program.cost left + program.cost right := by
+  induction program with
+  | empty => rfl
+  | gate program line inductionHypothesis =>
+      simp only [Program.cost_gate, inductionHypothesis]
+      omega
+
+/-- Circuit cost is additive in the operation-cost function. -/
+theorem Circuit.cost_add
+    (circuit : Circuit sigma n g m)
+    (left right : OperationCost sigma) :
+    circuit.cost (fun op => left op + right op) =
+      circuit.cost left + circuit.cost right := by
+  exact circuit.program.cost_add left right
+
+end CostAlgebra
+
+namespace Fusion
+namespace Arithmetic
+namespace Combined
+
+/-- Standard arithmetic gate cost is the pointwise sum of the addition-only
+and multiplication-only costs. -/
+theorem gateCost_eq_additionCost_add_multiplicationCost
+    (K : Type u) :
+    (Algebraic.Arithmetic.gateCost (K := K)) =
+      fun op =>
+        Algebraic.Arithmetic.additionCost op +
+          Algebraic.Arithmetic.multiplicationCost op := by
+  funext op
+  cases op <;> rfl
+
+/-- The total nonconstant arithmetic-gate cost is exactly additive complexity
+plus multiplicative complexity. -/
+theorem circuit_gateCost_eq_additionCost_add_multiplicationCost
+    (circuit : Circuit (Algebraic.Arithmetic.signature K) n g m) :
+    circuit.cost (Algebraic.Arithmetic.gateCost (K := K)) =
+      circuit.cost (Algebraic.Arithmetic.additionCost (K := K)) +
+        circuit.cost
+          (Algebraic.Arithmetic.multiplicationCost (K := K)) := by
+  rw [gateCost_eq_additionCost_add_multiplicationCost]
+  exact circuit.cost_add _ _
+
+/-- Independent lower bounds for additions and multiplications add to a lower
+bound for all nonconstant arithmetic gates. -/
+theorem circuit_gate_lowerBound_of_components
+    (circuit : Circuit (Algebraic.Arithmetic.signature K) n g m)
+    (additionBound multiplicationBound : Nat)
+    (additionLowerBound : additionBound ≤
+      circuit.cost (Algebraic.Arithmetic.additionCost (K := K)))
+    (multiplicationLowerBound : multiplicationBound ≤
+      circuit.cost (Algebraic.Arithmetic.multiplicationCost (K := K))) :
+    additionBound + multiplicationBound ≤
+      circuit.cost (Algebraic.Arithmetic.gateCost (K := K)) := by
+  rw [circuit_gateCost_eq_additionCost_add_multiplicationCost]
+  exact Nat.add_le_add additionLowerBound multiplicationLowerBound
+
+end Combined
+end Arithmetic
+end Fusion
+end Algebraic
