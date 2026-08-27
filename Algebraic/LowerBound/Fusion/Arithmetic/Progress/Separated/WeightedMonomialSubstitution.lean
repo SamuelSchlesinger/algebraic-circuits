@@ -70,6 +70,32 @@ theorem coefficient_pos
   exact Finset.prod_pos fun source _ =>
     pow_pos (positive source) _
 
+/-- Without a positivity assumption, a weighted monomial expansion is either
+zero or has the usual singleton exponent support. -/
+theorem support_monomialExpansion_eq_if
+    [DecidableEq TargetVar]
+    (weight : SourceVar → ℕ)
+    (basis : SourceVar → TargetVar →₀ ℕ)
+    (exponent : SourceVar →₀ ℕ) :
+    (Expansion.monomialExpansion
+      (substitution weight basis) exponent).support =
+        if coefficient weight exponent = 0 then ∅
+        else {MonomialSubstitution.exponentMap basis exponent} := by
+  rw [monomialExpansion_eq, MvPolynomial.support_monomial]
+
+/-- Even zero weights cannot create an exponent outside the ordinary linear
+image; they can only delete that image monomial. -/
+theorem support_monomialExpansion_subset
+    [DecidableEq TargetVar]
+    (weight : SourceVar → ℕ)
+    (basis : SourceVar → TargetVar →₀ ℕ)
+    (exponent : SourceVar →₀ ℕ) :
+    (Expansion.monomialExpansion
+      (substitution weight basis) exponent).support ⊆
+        {MonomialSubstitution.exponentMap basis exponent} := by
+  rw [support_monomialExpansion_eq_if]
+  split <;> simp
+
 /-- Under positive weights, every source monomial has singleton support at
 the ordinary linear exponent image. -/
 @[simp] theorem support_monomialExpansion
@@ -107,6 +133,41 @@ theorem support_transform
   rw [transform, Expansion.support_bind₁]
   simp_rw [support_monomialExpansion weight basis positive]
   exact Finset.biUnion_singleton
+
+/-- Arbitrary natural weights, including zero, can only delete monomials from
+the exponent image of the source support. -/
+theorem support_transform_subset_image
+    [DecidableEq SourceVar]
+    [DecidableEq TargetVar]
+    (weight : SourceVar → ℕ)
+    (basis : SourceVar → TargetVar →₀ ℕ)
+    (polynomial : MvPolynomial SourceVar ℕ) :
+    (transform weight basis polynomial).support ⊆
+      polynomial.support.image
+        (MonomialSubstitution.exponentMap basis) := by
+  classical
+  rw [transform, Expansion.support_bind₁]
+  intro target targetPresent
+  rw [Finset.mem_biUnion] at targetPresent
+  obtain ⟨source, sourcePresent, targetPresent⟩ := targetPresent
+  have targetImage :=
+    support_monomialExpansion_subset weight basis source targetPresent
+  have targetEqual := Finset.mem_singleton.mp targetImage
+  exact Finset.mem_image.mpr ⟨source, sourcePresent, targetEqual.symm⟩
+
+/-- A weighted monomial substitution never increases support cardinality,
+whether or not some weights vanish. -/
+theorem card_support_transform_le
+    [DecidableEq SourceVar]
+    [DecidableEq TargetVar]
+    (weight : SourceVar → ℕ)
+    (basis : SourceVar → TargetVar →₀ ℕ)
+    (polynomial : MvPolynomial SourceVar ℕ) :
+    (transform weight basis polynomial).support.card ≤
+      polynomial.support.card :=
+  (Finset.card_le_card
+    (support_transform_subset_image weight basis polynomial)).trans
+      Finset.card_image_le
 
 end
 end WeightedMonomialSubstitution
