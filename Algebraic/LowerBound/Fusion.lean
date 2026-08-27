@@ -1,4 +1,6 @@
 import Algebraic.LowerBound.Fusion.Framework
+import Algebraic.LowerBound.Fusion.Arithmetic
+import Algebraic.LowerBound.Fusion.Arithmetic.Degree
 import Algebraic.LowerBound.Fusion.Semifilter
 import Algebraic.LowerBound.Fusion.Boolean
 import Algebraic.LowerBound.Fusion.Pullback
