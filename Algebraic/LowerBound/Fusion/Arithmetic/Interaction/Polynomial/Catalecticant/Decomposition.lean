@@ -208,6 +208,22 @@ def multiplicationOccurrences
       MvPolynomial (Fin (2 * n)) K)
     circuit
 
+/-- The specialized occurrence list has exactly the circuit's multiplication
+cost. -/
+@[simp] theorem multiplicationOccurrences_length
+    [Field K]
+    (constant : C → K)
+    (n : Nat)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1) :
+    (multiplicationOccurrences constant n circuit).length =
+      circuit.cost
+        (Algebraic.Arithmetic.multiplicationCost (K := C)) :=
+  circuitMultiplicationArguments_length
+    (fun scalar => MvPolynomial.C (constant scalar))
+    (MvPolynomial.X : Fin (2 * n) →
+      MvPolynomial (Fin (2 * n)) K)
+    circuit
+
 /-- A possibly different Waring-decomposition budget for every multiplication
 gate occurrence.  Equal semantic products at distinct gates retain distinct
 indices and may receive different budgets. -/
@@ -298,6 +314,31 @@ theorem centralBinom_le_sum_occurrenceBudget
     (SumOfTerms.Waring.target_rank_ge n) circuit constructs budget
     (occurrenceIndexedBound_of_atOccurrences constant n positive circuit budget
       restricted)
+
+/-- Concentration form of the weighted bound: some actual multiplication
+gate needs at least the ceiling-average local Waring budget. -/
+theorem exists_occurrence_budget_ge_centralBinom_ceilDiv
+    [Field K]
+    [CharZero K]
+    (constant : C → K)
+    (n : Nat)
+    (positive : 0 < n)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C) (2 * n) g 1)
+    (constructs : (problem K n).Constructs circuit
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar => MvPolynomial.C (constant scalar))))
+    (budget : Fin (multiplicationOccurrences constant n circuit).length → Nat)
+    (restricted : AtOccurrences constant n circuit budget) :
+    ∃ index,
+      Nat.centralBinom n ⌈/⌉
+          circuit.cost
+            (Algebraic.Arithmetic.multiplicationCost (K := C)) ≤
+        budget index := by
+  simpa using
+    Rank.Occurrence.exists_budget_ge_ceilDiv
+      (Nat.centralBinom n) (Nat.centralBinom_pos n) budget
+      (centralBinom_le_sum_occurrenceBudget constant n positive circuit
+        constructs budget restricted)
 
 /-- Argument-dependent weighted catalecticant bound, expressed as a list sum
 over the evaluated multiplication gates. -/

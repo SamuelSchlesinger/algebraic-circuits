@@ -1,4 +1,5 @@
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Rank.Local
+import Mathlib.Data.Fintype.Lattice
 
 /-!
 # Multiplication-occurrence rank budgets
@@ -24,6 +25,32 @@ variable {A : Type x} {B : Type y}
 variable [Field K] [Add U] [Mul U]
 variable [AddCommGroup A] [Module K A]
 variable [AddCommGroup B] [Module K B]
+
+/-- A positive quantity bounded by a finite sum forces one summand to reach
+its ceiling average.  Positivity also rules out an empty index type. -/
+theorem exists_budget_ge_ceilDiv
+    (targetRank : Nat)
+    (targetPositive : 0 < targetRank)
+    (budget : Fin count → Nat)
+    (target_le_sum : targetRank ≤ ∑ index, budget index) :
+    ∃ index, targetRank ⌈/⌉ count ≤ budget index := by
+  have countPositive : 0 < count := by
+    by_contra notPositive
+    have countZero : count = 0 := Nat.eq_zero_of_not_pos notPositive
+    subst count
+    simp at target_le_sum
+    omega
+  let _ : Nonempty (Fin count) := Fin.pos_iff_nonempty.mp countPositive
+  obtain ⟨index, maximal⟩ := Finite.exists_max budget
+  refine ⟨index, (ceilDiv_le_iff_le_mul countPositive).2 ?_⟩
+  exact target_le_sum.trans (by
+    calc
+      (∑ candidate, budget candidate) ≤
+          ∑ _candidate : Fin count, budget index := by
+        apply Finset.sum_le_sum
+        intro candidate _
+        exact maximal candidate
+      _ = count * budget index := by simp)
 
 /-- The interaction map created by a particular evaluated multiplication-gate
 occurrence. -/
@@ -182,6 +209,33 @@ theorem targetRank_le_sum_indexedBudget
       (target_rank_le_sum_indexedBudget certificate circuit constructs budget
         localBound)
   exact_mod_cast cardinalBound
+
+/-- Some actual multiplication occurrence carries at least the ceiling
+average of any positive certified target-rank lower bound. -/
+theorem exists_occurrence_budget_ge_ceilDiv
+    {constant : C → U}
+    {problem : Problem U}
+    (certificate : Interaction.Certificate (K := K)
+      (Q := A →ₗ[K] B) constant problem)
+    (targetRank : Nat)
+    (targetPositive : 0 < targetRank)
+    (target_rank_ge : (targetRank : Cardinal) ≤
+      LinearMap.rank (certificate.feature problem.target))
+    (circuit : Circuit (Algebraic.Arithmetic.signature C)
+      problem.inputCount g 1)
+    (constructs : problem.Constructs circuit
+      (Algebraic.Arithmetic.interpretation constant))
+    (budget :
+      Fin (circuitMultiplicationArguments constant problem.inputs circuit).length →
+        Nat)
+    (localBound : IndexedBound certificate circuit budget) :
+    ∃ index,
+      targetRank ⌈/⌉
+          (circuitMultiplicationArguments constant problem.inputs circuit).length ≤
+        budget index :=
+  exists_budget_ge_ceilDiv targetRank targetPositive budget
+    (targetRank_le_sum_indexedBudget certificate targetRank target_rank_ge
+      circuit constructs budget localBound)
 
 /-- A semantic argument budget bounds target rank by its list sum over actual
 multiplication occurrences. -/
