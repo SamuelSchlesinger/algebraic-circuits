@@ -91,6 +91,21 @@ theorem multiplyInputCircuit_eval
         (Arithmetic.multiplicationCost (K := K)) =
       circuit.cost (Arithmetic.multiplicationCost (K := K)) + 1 := rfl
 
+/-- Squaring introduces no addition cost. -/
+@[simp] theorem squareCircuit_additionCost
+    (circuit : Circuit (Arithmetic.signature K) 1 g 1) :
+    (squareCircuit circuit).cost (Arithmetic.additionCost (K := K)) =
+      circuit.cost (Arithmetic.additionCost (K := K)) := by
+  simp [squareCircuit, Circuit.cost, Arithmetic.additionCost]
+
+/-- Multiplication by the retained input introduces no addition cost. -/
+@[simp] theorem multiplyInputCircuit_additionCost
+    (circuit : Circuit (Arithmetic.signature K) 1 g 1) :
+    (multiplyInputCircuit circuit).cost
+        (Arithmetic.additionCost (K := K)) =
+      circuit.cost (Arithmetic.additionCost (K := K)) := by
+  simp [multiplyInputCircuit, Circuit.cost, Arithmetic.additionCost]
+
 /-- A shared binary-power circuit, packaged with its inferred gate count.
 Zero uses one free constant gate; one is the zero-gate identity; each further
 binary digit contributes one squaring and, for a one bit, one multiplication
@@ -218,6 +233,23 @@ binary count. -/
   | bit bit exponent nonzero inductionHypothesis =>
       rw [binaryCircuit_bit bit exponent nonzero,
         binaryMultiplicationCount_bit bit exponent nonzero]
+      cases bit <;> simp [inductionHypothesis]
+
+/-- Binary powering contains no addition gates. -/
+@[simp] theorem binaryCircuit_additionCost
+    [One K]
+    (exponent : Nat) :
+    (binaryCircuit (K := K) exponent).2.cost
+        (Arithmetic.additionCost (K := K)) = 0 := by
+  induction exponent using Nat.binaryRecFromOne with
+  | zero =>
+      rw [binaryCircuit_zero]
+      rfl
+  | one =>
+      rw [binaryCircuit_one]
+      rfl
+  | bit bit exponent nonzero inductionHypothesis =>
+      rw [binaryCircuit_bit bit exponent nonzero]
       cases bit <;> simp [inductionHypothesis]
 
 /-- Binary powering uses at most twice the base-two logarithm many
