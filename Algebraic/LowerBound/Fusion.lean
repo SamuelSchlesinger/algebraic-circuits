@@ -1,0 +1,24 @@
+import Algebraic.LowerBound.Fusion.Framework
+import Algebraic.LowerBound.Fusion.Semifilter
+import Algebraic.LowerBound.Fusion.Boolean
+
+/-!
+# Fusion lower bounds
+
+This umbrella exports the algebra-generic fusion engine, its semi-filter
+set-cover specialization, and the pointwise Boolean interfaces.
+
+The semi-filter layer formalizes the acyclic lower-bound direction of the
+modern cover-complexity presentation.  The converse via cyclic circuits is a
+different computational model and is intentionally not folded into
+`Program`.
+
+References:
+
+* A. Wigderson, *The Fusion Method for Lower Bounds in Circuit Complexity*
+  (1993).
+* B. Cavalar and I. C. Oliveira, *Boolean Circuit Complexity and
+  Two-Dimensional Cover Problems* (2025), https://arxiv.org/abs/2503.14117.
+* J. Pich, *Localizability of the Approximation Method* (2022),
+  https://arxiv.org/abs/2212.09285.
+-/

@@ -7,6 +7,7 @@ import Algebraic.Circuit
 import Algebraic.Semantics
 import Algebraic.Support
 import Algebraic.Cost
+import Algebraic.Basis.Arithmetic
 import Algebraic.Substitution
 import Algebraic.Translation
 import Algebraic.Translation.Optimal
