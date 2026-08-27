@@ -69,6 +69,8 @@ import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Rectangular
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Translation
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Translation.Binary
 import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Restriction
+import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Restriction.Binary
+import Algebraic.LowerBound.Fusion.SumOfTerms.Waring.Restriction.Binary.Compilation
 import Algebraic.LowerBound.Fusion.SumOfTerms.Coverage
 import Algebraic.LowerBound.Fusion.SumOfTerms.Rectangle
 import Algebraic.LowerBound.Fusion.Semifilter
