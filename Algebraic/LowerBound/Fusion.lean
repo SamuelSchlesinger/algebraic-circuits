@@ -3,6 +3,8 @@ import Algebraic.LowerBound.Fusion.Counting
 import Algebraic.LowerBound.Fusion.Arithmetic.BoundedFailure
 import Algebraic.LowerBound.Fusion.Arithmetic
 import Algebraic.LowerBound.Fusion.Arithmetic.Degree
+import Algebraic.LowerBound.Fusion.SumOfTerms
+import Algebraic.LowerBound.Fusion.SumOfTerms.Rank
 import Algebraic.LowerBound.Fusion.Semifilter
 import Algebraic.LowerBound.Fusion.Cyclic
 import Algebraic.LowerBound.Fusion.Cyclic.Closure
