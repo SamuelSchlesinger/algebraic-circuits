@@ -127,6 +127,70 @@ theorem coefficientMatrix_rank_le_outputRank
         (inputProblem inputVariables) outputs :=
       rfl
 
+/-- If the selected coefficient feature has exactly the free-data submodule
+as its kernel, then its matrix rank equals the canonical quotient-output rank. -/
+theorem coefficientMatrix_rank_eq_outputRank_of_ker_eq
+    [Field K]
+    [DecidableEq σ]
+    (constant : C → K)
+    (inputVariables : Fin n → σ)
+    (exponent : I → σ →₀ ℕ)
+    (nonconstant : ∀ selected, exponent selected ≠ 0)
+    (notInput : ∀ selected input,
+      exponent selected ≠ Finsupp.single (inputVariables input) 1)
+    (kernel_eq : LinearMap.ker (coefficientFeature exponent) =
+      Linear.Quotient.freeSubmodule K
+        (fun scalar => MvPolynomial.C (constant scalar))
+        (inputProblem inputVariables))
+    (outputs : Fin m → MvPolynomial σ K) :
+    (coefficientMatrix exponent outputs).rank =
+      Linear.Quotient.outputRank (K := K)
+        (fun scalar => MvPolynomial.C (constant scalar))
+        (inputProblem inputVariables) outputs := by
+  let free := Linear.Quotient.freeSubmodule K
+    (fun scalar => MvPolynomial.C (constant scalar))
+    (inputProblem inputVariables)
+  let quotientFeatures : Fin m →
+      (MvPolynomial σ K ⧸ free) :=
+    free.mkQ ∘ outputs
+  let quotientSpan := Submodule.span K (Set.range quotientFeatures)
+  let descended := coefficientFeatureOnQuotient constant inputVariables
+    exponent nonconstant notInput
+  have factor : descended ∘ quotientFeatures =
+      coefficientFeature exponent ∘ outputs := by
+    funext output
+    exact coefficientFeatureOnQuotient_mkQ constant inputVariables exponent
+      nonconstant notInput (outputs output)
+  have map_eq : quotientSpan.map descended =
+      Submodule.span K
+        (Set.range (coefficientFeature exponent ∘ outputs)) := by
+    rw [Submodule.map_span, ← Set.range_comp, factor]
+  have descended_ker : LinearMap.ker descended = ⊥ := by
+    dsimp [descended]
+    unfold coefficientFeatureOnQuotient
+    apply Submodule.ker_liftQ_eq_bot'
+    exact kernel_eq.symm
+  have descended_injective : Function.Injective descended :=
+    LinearMap.ker_eq_bot.mp descended_ker
+  have map_finrank_eq : Module.finrank K quotientSpan =
+      Module.finrank K (quotientSpan.map descended) :=
+    (Submodule.equivMapOfInjective descended descended_injective
+      quotientSpan).finrank_eq
+  calc
+    (coefficientMatrix exponent outputs).rank =
+        Module.finrank K
+          (Submodule.span K
+            (Set.range (coefficientFeature exponent ∘ outputs))) := by
+      rw [Matrix.rank_eq_finrank_span_cols]
+      congr 2
+    _ = Module.finrank K (quotientSpan.map descended) := by
+      rw [map_eq]
+    _ = Module.finrank K quotientSpan := map_finrank_eq.symm
+    _ = Linear.Quotient.outputRank (K := K)
+        (fun scalar => MvPolynomial.C (constant scalar))
+        (inputProblem inputVariables) outputs :=
+      rfl
+
 /-- The coordinate comparison and canonical quotient theorem recover the
 selected coefficient-matrix multiplication lower bound. -/
 theorem coefficientMatrix_rank_le_multiplicationCost_viaQuotient
