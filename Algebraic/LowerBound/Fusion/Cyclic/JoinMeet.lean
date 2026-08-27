@@ -333,5 +333,44 @@ theorem joinMeetCyclic_pairCover_lowerBound
   exact coverLowerBound
     (pairCoverOfJoinMeetCyclic problem admissible circuit constructs)
 
+/-- Least meet cost of a finite-join/meet cyclic construction.  If no such
+construction exists, the dependent infimum is top. -/
+noncomputable def joinMeetCyclicComplexity
+    (problem : SetProblem Γ) : ℕ∞ :=
+  ⨅ g : Nat,
+    ⨅ circuit : CyclicCircuit JoinMeet.signature problem.inputCount g,
+      ⨅ _constructs : circuit.Constructs
+          (problem := problem) (JoinMeet.setInterpretation Γ),
+        (circuit.cost JoinMeet.meetCost : ℕ∞)
+
+/-- Every concrete cyclic construction upper-bounds cyclic meet complexity. -/
+theorem joinMeetCyclicComplexity_le
+    (problem : SetProblem Γ)
+    (circuit : CyclicCircuit JoinMeet.signature problem.inputCount g)
+    (constructs : circuit.Constructs
+      (problem := problem) (JoinMeet.setInterpretation Γ)) :
+    joinMeetCyclicComplexity problem ≤
+      (circuit.cost JoinMeet.meetCost : ℕ∞) := by
+  unfold joinMeetCyclicComplexity
+  exact iInf_le_of_le g <| iInf_le_of_le circuit <|
+    iInf_le_of_le constructs le_rfl
+
+/-- Pair-cover complexity is no larger than cyclic meet complexity. -/
+theorem pairCoverComplexity_le_joinMeetCyclicComplexity
+    (problem : SetProblem Γ) :
+    pairCoverComplexity problem SemifilterClass.all ≤
+      joinMeetCyclicComplexity problem := by
+  unfold joinMeetCyclicComplexity
+  refine le_iInf fun g => ?_
+  refine le_iInf fun circuit => ?_
+  refine le_iInf fun constructs => ?_
+  calc
+    pairCoverComplexity problem SemifilterClass.all ≤
+        ((pairCoverOfJoinMeetCyclic problem SemifilterClass.all
+          circuit constructs).cost : ℕ∞) :=
+      pairCoverComplexity_le problem SemifilterClass.all _
+    _ = (circuit.cost JoinMeet.meetCost : ℕ∞) := by
+      rw [pairCoverOfJoinMeetCyclic_cost]
+
 end Fusion
 end Algebraic
