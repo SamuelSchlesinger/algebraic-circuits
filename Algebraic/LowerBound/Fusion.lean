@@ -5,6 +5,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic.BoundedFailure
 import Algebraic.LowerBound.Fusion.Arithmetic.Combined
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Rank
+import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Multiple
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Hessian
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Hessian.Pairing
 import Algebraic.LowerBound.Fusion.Arithmetic.Support

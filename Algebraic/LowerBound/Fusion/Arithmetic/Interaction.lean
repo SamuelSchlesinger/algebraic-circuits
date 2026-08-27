@@ -305,6 +305,128 @@ theorem targetFeature_mem_circuitSubmodule
   exact targetFeature_mem_generatedSubmodule certificate
     (coverOfCircuit (model certificate) circuit constructs)
 
+/-- Every wire feature belongs to the interaction span of any atom list that
+contains all atoms of the program.  Unlike the cover argument, this invariant
+does not single out one output and is therefore the bridge to multi-output
+lower bounds. -/
+theorem feature_trace_mem_of_programAtoms_subset
+    {constant : C → U}
+    {problem : Problem U}
+    (certificate : Certificate (K := K) (Q := Q) constant problem)
+    (program : Program (Algebraic.Arithmetic.signature C)
+      problem.inputCount g)
+    (allAtoms : List (Atom (Algebraic.Arithmetic.signature C) U))
+    (atomsSubset : ∀ atom,
+      atom ∈ programAtoms
+        (Algebraic.Arithmetic.interpretation constant)
+        problem.inputs program → atom ∈ allAtoms) :
+    ∀ wire, certificate.feature
+        (program.trace (Algebraic.Arithmetic.interpretation constant)
+          problem.inputs wire) ∈
+      generatedSubmodule certificate allAtoms := by
+  induction program with
+  | empty =>
+      intro wire
+      refine Fin.addCases (fun input => ?_)
+        (fun impossible => Fin.elim0 impossible) wire
+      rw [Program.trace_input, certificate.input_zero input]
+      exact (generatedSubmodule certificate allAtoms).zero_mem
+  | @gate g program line inductionHypothesis =>
+      have priorSubset : ∀ atom,
+          atom ∈ programAtoms
+            (Algebraic.Arithmetic.interpretation constant)
+            problem.inputs program → atom ∈ allAtoms := by
+        intro atom present
+        exact atomsSubset atom (List.mem_append_left _ present)
+      have priorMem := inductionHypothesis priorSubset
+      intro wire
+      refine Fin.addCases (fun input => ?_) (fun gate => ?_) wire
+      · rw [Program.trace_input, certificate.input_zero input]
+        exact (generatedSubmodule certificate allAtoms).zero_mem
+      · refine Fin.lastCases ?_ (fun priorGate => ?_) gate
+        · let lastAtom := lineAtom line program
+            (Algebraic.Arithmetic.interpretation constant) problem.inputs
+          have lastPresent : lastAtom ∈ allAtoms := by
+            apply atomsSubset lastAtom
+            simp [lastAtom]
+          rw [Program.trace_gateWire, Program.gateFunction_gate_last]
+          cases line with
+          | mk op wires =>
+              cases op with
+              | add =>
+                  change Fin 2 → Wire problem.inputCount g at wires
+                  change certificate.feature
+                    (program.trace
+                        (Algebraic.Arithmetic.interpretation constant)
+                        problem.inputs (wires (0 : Fin 2)) +
+                      program.trace
+                        (Algebraic.Arithmetic.interpretation constant)
+                        problem.inputs (wires (1 : Fin 2))) ∈
+                    generatedSubmodule certificate allAtoms
+                  rw [certificate.feature_add]
+                  exact (generatedSubmodule certificate allAtoms).add_mem
+                    (priorMem (wires (0 : Fin 2)))
+                    (priorMem (wires (1 : Fin 2)))
+              | mul =>
+                  change Fin 2 → Wire problem.inputCount g at wires
+                  change certificate.feature
+                    (program.trace
+                        (Algebraic.Arithmetic.interpretation constant)
+                        problem.inputs (wires (0 : Fin 2)) *
+                      program.trace
+                        (Algebraic.Arithmetic.interpretation constant)
+                        problem.inputs (wires (1 : Fin 2))) ∈
+                    generatedSubmodule certificate allAtoms
+                  obtain ⟨leftScalar, rightScalar, decomposition⟩ :=
+                    certificate.feature_mul
+                      (program.trace
+                        (Algebraic.Arithmetic.interpretation constant)
+                        problem.inputs (wires (0 : Fin 2)))
+                      (program.trace
+                        (Algebraic.Arithmetic.interpretation constant)
+                        problem.inputs (wires (1 : Fin 2)))
+                  rw [decomposition]
+                  apply (generatedSubmodule certificate allAtoms).add_mem
+                  · exact (generatedSubmodule certificate allAtoms).add_mem
+                      ((generatedSubmodule certificate allAtoms).smul_mem
+                        leftScalar (priorMem (wires (0 : Fin 2))))
+                      ((generatedSubmodule certificate allAtoms).smul_mem
+                        rightScalar (priorMem (wires (1 : Fin 2))))
+                  · exact interaction_mem_generatedSubmodule certificate
+                      allAtoms
+                      (fun argument : Fin 2 =>
+                        program.trace
+                          (Algebraic.Arithmetic.interpretation constant)
+                          problem.inputs (wires argument)) (by
+                        simpa [lastAtom, lineAtom, Function.comp_def] using
+                          lastPresent)
+              | constant scalar =>
+                  change certificate.feature (constant scalar) ∈
+                    generatedSubmodule certificate allAtoms
+                  rw [certificate.constant_zero scalar]
+                  exact (generatedSubmodule certificate allAtoms).zero_mem
+        · simpa [Program.trace] using priorMem (Wire.gate priorGate)
+
+/-- Every output feature of a circuit lies in the common span of all its
+multiplication interactions. -/
+theorem feature_circuit_output_mem
+    {constant : C → U}
+    {problem : Problem U}
+    (certificate : Certificate (K := K) (Q := Q) constant problem)
+    (circuit : Circuit (Algebraic.Arithmetic.signature C)
+      problem.inputCount g m)
+    (output : Fin m) :
+    certificate.feature
+        (circuit.eval (Algebraic.Arithmetic.interpretation constant)
+          problem.inputs output) ∈
+      generatedSubmodule certificate
+        (circuitAtoms circuit
+          (Algebraic.Arithmetic.interpretation constant) problem.inputs) := by
+  exact feature_trace_mem_of_programAtoms_subset certificate circuit.program
+    (circuitAtoms circuit
+      (Algebraic.Arithmetic.interpretation constant) problem.inputs)
+    (fun _ present => present) (circuit.outputs output)
+
 end Interaction
 end Arithmetic
 end Fusion
