@@ -57,7 +57,7 @@ def coefficientFeatureOnQuotient
 
 /-- Descending to the quotient and then taking selected coefficients agrees
 with taking selected coefficients directly. -/
-@[simp] theorem coefficientFeatureOnQuotient_mkQ
+theorem coefficientFeatureOnQuotient_mkQ
     [Field K]
     [DecidableEq σ]
     (constant : C → K)

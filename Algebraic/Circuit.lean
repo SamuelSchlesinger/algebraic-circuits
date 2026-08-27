@@ -34,6 +34,12 @@ def Circuit.id (σ : Signature) (n : Nat) : Circuit σ n 0 n where
 def Circuit.FanInAtMost (c : Circuit σ n g m) (r : Nat) : Prop :=
   c.program.FanInAtMost r
 
+/-- Bounded fan-in is decidable for every concrete circuit. -/
+instance Circuit.instDecidableFanInAtMost
+    (c : Circuit σ n g m)
+    (r : Nat) : Decidable (c.FanInAtMost r) :=
+  Program.instDecidableFanInAtMost c.program r
+
 /-- The number of gates in a circuit. Designating outputs is free. -/
 def Circuit.size (_ : Circuit σ n g m) : Nat :=
   g

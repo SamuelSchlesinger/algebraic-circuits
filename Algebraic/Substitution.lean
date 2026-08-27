@@ -47,13 +47,13 @@ namespace Wire.Renaming
 def castAdd (k : Nat) : Wire.Renaming n g (g + k) where
   gates := fun gate => Wire.gate (gate.castAdd k)
 
-@[simp] theorem castAdd_input
+theorem castAdd_input
     (k : Nat) (input : Fin n) :
     (castAdd k : Wire.Renaming n g (g + k)) (Wire.input input) =
       Wire.input input := by
   simp [castAdd]
 
-@[simp] theorem castAdd_gate
+theorem castAdd_gate
     (k : Nat) (gate : Fin g) :
     (castAdd k : Wire.Renaming n g (g + k)) (Wire.gate gate) =
       Wire.gate (gate.castAdd k) := by

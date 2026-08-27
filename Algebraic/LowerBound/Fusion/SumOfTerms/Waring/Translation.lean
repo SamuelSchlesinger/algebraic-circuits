@@ -83,7 +83,6 @@ def sharedTermCircuit
 /-- Arithmetic expression implementing the source addition gate after the
 `2n` shared context inputs. -/
 def additionExpression
-    [Zero K]
     (n : Nat) : Algebraic.Arithmetic.Expression K (2 * n + 2) :=
   .add (.input (Fin.natAdd (2 * n) (0 : Fin 2)))
     (.input (Fin.natAdd (2 * n) (1 : Fin 2)))
@@ -180,13 +179,11 @@ def sharedTermAdditionCount (n : Nat) : Nat :=
 
 /-- The source-addition gadget uses no multiplication gates. -/
 @[simp] theorem multiplicationCount_additionExpression
-    [Zero K]
     (n : Nat) :
     (additionExpression (K := K) n).multiplicationCount = 0 := rfl
 
 /-- The source-addition gadget uses exactly one addition gate. -/
 @[simp] theorem additionCount_additionExpression
-    [Zero K]
     (n : Nat) :
     (additionExpression (K := K) n).additionCount = 1 := rfl
 

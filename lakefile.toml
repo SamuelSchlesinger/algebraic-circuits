@@ -1,6 +1,9 @@
 name = "algebraic"
 version = "0.1.0"
 defaultTargets = ["Algebraic"]
+testDriver = "AlgebraicTests"
+lintDriver = "batteries/runLinter"
+lintDriverArgs = ["Algebraic"]
 
 [[require]]
 name = "mathlib"
@@ -9,3 +12,6 @@ rev = "v4.33.1"
 
 [[lean_lib]]
 name = "Algebraic"
+
+[[lean_lib]]
+name = "AlgebraicTests"

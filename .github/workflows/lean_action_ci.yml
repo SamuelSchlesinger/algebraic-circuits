@@ -12,3 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: leanprover/lean-action@v1
+        with:
+          build-args: --wfail
+
+      - name: Build public API regression suite
+        run: lake build AlgebraicTests --wfail
+
+      - name: Lint public library
+        run: lake lint

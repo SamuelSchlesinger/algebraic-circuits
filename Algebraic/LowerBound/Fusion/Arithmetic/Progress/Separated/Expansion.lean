@@ -112,7 +112,6 @@ theorem support_bind₁_monomial_coeff
 
 /-- Exact support decomposition of a monotone polynomial substitution. -/
 theorem support_bind₁
-    [DecidableEq SourceVar]
     [DecidableEq TargetVar]
     (substitution : SourceVar → MvPolynomial TargetVar ℕ)
     (polynomial : MvPolynomial SourceVar ℕ) :
@@ -185,7 +184,6 @@ theorem support_monomialExpansion_congr
 /-- Over natural coefficients, the support after substitution depends only on
 the pointwise supports of the substituted variable polynomials. -/
 theorem support_bind₁_congr
-    [DecidableEq SourceVar]
     [DecidableEq TargetVar]
     (left right : SourceVar → MvPolynomial TargetVar ℕ)
     (supportEqual : ∀ source,
@@ -201,7 +199,6 @@ theorem support_bind₁_congr
 /-- Expand a substituted polynomial as the finite sum of the contributions
 of its supported source monomials. -/
 theorem bind₁_eq_sum
-    [DecidableEq SourceVar]
     (substitution : SourceVar → MvPolynomial TargetVar ℕ)
     (polynomial : MvPolynomial SourceVar ℕ) :
     MvPolynomial.bind₁ substitution polynomial =
@@ -215,7 +212,6 @@ theorem bind₁_eq_sum
 /-- Coefficients after substitution are sums of the coefficients contributed
 by the supported source monomials. -/
 theorem coeff_bind₁_eq_sum
-    [DecidableEq SourceVar]
     (substitution : SourceVar → MvPolynomial TargetVar ℕ)
     (polynomial : MvPolynomial SourceVar ℕ)
     (target : TargetVar →₀ ℕ) :
@@ -237,7 +233,6 @@ def IsNeighbor
 
 /-- Every monomial after substitution has a source neighbor. -/
 theorem exists_source_of_mem_support_bind₁
-    [DecidableEq SourceVar]
     [DecidableEq TargetVar]
     (substitution : SourceVar → MvPolynomial TargetVar ℕ)
     (polynomial : MvPolynomial SourceVar ℕ)
@@ -252,7 +247,6 @@ theorem exists_source_of_mem_support_bind₁
 /-- Every neighbor of a supported source monomial survives in the whole
 substituted polynomial. -/
 theorem mem_support_bind₁_of_neighbor
-    [DecidableEq SourceVar]
     [DecidableEq TargetVar]
     (substitution : SourceVar → MvPolynomial TargetVar ℕ)
     (polynomial : MvPolynomial SourceVar ℕ)

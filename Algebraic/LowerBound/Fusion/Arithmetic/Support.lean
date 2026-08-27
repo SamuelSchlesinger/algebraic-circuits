@@ -28,7 +28,6 @@ namespace Support
 
 /-- Construct a target support from the supplied input supports. -/
 abbrev problem
-    [DecidableEq M]
     (inputs : Fin n → FiniteSupport M)
     (target : Finset M) : Problem (FiniteSupport M) where
   inputCount := n
@@ -72,7 +71,7 @@ noncomputable instance witnessFintype
   change Fintype ↥target
   infer_instance
 
-@[simp] theorem witness_card
+theorem witness_card
     [DecidableEq M]
     [Mul M]
     (constantSupport : K → FiniteSupport M)

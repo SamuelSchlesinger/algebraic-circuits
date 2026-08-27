@@ -28,7 +28,6 @@ variable {K I J : Type}
 natural-valued matrix rank, coerced to a cardinal. -/
 theorem rank_toLin'_eq_matrixRank
     [Field K]
-    [Fintype I]
     [Fintype J]
     [DecidableEq J]
     (matrix : Matrix I J K) :
@@ -39,7 +38,6 @@ theorem rank_toLin'_eq_matrixRank
 /-- A finite set containing every nonzero row bounds flattening rank. -/
 theorem rank_toLin'_le_card_of_rowSupport_subset
     [Field K]
-    [Fintype I]
     [Fintype J]
     [DecidableEq J]
     (matrix : Matrix I J K)
@@ -55,7 +53,6 @@ theorem rank_toLin'_le_card_of_columnSupport_subset
     [Field K]
     [Fintype I]
     [Fintype J]
-    [DecidableEq I]
     [DecidableEq J]
     (matrix : Matrix I J K)
     (columns : Finset J)
@@ -119,7 +116,6 @@ theorem rank_toLin'_le_card_columnSupport
     [Field K]
     [Fintype I]
     [Fintype J]
-    [DecidableEq I]
     [DecidableEq J]
     (matrix : Matrix I J K) :
     LinearMap.rank (Matrix.toLin' matrix) ≤ (columnSupport matrix).card := by
@@ -134,7 +130,6 @@ theorem rank_toLin'_le_min_support
     [Field K]
     [Fintype I]
     [Fintype J]
-    [DecidableEq I]
     [DecidableEq J]
     (matrix : Matrix I J K) :
     LinearMap.rank (Matrix.toLin' matrix) ≤

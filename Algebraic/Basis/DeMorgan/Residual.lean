@@ -524,7 +524,7 @@ theorem orLine_eq_binaryLine
         op.eval (values left) (values right) := by
   cases op <;> rfl
 
-@[simp] theorem ResidualValue.eval_mapWires
+theorem ResidualValue.eval_mapWires
     (value : ResidualValue n g)
     (wireMap : Wire.Renaming n g h)
     (source : Program signature n g)

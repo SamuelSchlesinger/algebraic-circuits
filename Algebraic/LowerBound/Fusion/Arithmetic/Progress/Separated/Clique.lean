@@ -204,7 +204,7 @@ def polynomial
 
 /-- The clique polynomial has exactly `choose vertexCount cliqueSize`
 monomials. -/
-@[simp] theorem card_polynomial_support
+theorem card_polynomial_support
     (vertexCount cliqueSize : Nat) :
     (polynomial vertexCount cliqueSize).support.card =
       Nat.choose vertexCount cliqueSize := by

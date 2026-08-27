@@ -29,7 +29,7 @@ noncomputable section
 abbrev Index (n k : Nat) : Type :=
   ↥(Finset.powersetCard k (Finset.univ : Finset (Fin n)))
 
-@[simp] theorem card_index (n k : Nat) :
+theorem card_index (n k : Nat) :
     Fintype.card (Index n k) = Nat.choose n k := by
   simp [Index]
 

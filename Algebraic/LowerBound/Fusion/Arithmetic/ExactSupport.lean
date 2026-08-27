@@ -203,7 +203,6 @@ theorem support_bind₁_monomial_coeff
 omit [Nontrivial R] in
 /-- Exact support decomposition of a polynomial substitution. -/
 theorem support_bind₁
-    [DecidableEq SourceVar]
     [DecidableEq TargetVar]
     (substitution : SourceVar → MvPolynomial TargetVar R)
     (polynomial : MvPolynomial SourceVar R) :
@@ -287,7 +286,6 @@ theorem support_monomialExpansion_congr
 /-- Substitution support is independent of the exact-support coefficient
 semiring when source support and every variable-image support agree. -/
 theorem support_bind₁_congr
-    [DecidableEq SourceVar]
     [DecidableEq TargetVar]
     (leftSubstitution : SourceVar → MvPolynomial TargetVar R)
     (rightSubstitution : SourceVar → MvPolynomial TargetVar S)

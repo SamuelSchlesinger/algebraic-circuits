@@ -73,7 +73,6 @@ theorem coefficient_pos
 /-- Without a positivity assumption, a weighted monomial expansion is either
 zero or has the usual singleton exponent support. -/
 theorem support_monomialExpansion_eq_if
-    [DecidableEq TargetVar]
     (weight : SourceVar → ℕ)
     (basis : SourceVar → TargetVar →₀ ℕ)
     (exponent : SourceVar →₀ ℕ) :
@@ -86,7 +85,6 @@ theorem support_monomialExpansion_eq_if
 /-- Even zero weights cannot create an exponent outside the ordinary linear
 image; they can only delete that image monomial. -/
 theorem support_monomialExpansion_subset
-    [DecidableEq TargetVar]
     (weight : SourceVar → ℕ)
     (basis : SourceVar → TargetVar →₀ ℕ)
     (exponent : SourceVar →₀ ℕ) :
@@ -99,7 +97,6 @@ theorem support_monomialExpansion_subset
 /-- Under positive weights, every source monomial has singleton support at
 the ordinary linear exponent image. -/
 @[simp] theorem support_monomialExpansion
-    [DecidableEq TargetVar]
     (weight : SourceVar → ℕ)
     (basis : SourceVar → TargetVar →₀ ℕ)
     (positive : ∀ source, 0 < weight source)
@@ -120,7 +117,6 @@ def transform
 
 /-- Source monomials whose accumulated coefficient weight is nonzero. -/
 def survivingSupport
-    [DecidableEq SourceVar]
     (weight : SourceVar → ℕ)
     (polynomial : MvPolynomial SourceVar ℕ) :
     Finset (SourceVar →₀ ℕ) :=
@@ -129,7 +125,6 @@ def survivingSupport
 /-- Exact support with arbitrary weights: discard source monomials killed by
 a zero accumulated weight, then apply the linear exponent map. -/
 theorem support_transform_eq_surviving_image
-    [DecidableEq SourceVar]
     [DecidableEq TargetVar]
     (weight : SourceVar → ℕ)
     (basis : SourceVar → TargetVar →₀ ℕ)
@@ -165,7 +160,6 @@ theorem support_transform_eq_surviving_image
 
 /-- Exact support of a positive weighted monomial substitution. -/
 theorem support_transform
-    [DecidableEq SourceVar]
     [DecidableEq TargetVar]
     (weight : SourceVar → ℕ)
     (basis : SourceVar → TargetVar →₀ ℕ)
@@ -182,7 +176,6 @@ theorem support_transform
 /-- Arbitrary natural weights, including zero, can only delete monomials from
 the exponent image of the source support. -/
 theorem support_transform_subset_image
-    [DecidableEq SourceVar]
     [DecidableEq TargetVar]
     (weight : SourceVar → ℕ)
     (basis : SourceVar → TargetVar →₀ ℕ)
@@ -203,7 +196,6 @@ theorem support_transform_subset_image
 /-- A weighted monomial substitution never increases support cardinality,
 whether or not some weights vanish. -/
 theorem card_support_transform_le
-    [DecidableEq SourceVar]
     [DecidableEq TargetVar]
     (weight : SourceVar → ℕ)
     (basis : SourceVar → TargetVar →₀ ℕ)

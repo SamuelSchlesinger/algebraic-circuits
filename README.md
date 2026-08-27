@@ -22,6 +22,17 @@ Reusable Boolean, arithmetic, and sum-of-terms bases live under
 `Algebraic.Basis`. The main `Algebraic` module is the umbrella import; focused
 imports are available throughout the directory tree.
 
+For a smaller and more intentional dependency boundary, use:
+
+- `import Algebraic.Core` for signatures, shared circuits, semantics, costs,
+  substitution, and translation;
+- `import Algebraic.Applications` for a curated set of binary-power and
+  lower-bound endpoints under `Algebraic.Applications`;
+- `import Algebraic` when the complete research surface is wanted.
+
+The naming, namespace, simp, and stability conventions are recorded in
+[`STYLE.md`](STYLE.md).
+
 ## Lower bounds
 
 `Algebraic.LowerBound` collects several independent methods, including
@@ -41,6 +52,20 @@ truth for the results currently available and their precise hypotheses.
 
 ```sh
 lake build --wfail
+```
+
+Run all default declaration linters over the public `Algebraic` namespace:
+
+```sh
+lake lint
+```
+
+## Tests
+
+Compile the downstream-style public API regression suite:
+
+```sh
+lake test
 ```
 
 ## Documentation

@@ -139,23 +139,21 @@ def diagonalEmbedding (I : Type u) : I ↪ I × I where
 /-- The finite diagonal relation on an index type. -/
 def diagonal
     (I : Type u)
-    [Fintype I]
-    [DecidableEq I] : Finset (I × I) :=
+    [Fintype I] : Finset (I × I) :=
   Finset.univ.map (diagonalEmbedding I)
 
 @[simp] theorem card_diagonal
     (I : Type u)
-    [Fintype I]
-    [DecidableEq I] :
+    [Fintype I] :
     (diagonal I).card = Fintype.card I := by
   simp [diagonal]
 
 @[simp] theorem mem_diagonal
     {I : Type u}
     [Fintype I]
-    [DecidableEq I]
     (pair : I × I) :
     pair ∈ diagonal I ↔ pair.1 = pair.2 := by
+  classical
   constructor
   · intro present
     simp only [diagonal, Finset.mem_map] at present

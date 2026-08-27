@@ -27,7 +27,7 @@ inductive Op
 
 @[simp] theorem arity_meet : arity .meet = 2 := rfl
 
-@[simp] theorem arity_join (count : Nat) :
+theorem arity_join (count : Nat) :
     arity (.join count) = count := rfl
 
 /-- Signature with binary meet and every finite join. -/

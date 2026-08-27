@@ -125,6 +125,23 @@ def binaryCircuit
         ⟨prior.1 + 1, squareCircuit prior.2⟩)
     exponent
 
+/-- Gate count carried by the dependent binary-power package. -/
+def binaryPowerGateCount
+    [One K]
+    (exponent : Nat) : Nat :=
+  (binaryCircuit (K := K) exponent).1
+
+/-- Binary powering with a named gate-count index.
+
+This projection is easier to mention at concrete exponents than the second
+projection of the dependent pair returned by `binaryCircuit`. -/
+def binaryPowerCircuit
+    [One K]
+    (exponent : Nat) :
+    Circuit (Arithmetic.signature K) 1
+      (binaryPowerGateCount (K := K) exponent) 1 :=
+  (binaryCircuit (K := K) exponent).2
+
 /-- Exact number of multiplication gates used by `binaryCircuit`. -/
 def binaryMultiplicationCount (exponent : Nat) : Nat :=
   Nat.binaryRecFromOne 0 0
@@ -215,6 +232,18 @@ theorem binaryCircuit_eval
           simp only [Nat.bit_true_apply]
           omega
 
+/-- The named binary-power circuit computes the requested natural power. -/
+@[simp] theorem binaryPowerCircuit_eval
+    [Semiring R]
+    [One K]
+    (constant : K → R)
+    (mapsOne : constant 1 = 1)
+    (input : Fin 1 → R)
+    (exponent : Nat) :
+    (binaryPowerCircuit (K := K) exponent).eval
+        (Arithmetic.interpretation constant) input 0 = input 0 ^ exponent :=
+  binaryCircuit_eval constant mapsOne input exponent
+
 /-- The multiplication cost of binary compilation is exactly the recursive
 binary count. -/
 @[simp] theorem binaryCircuit_multiplicationCost
@@ -235,6 +264,15 @@ binary count. -/
         binaryMultiplicationCount_bit bit exponent nonzero]
       cases bit <;> simp [inductionHypothesis]
 
+/-- Multiplication cost of the named binary-power circuit. -/
+@[simp] theorem binaryPowerCircuit_multiplicationCost
+    [One K]
+    (exponent : Nat) :
+    (binaryPowerCircuit (K := K) exponent).cost
+        (Arithmetic.multiplicationCost (K := K)) =
+      binaryMultiplicationCount exponent :=
+  binaryCircuit_multiplicationCost exponent
+
 /-- Binary powering contains no addition gates. -/
 @[simp] theorem binaryCircuit_additionCost
     [One K]
@@ -251,6 +289,14 @@ binary count. -/
   | bit bit exponent nonzero inductionHypothesis =>
       rw [binaryCircuit_bit bit exponent nonzero]
       cases bit <;> simp [inductionHypothesis]
+
+/-- The named binary-power circuit contains no addition gates. -/
+@[simp] theorem binaryPowerCircuit_additionCost
+    [One K]
+    (exponent : Nat) :
+    (binaryPowerCircuit (K := K) exponent).cost
+        (Arithmetic.additionCost (K := K)) = 0 :=
+  binaryCircuit_additionCost exponent
 
 /-- Binary powering uses at most twice the base-two logarithm many
 multiplications for every positive exponent. -/

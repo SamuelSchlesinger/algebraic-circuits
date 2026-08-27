@@ -134,7 +134,7 @@ theorem identity_lowerBound
 abbrev Layer (n k : Nat) : Type :=
   ↥(Finset.powersetCard k (Finset.univ : Finset (Fin n)))
 
-@[simp] theorem card_layer (n k : Nat) :
+theorem card_layer (n k : Nat) :
     Fintype.card (Layer n k) = Nat.choose n k := by
   simp [Layer]
 

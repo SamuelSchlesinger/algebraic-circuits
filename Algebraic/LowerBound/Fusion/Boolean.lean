@@ -124,7 +124,7 @@ abbrev monotoneProblem
   exact AndOr.membership_setOf_bool_eq_true assignment
     (fun assignment => assignment input)
 
-@[simp] theorem monotoneProblem_target_membership
+theorem monotoneProblem_target_membership
     (function : (Fin n → Bool) → Bool)
     (assignment : Fin n → Bool) :
     AndOr.membership assignment (monotoneProblem function).target =
@@ -214,7 +214,7 @@ abbrev literalProblem
     (fun input => { assignment | assignment input = false })
   target := { assignment | function assignment = true }
 
-@[simp] theorem literalProblem_inputs_castAdd
+theorem literalProblem_inputs_castAdd
     (function : (Fin n → Bool) → Bool)
     (input : Fin n) :
     (literalProblem function).inputs (Fin.castAdd n input) =
@@ -229,7 +229,7 @@ abbrev literalProblem
       { assignment | assignment input = true }
   exact Fin.addCases_left input
 
-@[simp] theorem literalProblem_inputs_natAdd
+theorem literalProblem_inputs_natAdd
     (function : (Fin n → Bool) → Bool)
     (input : Fin n) :
     (literalProblem function).inputs (Fin.natAdd n input) =
@@ -244,7 +244,7 @@ abbrev literalProblem
       { assignment | assignment input = false }
   exact Fin.addCases_right input
 
-@[simp] theorem literalInput_natAdd
+theorem literalInput_natAdd
     (assignment : Fin n → Bool)
     (input : Fin n) :
     literalInput assignment (Fin.natAdd n input) = !assignment input := by
@@ -272,7 +272,7 @@ abbrev literalProblem
     exact AndOr.membership_setOf_bool_eq_false assignment
       (fun assignment => assignment input)
 
-@[simp] theorem literalProblem_target_membership
+theorem literalProblem_target_membership
     (function : (Fin n → Bool) → Bool)
     (assignment : Fin n → Bool) :
     AndOr.membership assignment (literalProblem function).target =

@@ -1,17 +1,7 @@
-import Algebraic.Fin
-import Algebraic.Signature
-import Algebraic.Interpretation
-import Algebraic.Homomorphism
-import Algebraic.Program
-import Algebraic.Circuit
-import Algebraic.Semantics
-import Algebraic.Support
-import Algebraic.Cost
+import Algebraic.Core
 import Algebraic.Basis.Arithmetic
 import Algebraic.Basis.Arithmetic.Expression
 import Algebraic.Basis.Arithmetic.Power
-import Algebraic.Substitution
-import Algebraic.Translation
 import Algebraic.Translation.Optimal
 import Algebraic.Translation.Category
 import Algebraic.Translation.Metric
@@ -25,3 +15,4 @@ import Algebraic.Reduction
 import Algebraic.Compaction
 import Algebraic.Counting
 import Algebraic.LowerBound
+import Algebraic.Applications

@@ -31,7 +31,7 @@ abbrev FiniteSupport (M : Type u) := Algebraic.FiniteSupport M
     (left + right).monomials = left.monomials ∪ right.monomials :=
   Algebraic.FiniteSupport.monomials_add left right
 
-@[simp] theorem mem_add
+theorem mem_add
     [DecidableEq M]
     (monomial : M)
     (left right : FiniteSupport M) :
@@ -41,7 +41,6 @@ abbrev FiniteSupport (M : Type u) := Algebraic.FiniteSupport M
 
 /-- Construct a target support from charged terms, with no free inputs. -/
 abbrev problem
-    [DecidableEq M]
     (target : Finset M) : Problem (FiniteSupport M) where
   inputCount := 0
   inputs := fun input => Fin.elim0 input
@@ -76,7 +75,7 @@ noncomputable instance witnessFintype
   unfold model
   infer_instance
 
-@[simp] theorem witness_card
+theorem witness_card
     [DecidableEq M]
     (target : Finset M)
     (termSupport : T → FiniteSupport M) :

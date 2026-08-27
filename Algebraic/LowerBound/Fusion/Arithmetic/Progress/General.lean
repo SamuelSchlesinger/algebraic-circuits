@@ -60,7 +60,7 @@ def lineReverseSubstitution
   MvPolynomial.bind₁
     (Fin.lastCases (lineFormalResult constant line) MvPolynomial.X)
 
-@[simp] theorem lineReverseSubstitution_X_last
+theorem lineReverseSubstitution_X_last
     [CommSemiring R]
     (constant : K → R)
     (line : Line (Algebraic.Arithmetic.signature K) n g) :

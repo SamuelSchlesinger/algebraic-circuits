@@ -709,7 +709,7 @@ noncomputable def constructsOfPairCover
     rfl]
   exact lineCost_closureIndex problem pairs index
 
-@[simp] theorem lineCost_pairIndex
+theorem lineCost_pairIndex
     (problem : SetProblem Γ)
     (pairs : List (Pair problem)) [Finite Γ]
     (index : Fin pairs.length) :
@@ -726,14 +726,14 @@ noncomputable def constructsOfPairCover
           (Fin.natAdd (subsetCount problem) index.castSucc)).op = 1 :=
   lineCost_pairIndex problem pairs index
 
-@[simp] theorem lineCost_bottomIndex
+theorem lineCost_bottomIndex
     (problem : SetProblem Γ)
     (pairs : List (Pair problem)) [Finite Γ] :
     JoinMeet.meetCost
         ((circuit problem pairs).lines (bottomGate problem pairs)).op = 0 := by
   simp [circuit_line_bottomGate, bottomLine, JoinMeet.meetCost]
 
-@[simp] theorem lineCost_bottomIndex_natAdd
+theorem lineCost_bottomIndex_natAdd
     (problem : SetProblem Γ)
     (pairs : List (Pair problem)) [Finite Γ] :
     JoinMeet.meetCost

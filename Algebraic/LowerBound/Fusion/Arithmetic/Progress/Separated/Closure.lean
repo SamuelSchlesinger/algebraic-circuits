@@ -40,7 +40,6 @@ def transform
 /-- Exact support of a monomial substitution: it is the image of the source
 support under the induced linear exponent map. -/
 theorem support_transform
-    [DecidableEq SourceVar]
     (basis : SourceVar → ℕ →₀ ℕ)
     (polynomial : MvPolynomial SourceVar ℕ) :
     (transform basis polynomial).support =
@@ -53,7 +52,6 @@ theorem support_transform
 
 /-- Monomial substitution cannot increase the number of support monomials. -/
 theorem card_support_transform_le
-    [DecidableEq SourceVar]
     (basis : SourceVar → ℕ →₀ ℕ)
     (polynomial : MvPolynomial SourceVar ℕ) :
     (transform basis polynomial).support.card ≤
@@ -64,7 +62,6 @@ theorem card_support_transform_le
 /-- Every substituted separation score is bounded by the original support
 cardinality minus one. -/
 theorem separationNumber_transform_le_card_sub_one
-    [DecidableEq SourceVar]
     (basis : SourceVar → ℕ →₀ ℕ)
     (polynomial : MvPolynomial SourceVar ℕ) :
     separationNumber (transform basis polynomial).support ≤
@@ -91,7 +88,6 @@ def separationClosure
 
 /-- Every particular monomial substitution lower-bounds the closed measure. -/
 theorem separationNumber_transform_le_closure
-    [DecidableEq SourceVar]
     (basis : SourceVar → ℕ →₀ ℕ)
     (polynomial : MvPolynomial SourceVar ℕ) :
     separationNumber (transform basis polynomial).support ≤
@@ -122,7 +118,6 @@ theorem achievable_separationClosure_of_pos
 
 /-- Injective renaming of exponent coordinates preserves separatedness. -/
 theorem IsSeparated.image_mapDomain
-    [DecidableEq Variable]
     [DecidableEq TargetVar]
     (embedding : Variable → TargetVar)
     (injective : Function.Injective embedding)
@@ -158,7 +153,6 @@ theorem IsSeparated.image_mapDomain
 /-- Separation number cannot decrease under an injective coordinate
 renaming. -/
 theorem separationNumber_le_image_mapDomain
-    [DecidableEq Variable]
     [DecidableEq TargetVar]
     (embedding : Variable → TargetVar)
     (injective : Function.Injective embedding)

@@ -43,7 +43,7 @@ def lineReverseSubstitution
       MvPolynomial (Wire n g) ℕ :=
   General.lineReverseSubstitution noConstants line
 
-@[simp] theorem lineReverseSubstitution_X_last
+theorem lineReverseSubstitution_X_last
     (line : Line (Algebraic.Arithmetic.signature PEmpty) n g) :
     lineReverseSubstitution line
         (MvPolynomial.X (Fin.last (n.add g))) =
@@ -112,6 +112,7 @@ theorem circuitExpandedOutput_eq_eval
 structure Measure
     (operationCost : OperationCost
       (Algebraic.Arithmetic.signature PEmpty)) where
+  /-- Quantity assigned to polynomials over each finite variable set. -/
   value : ∀ variableCount : Nat,
     MvPolynomial (Fin variableCount) ℕ → Nat
   variable_zero : ∀ variableCount (coordinate : Fin variableCount),

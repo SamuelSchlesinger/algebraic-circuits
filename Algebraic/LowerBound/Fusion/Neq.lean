@@ -97,7 +97,7 @@ abbrev problem (N : Nat) : SetProblem (Ground N) where
   inputs := Fin.addCases row column
   target := target N
 
-@[simp] theorem problem_inputs_natAdd
+theorem problem_inputs_natAdd
     (vertex : Fin N) :
     (problem N).inputs (Fin.natAdd N vertex) = column vertex := by
   unfold problem

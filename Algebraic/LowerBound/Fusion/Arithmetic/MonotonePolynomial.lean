@@ -57,33 +57,29 @@ def monomialEmbedding (σ : Type u) : (σ →₀ ℕ) ↪ Monomial σ where
 /-- The support of a natural-coefficient polynomial, expressed in the
 multiplicative monomial wrapper. -/
 def supportFinset
-    [DecidableEq σ]
     (polynomial : MvPolynomial σ ℕ) : Finset (Monomial σ) :=
   polynomial.support.map (monomialEmbedding σ)
 
 /-- A polynomial support as the reusable finite-support semantic carrier. -/
 def supportValue
-    [DecidableEq σ]
     (polynomial : MvPolynomial σ ℕ) : FiniteSupport (Monomial σ) :=
   ⟨supportFinset polynomial⟩
 
 @[simp] theorem supportValue_monomials
-    [DecidableEq σ]
     (polynomial : MvPolynomial σ ℕ) :
     (supportValue polynomial).monomials = supportFinset polynomial := rfl
 
 @[simp] theorem card_supportFinset
-    [DecidableEq σ]
     (polynomial : MvPolynomial σ ℕ) :
     (supportFinset polynomial).card = polynomial.support.card := by
   simp [supportFinset]
 
 @[simp] theorem monomial_mem_supportFinset
-    [DecidableEq σ]
     (exponent : σ →₀ ℕ)
     (polynomial : MvPolynomial σ ℕ) :
     (⟨exponent⟩ : Monomial σ) ∈ supportFinset polynomial ↔
       exponent ∈ polynomial.support := by
+  classical
   constructor
   · intro present
     obtain ⟨other, otherPresent, equal⟩ :=
@@ -179,13 +175,11 @@ theorem polynomial_support_mul
 /-- Support of the scalar constants used by the target support
 interpretation. -/
 def constantSupport
-    [DecidableEq σ]
     (scalar : ℕ) : FiniteSupport (Monomial σ) :=
   supportValue (MvPolynomial.C scalar)
 
 /-- Constant supports contain only the zero exponent vector. -/
 theorem constantSupport_subset_zero
-    [DecidableEq σ]
     (scalar : ℕ) :
     (constantSupport (σ := σ) scalar).monomials ⊆
       {(⟨0⟩ : Monomial σ)} := by
@@ -200,7 +194,6 @@ theorem constantSupport_subset_zero
 /-- If the target has no constant monomial, every named natural constant is
 sound for the support-fusion model. -/
 theorem constantAvoid_of_zero_not_mem
-    [DecidableEq σ]
     (target : MvPolynomial σ ℕ)
     (zero_not_mem : 0 ∉ target.support) :
     ∀ witness : ↥(supportFinset target), ∀ scalar,
@@ -215,7 +208,6 @@ theorem constantAvoid_of_zero_not_mem
 
 /-- Disjoint source supports imply the witness-wise input-avoidance premise. -/
 theorem inputAvoid_of_disjoint
-    [DecidableEq σ]
     (inputs : Fin n → MvPolynomial σ ℕ)
     (target : MvPolynomial σ ℕ)
     (disjoint : ∀ input,

@@ -125,7 +125,7 @@ def origins
     rw [castGate, origins_gateWire, origins_gateWire,
       gateOrigins_gate_castSucc]
 
-@[simp] theorem origins_gate_last
+theorem origins_gate_last
     (program : Program signature n g)
     (line : Line signature n g) :
     origins (program.gate line) (Wire.gate (Fin.last g)) =
@@ -158,7 +158,7 @@ theorem origins_last_of_charged
   rw [← Fin.natAdd_last (n := n) (m := g)]
   exact origins_gateWire_last_of_charged program line charged
 
-@[simp] theorem origins_gateWire_last_false
+theorem origins_gateWire_last_false
     (program : Program signature n g)
     (wires : Fin 0 → Wire n g) :
     origins (program.gate ⟨Op.false, wires⟩)
@@ -166,7 +166,7 @@ theorem origins_last_of_charged
   rw [origins_gate_last]
   rfl
 
-@[simp] theorem origins_gateWire_last_true
+theorem origins_gateWire_last_true
     (program : Program signature n g)
     (wires : Fin 0 → Wire n g) :
     origins (program.gate ⟨Op.true, wires⟩)
@@ -174,7 +174,7 @@ theorem origins_last_of_charged
   rw [origins_gate_last]
   rfl
 
-@[simp] theorem origins_gateWire_last_id
+theorem origins_gateWire_last_id
     (program : Program signature n g)
     (wires : Fin 1 → Wire n g) :
     origins (program.gate ⟨Op.id, wires⟩)
@@ -183,7 +183,7 @@ theorem origins_last_of_charged
   rw [origins_gate_last]
   exact liftedOrigins_apply program (wires 0)
 
-@[simp] theorem origins_gateWire_last_not
+theorem origins_gateWire_last_not
     (program : Program signature n g)
     (wires : Fin 1 → Wire n g) :
     origins (program.gate ⟨Op.not, wires⟩)

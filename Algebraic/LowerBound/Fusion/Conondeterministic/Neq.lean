@@ -66,7 +66,7 @@ def function (n : Nat) (assignment : Assignment n) : Bool :=
       decide (leftVertex ≠ rightVertex) := by
   simp [function]
 
-@[simp] theorem pair_mem_target_iff
+theorem pair_mem_target_iff
     (leftVertex rightVertex : Vertex n) :
     pair leftVertex rightVertex ∈ (literalProblem (function n)).target ↔
       leftVertex ≠ rightVertex := by

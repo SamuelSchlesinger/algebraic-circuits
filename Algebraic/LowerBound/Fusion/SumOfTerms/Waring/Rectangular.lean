@@ -272,7 +272,6 @@ theorem targetScalar_ne_zero
 theorem catalecticant_target
     {K : Type}
     [Field K]
-    [CharZero K]
     (degree split : Nat) :
     catalecticant K degree split (target K degree) =
       targetScalar K degree •
@@ -310,6 +309,10 @@ noncomputable def feature
     (n := MatrixRank.Layer degree split)).toLinearMap.comp
       (catalecticant K degree split)
 
+/-- The target feature is a nonzero scalar multiple of the identity map.
+`CharZero K` makes the normalizing scalar nonzero, although that proof-only
+assumption cannot occur syntactically in the conclusion. -/
+@[nolint unusedArguments]
 theorem feature_target
     {K : Type}
     [Field K]

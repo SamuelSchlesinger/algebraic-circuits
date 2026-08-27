@@ -40,7 +40,6 @@ def scaleExpression
 
 /-- Source addition after the shared `degree` context variables. -/
 def additionExpression
-    [Zero K]
     (degree : Nat) : Algebraic.Arithmetic.Expression K (degree + 2) :=
   .add (.input (Fin.natAdd degree (0 : Fin 2)))
     (.input (Fin.natAdd degree (1 : Fin 2)))
@@ -106,12 +105,10 @@ def termAdditionCount (degree : Nat) : Nat := degree
     Algebraic.Arithmetic.Expression.weightedCost]
 
 @[simp] theorem multiplicationCount_additionExpression
-    [Zero K]
     (degree : Nat) :
     (additionExpression (K := K) degree).multiplicationCount = 0 := rfl
 
 @[simp] theorem additionCount_additionExpression
-    [Zero K]
     (degree : Nat) :
     (additionExpression (K := K) degree).additionCount = 1 := rfl
 

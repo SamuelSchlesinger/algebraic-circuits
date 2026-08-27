@@ -33,7 +33,7 @@ def polynomial
 @[simp] theorem polynomial_support
     (R : Type u)
     [CommSemiring R] [Nontrivial R]
-    [NoZeroDivisors R] [ExactSupport.ZeroSumFree R]
+    [ExactSupport.ZeroSumFree R]
     (vertexCount cliqueSize : Nat) :
     (polynomial R vertexCount cliqueSize).support =
       cliqueSupport vertexCount cliqueSize := by
@@ -43,10 +43,10 @@ def polynomial
     if_neg (one_ne_zero : (1 : R) ≠ 0)]
   exact Finset.biUnion_singleton_eq_self
 
-@[simp] theorem card_polynomial_support
+theorem card_polynomial_support
     (R : Type u)
     [CommSemiring R] [Nontrivial R]
-    [NoZeroDivisors R] [ExactSupport.ZeroSumFree R]
+    [ExactSupport.ZeroSumFree R]
     (vertexCount cliqueSize : Nat) :
     (polynomial R vertexCount cliqueSize).support.card =
       Nat.choose vertexCount cliqueSize := by

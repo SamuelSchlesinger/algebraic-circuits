@@ -48,7 +48,6 @@ def Achievable
 /-- Every weighted substitution score is bounded by the original support
 cardinality minus one. -/
 theorem separationNumber_transform_le_card_sub_one
-    [DecidableEq SourceVar]
     (weight : SourceVar → ℕ)
     (basis : SourceVar → ℕ →₀ ℕ)
     (polynomial : MvPolynomial SourceVar ℕ) :
@@ -70,7 +69,6 @@ def separationClosure
 /-- Every particular weighted substitution lower-bounds the weighted
 closure. -/
 theorem separationNumber_transform_le_closure
-    [DecidableEq SourceVar]
     (weight : SourceVar → ℕ)
     (basis : SourceVar → ℕ →₀ ℕ)
     (polynomial : MvPolynomial SourceVar ℕ) :
@@ -101,7 +99,6 @@ theorem achievable_separationClosure_of_pos
 
 /-- Weighted transformed support depends only on source support. -/
 theorem transform_support_eq_of_support_eq
-    [DecidableEq SourceVar]
     (weight : SourceVar → ℕ)
     (basis : SourceVar → ℕ →₀ ℕ)
     {left right : MvPolynomial SourceVar ℕ}

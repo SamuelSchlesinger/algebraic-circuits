@@ -316,7 +316,6 @@ theorem targetScalar_ne_zero
 theorem catalecticant_target
     {K : Type}
     [Field K]
-    [CharZero K]
     (n : Nat) :
     catalecticant K n (target K n) =
       targetScalar K n •
@@ -350,7 +349,10 @@ noncomputable def feature
     (n := MatrixRank.Layer (2 * n) n)).toLinearMap.comp
       (catalecticant K n)
 
-/-- Feature of the target is a nonzero scalar multiple of the identity map. -/
+/-- Feature of the target is a nonzero scalar multiple of the identity map.
+`CharZero K` makes the normalizing scalar nonzero, although that proof-only
+assumption cannot occur syntactically in the conclusion. -/
+@[nolint unusedArguments]
 theorem feature_target
     {K : Type}
     [Field K]

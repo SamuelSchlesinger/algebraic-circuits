@@ -22,7 +22,6 @@ namespace FiniteSupport
 
 /-- The support consisting of one monomial. -/
 def singleton
-    [DecidableEq M]
     (monomial : M) : FiniteSupport M :=
   ⟨{monomial}⟩
 
@@ -38,7 +37,6 @@ instance [DecidableEq M] [Mul M] : Mul (FiniteSupport M) where
     ⟨left.monomials.image₂ (· * ·) right.monomials⟩
 
 @[simp] theorem monomials_singleton
-    [DecidableEq M]
     (monomial : M) :
     (singleton monomial).monomials = {monomial} := rfl
 
@@ -50,7 +48,7 @@ instance [DecidableEq M] [Mul M] : Mul (FiniteSupport M) where
     (left right : FiniteSupport M) :
     (left + right).monomials = left.monomials ∪ right.monomials := rfl
 
-@[simp] theorem mem_add
+theorem mem_add
     [DecidableEq M]
     (monomial : M)
     (left right : FiniteSupport M) :
@@ -65,7 +63,7 @@ instance [DecidableEq M] [Mul M] : Mul (FiniteSupport M) where
     (left * right).monomials =
       left.monomials.image₂ (· * ·) right.monomials := rfl
 
-@[simp] theorem mem_mul
+theorem mem_mul
     [DecidableEq M]
     [Mul M]
     (monomial : M)

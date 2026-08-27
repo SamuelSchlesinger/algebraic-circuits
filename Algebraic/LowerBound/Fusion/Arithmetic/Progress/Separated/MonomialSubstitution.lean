@@ -58,7 +58,6 @@ theorem monomialExpansion_eq
 /-- Every monomial expansion under a monomial-valued substitution has
 singleton support. -/
 @[simp] theorem support_monomialExpansion
-    [DecidableEq TargetVar]
     (basis : SourceVar → TargetVar →₀ ℕ)
     (exponent : SourceVar →₀ ℕ) :
     (Expansion.monomialExpansion (substitution basis) exponent).support =

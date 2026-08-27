@@ -88,6 +88,7 @@ variable [CommSemiring R] [Nontrivial R]
 variable [NoZeroDivisors R]
 variable [Algebraic.Fusion.Arithmetic.ExactSupport.ZeroSumFree R]
 
+omit [NoZeroDivisors R] in
 /-- A positive-size exact-semiring clique polynomial has no constant
 monomial. -/
 theorem zero_not_mem_polynomial_support
@@ -96,6 +97,7 @@ theorem zero_not_mem_polynomial_support
   rw [polynomial_support]
   exact zero_not_mem_cliqueSupport positive
 
+omit [NoZeroDivisors R] in
 /-- When the clique size is at least two, the target support is disjoint from
 every individual input-variable support. -/
 theorem polynomial_support_disjoint_X

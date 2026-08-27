@@ -221,6 +221,17 @@ def Program.FanInAtMost : (program : Program σ n g) → Nat → Prop
   | .gate program line, r =>
       program.FanInAtMost r ∧ σ.Arity line.op ≤ r
 
+/-- Bounded fan-in is decidable for every concrete program. -/
+instance Program.instDecidableFanInAtMost
+    (program : Program σ n g)
+    (r : Nat) : Decidable (program.FanInAtMost r) :=
+  match program with
+  | .empty => isTrue trivial
+  | .gate prior line =>
+      @instDecidableAnd (prior.FanInAtMost r)
+        (σ.Arity line.op ≤ r)
+        (Program.instDecidableFanInAtMost prior r) inferInstance
+
 /-- Evaluate a line from the values of the inputs and preceding gates. -/
 def Line.eval
   (line : Line σ n g)

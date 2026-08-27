@@ -38,7 +38,7 @@ def polynomial
     if_neg (one_ne_zero : (1 : ℚ≥0) ≠ 0)]
   exact Finset.biUnion_singleton_eq_self
 
-@[simp] theorem card_polynomial_support
+theorem card_polynomial_support
     (vertexCount cliqueSize : Nat) :
     (polynomial vertexCount cliqueSize).support.card =
       Nat.choose vertexCount cliqueSize := by

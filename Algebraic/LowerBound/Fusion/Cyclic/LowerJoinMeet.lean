@@ -21,9 +21,9 @@ namespace JoinMeetLowering
   | .meet => 1
   | .join count => count + 1
 
-@[simp] theorem blockGateCount_meet : blockGateCount .meet = 1 := rfl
+theorem blockGateCount_meet : blockGateCount .meet = 1 := rfl
 
-@[simp] theorem blockGateCount_join (count : Nat) :
+theorem blockGateCount_join (count : Nat) :
     blockGateCount (.join count) = count + 1 := rfl
 
 /-- Local output gate of an expanded operation block. -/

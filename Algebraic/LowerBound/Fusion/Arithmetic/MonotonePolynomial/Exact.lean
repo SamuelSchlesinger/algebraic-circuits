@@ -32,35 +32,31 @@ variable [CommSemiring R]
 
 /-- Exponent support embedded into the multiplicative monomial carrier. -/
 def supportFinset
-    [DecidableEq σ]
     (polynomial : MvPolynomial σ R) :
     Finset (Monomial σ) :=
   polynomial.support.map (monomialEmbedding σ)
 
 /-- Polynomial support as the reusable finite-support semantic value. -/
 def supportValue
-    [DecidableEq σ]
     (polynomial : MvPolynomial σ R) :
     FiniteSupport (Monomial σ) :=
   ⟨supportFinset polynomial⟩
 
 @[simp] theorem supportValue_monomials
-    [DecidableEq σ]
     (polynomial : MvPolynomial σ R) :
     (supportValue polynomial).monomials = supportFinset polynomial := rfl
 
 @[simp] theorem card_supportFinset
-    [DecidableEq σ]
     (polynomial : MvPolynomial σ R) :
     (supportFinset polynomial).card = polynomial.support.card := by
   simp [supportFinset]
 
 @[simp] theorem monomial_mem_supportFinset
-    [DecidableEq σ]
     (exponent : σ →₀ ℕ)
     (polynomial : MvPolynomial σ R) :
     (⟨exponent⟩ : Monomial σ) ∈ supportFinset polynomial ↔
       exponent ∈ polynomial.support := by
+  classical
   constructor
   · intro present
     obtain ⟨other, otherPresent, equal⟩ := Finset.mem_map.mp present
@@ -135,7 +131,6 @@ omit [Nontrivial R] in
 
 /-- Support of a scalar constant. -/
 def constantSupport
-    [DecidableEq σ]
     (scalar : R) : FiniteSupport (Monomial σ) :=
   supportValue (MvPolynomial.C scalar)
 
@@ -143,7 +138,6 @@ omit [Nontrivial R] [NoZeroDivisors R]
     [ExactSupport.ZeroSumFree R] in
 /-- Every scalar constant support is contained in the zero exponent. -/
 theorem constantSupport_subset_zero
-    [DecidableEq σ]
     (scalar : R) :
     (constantSupport (σ := σ) scalar).monomials ⊆
       {(⟨0⟩ : Monomial σ)} := by
@@ -194,7 +188,6 @@ omit [Nontrivial R] [NoZeroDivisors R]
 /-- If the target has no constant monomial, every scalar constant avoids all
 target witnesses. -/
 theorem constantAvoid_of_zero_not_mem
-    [DecidableEq σ]
     (constant : K → R)
     (target : MvPolynomial σ R)
     (zero_not_mem : 0 ∉ target.support) :
@@ -215,7 +208,6 @@ omit [Nontrivial R] [NoZeroDivisors R]
     [ExactSupport.ZeroSumFree R] in
 /-- Disjoint input and target supports imply witness-wise input avoidance. -/
 theorem inputAvoid_of_disjoint
-    [DecidableEq σ]
     (inputs : Fin n → MvPolynomial σ R)
     (target : MvPolynomial σ R)
     (disjoint : ∀ input,
