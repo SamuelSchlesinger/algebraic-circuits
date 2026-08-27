@@ -3,6 +3,7 @@ import Algebraic.LowerBound.Fusion.Counting
 import Algebraic.LowerBound.Fusion.Arithmetic.ExactSupport
 import Algebraic.LowerBound.Fusion.Arithmetic.BoundedFailure
 import Algebraic.LowerBound.Fusion.Arithmetic.Combined
+import Algebraic.LowerBound.Fusion.Arithmetic.Interaction
 import Algebraic.LowerBound.Fusion.Arithmetic.Support
 import Algebraic.LowerBound.Fusion.Arithmetic.MonotonePolynomial
 import Algebraic.LowerBound.Fusion.Arithmetic.MonotonePolynomial.Layer
