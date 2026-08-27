@@ -214,6 +214,21 @@ abbrev literalProblem
     (fun input => { assignment | assignment input = false })
   target := { assignment | function assignment = true }
 
+@[simp] theorem literalProblem_inputs_castAdd
+    (function : (Fin n → Bool) → Bool)
+    (input : Fin n) :
+    (literalProblem function).inputs (Fin.castAdd n input) =
+      { assignment | assignment input = true } := by
+  unfold literalProblem
+  change Fin.addCases
+    (fun positive : Fin n =>
+      { assignment : Fin n → Bool | assignment positive = true })
+    (fun negative : Fin n =>
+      { assignment : Fin n → Bool | assignment negative = false })
+    (Fin.castAdd n input) =
+      { assignment | assignment input = true }
+  exact Fin.addCases_left input
+
 @[simp] theorem literalProblem_inputs_natAdd
     (function : (Fin n → Bool) → Bool)
     (input : Fin n) :
@@ -234,6 +249,12 @@ abbrev literalProblem
     (input : Fin n) :
     literalInput assignment (Fin.natAdd n input) = !assignment input := by
   exact Fin.addCases_right input
+
+@[simp] theorem literalInput_castAdd
+    (assignment : Fin n → Bool)
+    (input : Fin n) :
+    literalInput assignment (Fin.castAdd n input) = assignment input := by
+  exact Fin.addCases_left input
 
 @[simp] theorem literalProblem_membershipInput
     (function : (Fin n → Bool) → Bool)
