@@ -3,6 +3,7 @@ import Algebraic.LowerBound.Fusion.Arithmetic
 import Algebraic.LowerBound.Fusion.Arithmetic.Degree
 import Algebraic.LowerBound.Fusion.Semifilter
 import Algebraic.LowerBound.Fusion.Cyclic
+import Algebraic.LowerBound.Fusion.Cyclic.Closure
 import Algebraic.LowerBound.Fusion.Boolean
 import Algebraic.LowerBound.Fusion.Pullback
 import Algebraic.LowerBound.Fusion.Conondeterministic
