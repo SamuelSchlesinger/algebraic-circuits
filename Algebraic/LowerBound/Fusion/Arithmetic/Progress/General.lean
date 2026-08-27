@@ -3,14 +3,13 @@ import Algebraic.Basis.Arithmetic
 import Mathlib.Algebra.MvPolynomial.Monad
 
 /-!
-# Reverse-substitution progress measures with named constants
+# Reverse-substitution progress measures over a commutative semiring
 
 This is the constant-alphabet-generic core of arithmetic reverse
 substitution.  Every input and gate wire receives a formal variable, and gates
 are eliminated in reverse topological order.  Addition and multiplication
 substitute the last variable by the corresponding expression in prior wire
-variables; a named constant substitutes its natural-coefficient constant
-polynomial.
+variables; a named constant substitutes its constant polynomial.
 
 `Measure` exposes one local law for each operation.  These laws telescope over
 the circuit DAG, so shared gates are charged exactly once.
@@ -24,22 +23,24 @@ namespace General
 
 noncomputable section
 
-/-- Arithmetic interpretation on natural-coefficient polynomials, with named
+/-- Arithmetic interpretation on semiring-coefficient polynomials, with named
 constants interpreted by `constant`. -/
 def polynomialInterpretation
-    (constant : K → ℕ)
+    [CommSemiring R]
+    (constant : K → R)
     (V : Type v) :
     Interpretation (Algebraic.Arithmetic.signature K)
-      (MvPolynomial V ℕ) :=
+      (MvPolynomial V R) :=
   Algebraic.Arithmetic.interpretation
     (fun scalar => MvPolynomial.C (constant scalar))
 
 /-- Formal polynomial computed by one arithmetic line from variables naming
 all wires in its prefix. -/
 def lineFormalResult
-    (constant : K → ℕ)
+    [CommSemiring R]
+    (constant : K → R)
     (line : Line (Algebraic.Arithmetic.signature K) n g) :
-    MvPolynomial (Wire n g) ℕ :=
+    MvPolynomial (Wire n g) R :=
   match line with
   | ⟨.add, wires⟩ =>
       MvPolynomial.X (wires (0 : Fin 2)) +
@@ -51,15 +52,17 @@ def lineFormalResult
 
 /-- Eliminate the new last gate-variable by substituting its formal result. -/
 def lineReverseSubstitution
-    (constant : K → ℕ)
+    [CommSemiring R]
+    (constant : K → R)
     (line : Line (Algebraic.Arithmetic.signature K) n g) :
-    MvPolynomial (Wire n (g + 1)) ℕ →ₐ[ℕ]
-      MvPolynomial (Wire n g) ℕ :=
+    MvPolynomial (Wire n (g + 1)) R →ₐ[R]
+      MvPolynomial (Wire n g) R :=
   MvPolynomial.bind₁
     (Fin.lastCases (lineFormalResult constant line) MvPolynomial.X)
 
 @[simp] theorem lineReverseSubstitution_X_last
-    (constant : K → ℕ)
+    [CommSemiring R]
+    (constant : K → R)
     (line : Line (Algebraic.Arithmetic.signature K) n g) :
     lineReverseSubstitution constant line
         (MvPolynomial.X (Fin.last (n.add g))) =
@@ -67,7 +70,8 @@ def lineReverseSubstitution
   simp [lineReverseSubstitution]
 
 @[simp] theorem lineReverseSubstitution_X_castSucc
-    (constant : K → ℕ)
+    [CommSemiring R]
+    (constant : K → R)
     (line : Line (Algebraic.Arithmetic.signature K) n g)
     (wire : Wire n g) :
     lineReverseSubstitution constant line
@@ -78,22 +82,25 @@ def lineReverseSubstitution
 /-- Expand every formal gate-variable by eliminating gates in reverse
 topological order. -/
 def programExpansionHom
-    (constant : K → ℕ) :
+    [CommSemiring R]
+    (constant : K → R) :
     (program : Program (Algebraic.Arithmetic.signature K) n g) →
-      MvPolynomial (Wire n g) ℕ →ₐ[ℕ] MvPolynomial (Fin n) ℕ
-  | .empty => AlgHom.id ℕ _
+      MvPolynomial (Wire n g) R →ₐ[R] MvPolynomial (Fin n) R
+  | .empty => AlgHom.id R _
   | .gate program line =>
       (programExpansionHom constant program).comp
         (lineReverseSubstitution constant line)
 
 @[simp] theorem programExpansionHom_empty
-    (constant : K → ℕ) :
+    [CommSemiring R]
+    (constant : K → R) :
     programExpansionHom constant (Program.empty : Program
       (Algebraic.Arithmetic.signature K) n 0) =
-        AlgHom.id ℕ _ := rfl
+        AlgHom.id R _ := rfl
 
 @[simp] theorem programExpansionHom_gate
-    (constant : K → ℕ)
+    [CommSemiring R]
+    (constant : K → R)
     (program : Program (Algebraic.Arithmetic.signature K) n g)
     (line : Line (Algebraic.Arithmetic.signature K) n g) :
     programExpansionHom constant (program.gate line) =
@@ -103,7 +110,8 @@ def programExpansionHom
 /-- Expanding a formal wire-variable gives the polynomial carried by that
 wire in the original program. -/
 theorem programExpansionHom_X
-    (constant : K → ℕ)
+    [CommSemiring R]
+    (constant : K → R)
     (program : Program (Algebraic.Arithmetic.signature K) n g)
     (wire : Wire n g) :
     programExpansionHom constant program (MvPolynomial.X wire) =
@@ -160,23 +168,26 @@ theorem programExpansionHom_X
 
 /-- The formal output variable of a single-output circuit. -/
 def circuitFormalOutput
+    [CommSemiring R]
     (circuit : Circuit
       (Algebraic.Arithmetic.signature K) n g 1) :
-    MvPolynomial (Wire n g) ℕ :=
+    MvPolynomial (Wire n g) R :=
   MvPolynomial.X (circuit.outputs 0)
 
 /-- Polynomial obtained by reverse-substituting every gate into the formal
 output variable. -/
 def circuitExpandedOutput
-    (constant : K → ℕ)
+    [CommSemiring R]
+    (constant : K → R)
     (circuit : Circuit
       (Algebraic.Arithmetic.signature K) n g 1) :
-    MvPolynomial (Fin n) ℕ :=
+    MvPolynomial (Fin n) R :=
   programExpansionHom constant circuit.program (circuitFormalOutput circuit)
 
 /-- Reverse substitution recovers ordinary polynomial evaluation. -/
 theorem circuitExpandedOutput_eq_eval
-    (constant : K → ℕ)
+    [CommSemiring R]
+    (constant : K → R)
     (circuit : Circuit
       (Algebraic.Arithmetic.signature K) n g 1) :
     circuitExpandedOutput constant circuit =
@@ -187,18 +198,19 @@ theorem circuitExpandedOutput_eq_eval
 /-- A polymorphic polynomial progress measure compatible with all three
 reverse substitutions. -/
 structure Measure
-    (constant : K → ℕ)
+    [CommSemiring R]
+    (constant : K → R)
     (operationCost : OperationCost
       (Algebraic.Arithmetic.signature K)) where
   /-- Quantity assigned to polynomials over each finite variable set. -/
   value : ∀ variableCount : Nat,
-    MvPolynomial (Fin variableCount) ℕ → Nat
+    MvPolynomial (Fin variableCount) R → Nat
   /-- A single formal variable has zero progress. -/
   variable_zero : ∀ variableCount (coordinate : Fin variableCount),
     value variableCount (MvPolynomial.X coordinate) = 0
   /-- Substituting the last variable by a sum obeys the addition charge. -/
   add_substitution_le : ∀ variableCount
-      (polynomial : MvPolynomial (Fin (variableCount + 1)) ℕ)
+      (polynomial : MvPolynomial (Fin (variableCount + 1)) R)
       (left right : Fin variableCount),
     value variableCount
         (MvPolynomial.bind₁
@@ -210,7 +222,7 @@ structure Measure
   /-- Substituting the last variable by a product obeys the multiplication
   charge. -/
   mul_substitution_le : ∀ variableCount
-      (polynomial : MvPolynomial (Fin (variableCount + 1)) ℕ)
+      (polynomial : MvPolynomial (Fin (variableCount + 1)) R)
       (left right : Fin variableCount),
     value variableCount
         (MvPolynomial.bind₁
@@ -222,7 +234,7 @@ structure Measure
   /-- Substituting the last variable by a named constant obeys its operation
   charge. -/
   constant_substitution_le : ∀ variableCount
-      (polynomial : MvPolynomial (Fin (variableCount + 1)) ℕ)
+      (polynomial : MvPolynomial (Fin (variableCount + 1)) R)
       (scalar : K),
     value variableCount
         (MvPolynomial.bind₁
@@ -235,12 +247,13 @@ structure Measure
 
 /-- One reverse gate substitution obeys the local progress estimate. -/
 theorem Measure.reverseSubstitution_le
-    {constant : K → ℕ}
+    [CommSemiring R]
+    {constant : K → R}
     {operationCost : OperationCost
       (Algebraic.Arithmetic.signature K)}
     (measure : Measure constant operationCost)
     (line : Line (Algebraic.Arithmetic.signature K) n g)
-    (polynomial : MvPolynomial (Wire n (g + 1)) ℕ) :
+    (polynomial : MvPolynomial (Wire n (g + 1)) R) :
     measure.value (n + g)
         (lineReverseSubstitution constant line polynomial) ≤
       measure.value (n + g + 1) polynomial + operationCost line.op := by
@@ -266,12 +279,13 @@ theorem Measure.reverseSubstitution_le
 
 /-- Reverse substitution telescopes local progress across a whole program. -/
 theorem Measure.expansionHom_le_cost
-    {constant : K → ℕ}
+    [CommSemiring R]
+    {constant : K → R}
     {operationCost : OperationCost
       (Algebraic.Arithmetic.signature K)}
     (measure : Measure constant operationCost)
     (program : Program (Algebraic.Arithmetic.signature K) n g)
-    (polynomial : MvPolynomial (Wire n g) ℕ) :
+    (polynomial : MvPolynomial (Wire n g) R) :
     measure.value n (programExpansionHom constant program polynomial) ≤
       measure.value (n + g) polynomial + program.cost operationCost := by
   induction program with
@@ -299,7 +313,8 @@ theorem Measure.expansionHom_le_cost
 
 /-- The measure of the expanded output is bounded by circuit cost. -/
 theorem Measure.expandedOutput_le_cost
-    {constant : K → ℕ}
+    [CommSemiring R]
+    {constant : K → R}
     {operationCost : OperationCost
       (Algebraic.Arithmetic.signature K)}
     (measure : Measure constant operationCost)
@@ -315,16 +330,17 @@ theorem Measure.expandedOutput_le_cost
 /-- Any arithmetic circuit producing a target polynomial pays its progress
 measure. -/
 theorem Measure.circuit_lowerBound
-    {constant : K → ℕ}
+    [CommSemiring R]
+    {constant : K → R}
     {operationCost : OperationCost
       (Algebraic.Arithmetic.signature K)}
     (measure : Measure constant operationCost)
-    (target : MvPolynomial (Fin n) ℕ)
+    (target : MvPolynomial (Fin n) R)
     (circuit : Circuit
       (Algebraic.Arithmetic.signature K) n g 1)
     (constructs :
       ({ inputCount := n, inputs := MvPolynomial.X, target := target } :
-        Problem (MvPolynomial (Fin n) ℕ)).Constructs circuit
+        Problem (MvPolynomial (Fin n) R)).Constructs circuit
           (polynomialInterpretation constant (Fin n))) :
     measure.value n target ≤ circuit.cost operationCost := by
   change circuit.eval (polynomialInterpretation constant (Fin n))
