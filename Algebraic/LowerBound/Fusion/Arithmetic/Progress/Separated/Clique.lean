@@ -1,4 +1,5 @@
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Polynomial
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Addition
 import Mathlib.Data.Finsupp.Indicator
 import Mathlib.Data.Finset.Powerset
 import Mathlib.Logic.Equiv.Fin.Basic
@@ -13,8 +14,8 @@ monomials is separated: if `C × C` is contained in
 `(A × A) ∪ (B × B)` and all three vertex sets have the same cardinality,
 then `C = A` or `C = B`.
 
-Combining this finite combinatorics with the generic coefficient-one
-separation measure proves that the `n`-vertex `k`-clique polynomial needs at
+Combining this finite combinatorics with Schnorr's substitution-closed
+separation measure proves that every polynomial with this support needs at
 least `Nat.choose n k - 1` addition gates in every constant-free monotone
 arithmetic circuit.  Taking a middle layer gives the classical exponential
 family over `n²` variables.
@@ -209,6 +210,33 @@ monomials. -/
       Nat.choose vertexCount cliqueSize := by
   simp
 
+/-- Every polynomial with exactly the clique-monomial support needs
+`choose vertexCount cliqueSize - 1` additions, independently of its positive
+coefficients. -/
+theorem circuit_addition_lowerBound_of_support_eq
+    (target : MvPolynomial (Fin (vertexCount * vertexCount)) ℕ)
+    (supportEqual : target.support =
+      cliqueSupport vertexCount cliqueSize)
+    (circuit : Circuit
+      (Algebraic.Arithmetic.signature PEmpty)
+        (vertexCount * vertexCount) g 1)
+    (constructs :
+      ({ inputCount := vertexCount * vertexCount,
+          inputs := MvPolynomial.X, target := target } :
+        Problem (MvPolynomial (Fin (vertexCount * vertexCount)) ℕ)).Constructs
+          circuit
+          (polynomialInterpretation
+            (Fin (vertexCount * vertexCount)))) :
+    Nat.choose vertexCount cliqueSize - 1 ≤
+      circuit.cost
+        (Algebraic.Arithmetic.additionCost (K := PEmpty)) := by
+  have targetSeparated : IsSeparated target.support target.support := by
+    rw [supportEqual]
+    exact cliqueSupport_isSeparated vertexCount cliqueSize
+  have bound := Closure.Addition.circuit_addition_lowerBound_of_isSeparated
+    target targetSeparated circuit constructs
+  simpa [supportEqual] using bound
+
 /-- Schnorr's addition lower bound for the clique polynomial. -/
 theorem circuit_addition_lowerBound
     (circuit : Circuit
@@ -224,12 +252,10 @@ theorem circuit_addition_lowerBound
             (Fin (vertexCount * vertexCount)))) :
     Nat.choose vertexCount cliqueSize - 1 ≤
       circuit.cost
-        (Algebraic.Arithmetic.additionCost (K := PEmpty)) := by
-  have bound := Polynomial.circuit_addition_lowerBound
-    (cliqueSupport vertexCount cliqueSize)
-    (cliqueSupport_isSeparated vertexCount cliqueSize)
+        (Algebraic.Arithmetic.additionCost (K := PEmpty)) :=
+  circuit_addition_lowerBound_of_support_eq
+    (polynomial vertexCount cliqueSize) (polynomial_support _ _)
     circuit constructs
-  simpa [polynomial] using bound
 
 /-- Middle-layer clique polynomials pay the central binomial coefficient,
 minus one, in additions. -/

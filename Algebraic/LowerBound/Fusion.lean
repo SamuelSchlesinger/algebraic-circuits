@@ -8,6 +8,8 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Progress
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Expansion
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.MonomialSubstitution
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure
+import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Closure.Addition
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Unit
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Collision
 import Algebraic.LowerBound.Fusion.Arithmetic.Progress.Separated.Addition
