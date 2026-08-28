@@ -14,9 +14,8 @@ The quantitative endpoint is the classical elementary bound
 
 `family.card > (p - 1) ^ width * width!`.
 
-It applies to families whose members have size *at most* `width`; the proof
-first pads them with private dummy elements and then applies the uniform
-induction.
+For families whose members have size *at most* `width`, the proof partitions
+the family by cardinality and applies the uniform bound to a large layer.
 -/
 
 namespace Algebraic

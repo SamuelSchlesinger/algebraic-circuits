@@ -1,4 +1,4 @@
-import Algebraic.LowerBound.Fusion.Boolean
+import Algebraic.Basis.AndOr
 import Mathlib.Data.Finset.Powerset
 import Mathlib.Data.Fintype.Pi
 import Mathlib.Data.Fintype.Prod
@@ -23,7 +23,7 @@ method.
 -/
 
 namespace Algebraic
-namespace Fusion
+namespace Monotone
 namespace Clique
 
 noncomputable section
@@ -149,11 +149,6 @@ def function (n k : Nat) (assignment : Fin (edgeCount n) → Bool) : Bool :=
   decide (∃ vertices : CliqueSet n k,
     Contains assignment vertices.1)
 
-/-- The positive-generator set problem for Boolean CLIQUE. -/
-abbrev problem (n k : Nat) :
-    SetProblem (Fin (edgeCount n) → Bool) :=
-  monotoneProblem (function n k)
-
 /-- The minimal graph of a `k`-set is a positive CLIQUE input. -/
 @[simp] theorem function_cliqueAssignment
     (vertices : CliqueSet n k) :
@@ -227,5 +222,5 @@ theorem function_monotone : Monotone (function n k) := by
 end
 
 end Clique
-end Fusion
+end Monotone
 end Algebraic

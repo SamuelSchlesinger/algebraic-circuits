@@ -1,4 +1,4 @@
-import Algebraic.LowerBound.Fusion.Clique.LowerBound
+import Algebraic.LowerBound.Monotone.Clique.LowerBound
 import Mathlib.Data.Nat.Choose.Bounds
 
 /-!
@@ -14,14 +14,15 @@ We instantiate the finite approximation dichotomy with
 For every `w ≥ 16`, a binary, constant-free monotone shared circuit computing
 this CLIQUE function has more than `w^w` gates.  Taking `w = 2^t` gives the
 closed form `2^(t * 2^t)` gates on `2^(20*t)` vertices.
+
+This is an explicit finite specialization of Razborov's monotone
+approximation method (1985).
 -/
 
 namespace Algebraic
-namespace Fusion
+namespace Monotone
 namespace Clique
 namespace Exponential
-
-noncomputable section
 
 /-- Scaling the ambient set by `q` scales every factor in a descending
 factorial by at least `q`. -/
@@ -126,7 +127,7 @@ theorem sunflower_bound_le_pow
       Nat.pow_le_pow_right (by omega) (by omega)
 
 /-- The chosen vertex count factors as `w^16 * w^4`. -/
-theorem vertexCount_factorization (w : Nat) :
+private theorem vertexCount_factorization (w : Nat) :
     w ^ 16 * w ^ 4 = w ^ 20 := by
   rw [← pow_add]
 
@@ -301,7 +302,7 @@ theorem powSelf_lt_circuitSize
         function (w ^ 20) (w ^ 4) assignment) :
     w ^ w < circuit.size := by
   have two_le : 2 ≤ w := by omega
-  exact LowerBound.proposedSize_lt_circuitSize_of_budgets
+  exact LowerBound.sizeBound_lt_circuitSize
     (w ^ 20) (w ^ 4) (w ^ 2) w (w ^ w)
     (pow_pos (by omega) 20)
     (pow_pos (by omega) 4)
@@ -330,9 +331,7 @@ theorem twoPow_lt_circuitSize
   simpa [pow_mul] using
     powSelf_lt_circuitSize (w := 2 ^ t) sixteen_le circuit computes
 
-end
-
 end Exponential
 end Clique
-end Fusion
+end Monotone
 end Algebraic

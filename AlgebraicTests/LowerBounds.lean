@@ -1,5 +1,7 @@
 import Algebraic.Applications
-import Algebraic.LowerBound.Fusion
+import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Cover.Exponential
+import Algebraic.LowerBound.Fusion.Comap
+import Algebraic.LowerBound.Fusion.CrownCollision
 import AlgebraicTests.Circuit
 
 /-!
@@ -110,10 +112,10 @@ example
     (w : Nat)
     (sixteen_le : 16 ≤ w)
     (circuit : Algebraic.Circuit AndOr.signature
-      (Fusion.Clique.edgeCount (w ^ 20)) g 1)
+      (Monotone.Clique.edgeCount (w ^ 20)) g 1)
     (computes : ∀ assignment,
       circuit.eval AndOr.boolInterpretation assignment 0 =
-        Fusion.Clique.function (w ^ 20) (w ^ 4) assignment) :
+        Monotone.Clique.function (w ^ 20) (w ^ 4) assignment) :
     w ^ w < circuit.size :=
   Applications.powSelf_lt_circuitSize w sixteen_le circuit computes
 

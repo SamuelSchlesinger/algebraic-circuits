@@ -1,4 +1,4 @@
-import Algebraic.LowerBound.Fusion.Clique.Negative
+import Algebraic.LowerBound.Monotone.Clique.Negative
 
 /-!
 # A parameterized monotone CLIQUE circuit lower bound
@@ -13,7 +13,7 @@ for exact finite parameter choices and for later asymptotic specialization.
 -/
 
 namespace Algebraic
-namespace Fusion
+namespace Monotone
 namespace Clique
 namespace LowerBound
 
@@ -212,28 +212,27 @@ theorem circuitSize_dichotomy
       (errorBound.trans costBound)).trans_eq (by
         simp [Nat.mul_assoc])
 
-/-- A convenient strict-budget formulation: any proposed size bound that
-fits under both error thresholds is impossible. -/
-theorem proposedSize_lt_circuitSize_of_budgets
-    (n k petalCount width proposedSize : Nat)
+/-- Any size bound below both error thresholds is smaller than the circuit. -/
+theorem sizeBound_lt_circuitSize
+    (n k petalCount width sizeBound : Nat)
     (nPositive : 0 < n)
     (kPositive : 0 < k)
     (two_le_petals : 2 ≤ petalCount)
     (two_le_width : 2 ≤ width)
     (width_succ_le_k : width + 1 ≤ k)
     (colorsLarge : 2 * width ^ 2 ≤ k - 1)
-    (positiveBudget : positiveGateCap n k petalCount width * proposedSize <
+    (positiveBudget : positiveGateCap n k petalCount width * sizeBound <
       Nat.choose n k)
     (negativeBudget :
-      2 * negativeGateCap n (k - 1) petalCount width * proposedSize <
+      2 * negativeGateCap n (k - 1) petalCount width * sizeBound <
         (k - 1) ^ n)
     (circuit : Circuit AndOr.signature (edgeCount n) g 1)
     (computes : ∀ assignment,
       circuit.eval AndOr.boolInterpretation assignment 0 =
         function n k assignment) :
-    proposedSize < circuit.size := by
+    sizeBound < circuit.size := by
   by_contra notLarger
-  have sizeLe : circuit.size ≤ proposedSize := Nat.le_of_not_gt notLarger
+  have sizeLe : circuit.size ≤ sizeBound := Nat.le_of_not_gt notLarger
   rcases circuitSize_dichotomy n k petalCount width nPositive kPositive
       two_le_petals two_le_width width_succ_le_k colorsLarge circuit computes with
     positiveSpent | negativeSpent
@@ -248,5 +247,5 @@ end
 
 end LowerBound
 end Clique
-end Fusion
+end Monotone
 end Algebraic

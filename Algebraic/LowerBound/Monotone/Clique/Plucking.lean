@@ -1,5 +1,5 @@
 import Algebraic.Combinatorics.Sunflower
-import Algebraic.LowerBound.Fusion.Clique.Basic
+import Algebraic.LowerBound.Monotone.Clique.Basic
 
 /-!
 # Sunflower plucking for clique approximators
@@ -15,7 +15,7 @@ the cardinality of the starting family.
 -/
 
 namespace Algebraic
-namespace Fusion
+namespace Monotone
 namespace Clique
 namespace Plucking
 
@@ -306,5 +306,5 @@ end
 
 end Plucking
 end Clique
-end Fusion
+end Monotone
 end Algebraic

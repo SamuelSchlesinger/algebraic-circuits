@@ -1,5 +1,5 @@
 import Algebraic.LowerBound.Approximation
-import Algebraic.LowerBound.Fusion.Clique.Plucking
+import Algebraic.LowerBound.Monotone.Clique.Plucking
 import Mathlib.Data.Finset.Prod
 
 /-!
@@ -17,7 +17,7 @@ conjunction.
 -/
 
 namespace Algebraic
-namespace Fusion
+namespace Monotone
 namespace Clique
 namespace Approx
 
@@ -142,9 +142,9 @@ def gateFamily
     (arguments : Fin 2 → Family n) : Family n :=
   match op with
   | .or => truncate width <| rawOr
-      (arguments ⟨0, by decide⟩) (arguments ⟨1, by decide⟩)
+      (arguments 0) (arguments 1)
   | .and => truncate width <| rawAnd
-      (arguments ⟨0, by decide⟩) (arguments ⟨1, by decide⟩)
+      (arguments 0) (arguments 1)
 
 /-- Gate preprocessing enforces the width bound before normalization. -/
 theorem gateFamily_bounded
@@ -275,6 +275,21 @@ def normalDecode
       assignment input := by
   simp [normalDecode, normalInput]
 
+private theorem contains_of_card_le_one
+    (assignment : Fin (edgeCount n) → Bool)
+    (vertices : Finset (Fin n))
+    (small : vertices.card ≤ 1) :
+    Contains assignment vertices := by
+  intro edge inside
+  have endpoints : {edge.1.1, edge.1.2} ⊆ vertices := by
+    intro vertex present
+    simp only [Finset.mem_insert, Finset.mem_singleton] at present
+    exact present.elim (fun equal => equal ▸ inside.1)
+      (fun equal => equal ▸ inside.2)
+  have two_le : 2 ≤ vertices.card := by
+    simpa [ne_of_lt edge.2] using Finset.card_le_card endpoints
+  omega
+
 /-- A joined term implies both input terms on every graph. -/
 theorem contains_of_contains_joinTerms
     (assignment : Fin (edgeCount n) → Bool)
@@ -284,37 +299,11 @@ theorem contains_of_contains_joinTerms
   unfold joinTerms at contains
   split at contains
   next leftSmall =>
-    refine ⟨?_, contains⟩
-    intro edge inside
-    have impossible : False := by
-      have edgeVertices : 2 ≤ left.card := by
-        have distinct := ne_of_lt edge.2
-        have subset : {edge.1.1, edge.1.2} ⊆ left := by
-          intro vertex present
-          simp only [Finset.mem_insert, Finset.mem_singleton] at present
-          rcases present with rfl | rfl
-          · exact inside.1
-          · exact inside.2
-        simpa [distinct] using Finset.card_le_card subset
-      omega
-    exact impossible.elim
+    exact ⟨contains_of_card_le_one assignment left leftSmall, contains⟩
   next leftLarge =>
     split at contains
     next rightSmall =>
-      refine ⟨contains, ?_⟩
-      intro edge inside
-      have impossible : False := by
-        have edgeVertices : 2 ≤ right.card := by
-          have distinct := ne_of_lt edge.2
-          have subset : {edge.1.1, edge.1.2} ⊆ right := by
-            intro vertex present
-            simp only [Finset.mem_insert, Finset.mem_singleton] at present
-            rcases present with rfl | rfl
-            · exact inside.1
-            · exact inside.2
-          simpa [distinct] using Finset.card_le_card subset
-        omega
-      exact impossible.elim
+      exact ⟨contains, contains_of_card_le_one assignment right rightSmall⟩
     next rightLarge =>
       exact ⟨Contains.mono_vertices Finset.subset_union_left contains,
         Contains.mono_vertices Finset.subset_union_right contains⟩
@@ -377,5 +366,5 @@ end
 
 end Approx
 end Clique
-end Fusion
+end Monotone
 end Algebraic

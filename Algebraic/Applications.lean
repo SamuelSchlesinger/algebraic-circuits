@@ -2,7 +2,7 @@ import Algebraic.Basis.Arithmetic.Power
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.Counting.Shannon
 import Algebraic.LowerBound.GateElimination.DeMorganXor
-import Algebraic.LowerBound.Fusion.Clique.Exponential
+import Algebraic.LowerBound.Monotone.Clique.Exponential
 import Algebraic.LowerBound.Fusion.Cyclic.Complete
 import Algebraic.LowerBound.Fusion.SumOfTerms.Rectangle
 
@@ -44,7 +44,7 @@ export Fusion
 
 export Fusion.SumOfTerms.Rectangle (diagonal_lowerBound)
 
-export Fusion.Clique.Exponential
+export Monotone.Clique.Exponential
   (powSelf_lt_circuitSize
    twoPow_lt_circuitSize)
 

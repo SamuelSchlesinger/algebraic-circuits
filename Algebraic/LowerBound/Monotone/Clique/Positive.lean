@@ -1,4 +1,4 @@
-import Algebraic.LowerBound.Fusion.Clique.Approximation
+import Algebraic.LowerBound.Monotone.Clique.Approximation
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Data.Finset.Powerset
 
@@ -14,7 +14,7 @@ counting bound.
 -/
 
 namespace Algebraic
-namespace Fusion
+namespace Monotone
 namespace Clique
 namespace Positive
 
@@ -187,8 +187,8 @@ def exceptions
     Finset (CliqueSet n k) :=
   match op with
   | .and => andExceptions n k width
-      (arguments ⟨0, by decide⟩).family
-      (arguments ⟨1, by decide⟩).family
+      (arguments 0).family
+      (arguments 1).family
   | .or => ∅
 
 /-- Binary Boolean AND and OR preserve pointwise Boolean order. -/
@@ -201,13 +201,13 @@ theorem boolInterpretation_mono
   cases op with
   | and =>
       apply Bool.le_and
-      · exact (Bool.and_le_left _ _).trans (ordered ⟨0, by decide⟩)
-      · exact (Bool.and_le_right _ _).trans (ordered ⟨1, by decide⟩)
+      · exact (Bool.and_le_left _ _).trans (ordered 0)
+      · exact (Bool.and_le_right _ _).trans (ordered 1)
   | or =>
       apply Bool.or_le
-      · exact (ordered ⟨0, by decide⟩).trans
+      · exact (ordered 0).trans
           (Bool.left_le_or _ _)
-      · exact (ordered ⟨1, by decide⟩).trans
+      · exact (ordered 1).trans
           (Bool.right_le_or _ _)
 
 /-- Normalized OR is positively correct on every minimal clique graph. -/
@@ -225,29 +225,29 @@ theorem or_gate_correct
   rw [Bool.le_iff_imp]
   intro accepted
   have disjunction :
-      normalDecode (arguments ⟨0, by decide⟩)
+      normalDecode (arguments 0)
           (cliqueAssignment clique.1) = true ∨
-      normalDecode (arguments ⟨1, by decide⟩)
+      normalDecode (arguments 1)
           (cliqueAssignment clique.1) = true := by
     simpa [AndOr.boolInterpretation] using accepted
   rw [normalDecode_eq_true]
   change Accepts
     (Plucking.normalize petalCount two_le_petals
       (truncate width (rawOr
-        (arguments ⟨0, by decide⟩).family
-        (arguments ⟨1, by decide⟩).family)))
+        (arguments 0).family
+        (arguments 1).family)))
       (cliqueAssignment clique.1)
   apply Plucking.normalize_acceptance_mono
   rcases disjunction with leftAccepted | rightAccepted
   · rw [normalDecode_eq_true] at leftAccepted
     obtain ⟨term, present, contains⟩ := leftAccepted
     refine ⟨term, Finset.mem_filter.mpr ⟨?_,
-      (arguments ⟨0, by decide⟩).bounded term present⟩, contains⟩
+      (arguments 0).bounded term present⟩, contains⟩
     exact Finset.mem_union_left _ present
   · rw [normalDecode_eq_true] at rightAccepted
     obtain ⟨term, present, contains⟩ := rightAccepted
     refine ⟨term, Finset.mem_filter.mpr ⟨?_,
-      (arguments ⟨1, by decide⟩).bounded term present⟩, contains⟩
+      (arguments 1).bounded term present⟩, contains⟩
     exact Finset.mem_union_right _ present
 
 /-- Away from `andExceptions`, normalized AND is positively correct. -/
@@ -259,8 +259,8 @@ theorem and_gate_correct
     (arguments : Fin 2 → NormalFamily n petalCount width)
     (clique : CliqueSet n k)
     (fresh : clique ∉ andExceptions n k width
-      (arguments ⟨0, by decide⟩).family
-      (arguments ⟨1, by decide⟩).family) :
+      (arguments 0).family
+      (arguments 1).family) :
     AndOr.boolInterpretation .and (fun input =>
         normalDecode (arguments input) (cliqueAssignment clique.1)) ≤
       normalDecode
@@ -268,10 +268,10 @@ theorem and_gate_correct
         (cliqueAssignment clique.1) := by
   rw [Bool.le_iff_imp]
   intro accepted
-  have leftTrue : normalDecode (arguments ⟨0, by decide⟩)
+  have leftTrue : normalDecode (arguments 0)
       (cliqueAssignment clique.1) = true := by
     simpa [AndOr.boolInterpretation] using Bool.and_elim_left accepted
-  have rightTrue : normalDecode (arguments ⟨1, by decide⟩)
+  have rightTrue : normalDecode (arguments 1)
       (cliqueAssignment clique.1) = true := by
     simpa [AndOr.boolInterpretation] using Bool.and_elim_right accepted
   rw [normalDecode_eq_true] at leftTrue rightTrue
@@ -288,15 +288,15 @@ theorem and_gate_correct
       subset_of_contains_cliqueAssignment (by omega) joinedContains
     apply fresh
     exact mem_andExceptions_of_pair clique
-      (arguments ⟨0, by decide⟩).family
-      (arguments ⟨1, by decide⟩).family
+      (arguments 0).family
+      (arguments 1).family
       leftTerm leftPresent rightTerm rightPresent wide joinedSubset
   rw [normalDecode_eq_true]
   change Accepts
     (Plucking.normalize petalCount two_le_petals
       (truncate width (rawAnd
-        (arguments ⟨0, by decide⟩).family
-        (arguments ⟨1, by decide⟩).family)))
+        (arguments 0).family
+        (arguments 1).family)))
       (cliqueAssignment clique.1)
   apply Plucking.normalize_acceptance_mono
   refine ⟨joined, Finset.mem_filter.mpr ⟨?_, narrow⟩, joinedContains⟩
@@ -339,12 +339,12 @@ def scheme
     cases op with
     | and =>
         exact card_andExceptions_normal_le width_succ_le_k
-          (arguments ⟨0, by decide⟩) (arguments ⟨1, by decide⟩)
+          (arguments 0) (arguments 1)
     | or => simp [exceptions, operationCost]
 
 end
 
 end Positive
 end Clique
-end Fusion
+end Monotone
 end Algebraic

@@ -19,8 +19,6 @@ interpretation.
 namespace Algebraic
 namespace Approximation
 
-noncomputable section
-
 /-- A locally sound approximate interpretation on a finite sample space. -/
 structure Scheme
     (exactInterpretation : Interpretation σ U)
@@ -244,8 +242,6 @@ theorem failures_card_le_cost
       (scheme.programExceptions_card_le_cost circuit.program)
 
 end Scheme
-
-end
 
 end Approximation
 end Algebraic

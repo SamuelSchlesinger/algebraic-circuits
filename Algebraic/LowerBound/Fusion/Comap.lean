@@ -182,7 +182,7 @@ theorem Framework.lowerBound_of_map
     (circuit : Circuit σ problem.inputCount g 1)
     (constructs : problem.Constructs circuit i₁) :
     framework.bound ≤ circuit.cost operationCost :=
-  (framework.comap h).lowerBound circuit constructs
+  framework.lowerBound circuit (constructs.map h)
 
 /-- Cover complexity of an image model lower-bounds every source circuit. -/
 theorem Model.coverComplexity_le_cost_of_map
@@ -191,8 +191,7 @@ theorem Model.coverComplexity_le_cost_of_map
     (circuit : Circuit σ problem.inputCount g 1)
     (constructs : problem.Constructs circuit i₁) :
     model.coverComplexity ≤ circuit.cost operationCost :=
-  (model.coverComplexity_le_comap h).trans
-    ((model.comap h).coverComplexity_le_cost circuit constructs)
+  model.coverComplexity_le_cost circuit (constructs.map h)
 
 end Comap
 

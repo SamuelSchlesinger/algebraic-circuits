@@ -1,4 +1,4 @@
-import Algebraic.LowerBound.Fusion.Clique.Positive
+import Algebraic.LowerBound.Monotone.Clique.Positive
 import Mathlib.Data.Fintype.BigOperators
 import Mathlib.Data.Set.Pairwise.Basic
 
@@ -14,12 +14,11 @@ petal, yielding the integral bound
 
 `width ^ (2 * petals) * colors ^ (n - petals)`.
 
-No probability space or asymptotic estimate is hidden in this statement; it
-is a direct finite-cardinality argument.
+The proof is a direct finite-cardinality count.
 -/
 
 namespace Algebraic
-namespace Fusion
+namespace Monotone
 namespace Clique
 namespace Negative
 
@@ -519,13 +518,13 @@ private theorem card_gateFamily_or_le
   apply (Finset.card_filter_le _ _).trans
   apply (card_rawOr_le _ _).trans
   calc
-    (arguments ⟨0, by decide⟩).family.card +
-        (arguments ⟨1, by decide⟩).family.card ≤
+    (arguments 0).family.card +
+        (arguments 1).family.card ≤
         Sunflower.bound petalCount width +
           Sunflower.bound petalCount width :=
       Nat.add_le_add
-        (arguments ⟨0, by decide⟩).card_le
-        (arguments ⟨1, by decide⟩).card_le
+        (arguments 0).card_le
+        (arguments 1).card_le
     _ = 2 * Sunflower.bound petalCount width := by omega
 
 private theorem card_gateFamily_and_le
@@ -535,8 +534,8 @@ private theorem card_gateFamily_and_le
   apply (Finset.card_filter_le _ _).trans
   apply (card_rawAnd_le _ _).trans
   simpa [pow_two] using Nat.mul_le_mul
-    (arguments ⟨0, by decide⟩).card_le
-    (arguments ⟨1, by decide⟩).card_le
+    (arguments 0).card_le
+    (arguments 1).card_le
 
 /-- Per-operation negative error cost. -/
 def operationCost
@@ -595,65 +594,64 @@ theorem gate_correct
   rw [Bool.le_iff_imp]
   intro normalizedTrue
   rw [normalDecode_eq_true] at normalizedTrue
+  have gateAccepted : Accepts (gateFamily width op arguments)
+      (coloringAssignment coloring) := by
+    apply acceptance_of_normalize_away petalCount two_le_petals r
+      (gateFamily width op arguments) coloring fresh
+    simpa [normalInterpretation, interpretation, gateFamily] using
+      normalizedTrue
   cases op with
   | or =>
-      have gateAccepted : Accepts (gateFamily width .or arguments)
-          (coloringAssignment coloring) := by
-        apply acceptance_of_normalize_away petalCount two_le_petals r
-          (gateFamily width .or arguments) coloring fresh
-        simpa [normalInterpretation, interpretation, gateFamily] using
-          normalizedTrue
       obtain ⟨term, termPresent, termContains⟩ := gateAccepted
       have rawPresent : term ∈
-          rawOr (arguments ⟨0, by decide⟩).family
-            (arguments ⟨1, by decide⟩).family :=
+          rawOr (arguments 0).family
+            (arguments 1).family :=
         (Finset.mem_filter.mp termPresent).1
       have rawAccepted : Accepts
-          (rawOr (arguments ⟨0, by decide⟩).family
-            (arguments ⟨1, by decide⟩).family)
+          (rawOr (arguments 0).family
+            (arguments 1).family)
           (coloringAssignment coloring) :=
         ⟨term, rawPresent, termContains⟩
       rw [accepts_rawOr_iff] at rawAccepted
       rcases rawAccepted with leftAccepted | rightAccepted
-      · have leftTrue : normalDecode (arguments ⟨0, by decide⟩)
+      · have leftTrue : normalDecode (arguments 0)
             (coloringAssignment coloring) = true := by
-          exact (normalDecode_eq_true (arguments ⟨0, by decide⟩)
+          exact (normalDecode_eq_true (arguments 0)
             (coloringAssignment coloring)).2 leftAccepted
-        simp only [AndOr.boolInterpretation, leftTrue, Bool.true_or]
-      · have rightTrue : normalDecode (arguments ⟨1, by decide⟩)
+        change (normalDecode (arguments 0) (coloringAssignment coloring) ||
+          normalDecode (arguments 1) (coloringAssignment coloring)) = true
+        simp [leftTrue]
+      · have rightTrue : normalDecode (arguments 1)
             (coloringAssignment coloring) = true := by
-          exact (normalDecode_eq_true (arguments ⟨1, by decide⟩)
+          exact (normalDecode_eq_true (arguments 1)
             (coloringAssignment coloring)).2 rightAccepted
-        simp only [AndOr.boolInterpretation, rightTrue, Bool.or_true]
+        change (normalDecode (arguments 0) (coloringAssignment coloring) ||
+          normalDecode (arguments 1) (coloringAssignment coloring)) = true
+        simp [rightTrue]
   | and =>
-      have gateAccepted : Accepts (gateFamily width .and arguments)
-          (coloringAssignment coloring) := by
-        apply acceptance_of_normalize_away petalCount two_le_petals r
-          (gateFamily width .and arguments) coloring fresh
-        simpa [normalInterpretation, interpretation, gateFamily] using
-          normalizedTrue
       obtain ⟨term, termPresent, termContains⟩ := gateAccepted
       have rawPresent : term ∈
-          rawAnd (arguments ⟨0, by decide⟩).family
-            (arguments ⟨1, by decide⟩).family :=
+          rawAnd (arguments 0).family
+            (arguments 1).family :=
         (Finset.mem_filter.mp termPresent).1
       have rawAccepted : Accepts
-          (rawAnd (arguments ⟨0, by decide⟩).family
-            (arguments ⟨1, by decide⟩).family)
+          (rawAnd (arguments 0).family
+            (arguments 1).family)
           (coloringAssignment coloring) :=
         ⟨term, rawPresent, termContains⟩
       have both := accepts_left_right_of_accepts_rawAnd
         (coloringAssignment coloring) _ _ rawAccepted
-      have leftTrue : normalDecode (arguments ⟨0, by decide⟩)
+      have leftTrue : normalDecode (arguments 0)
           (coloringAssignment coloring) = true := by
-        exact (normalDecode_eq_true (arguments ⟨0, by decide⟩)
+        exact (normalDecode_eq_true (arguments 0)
           (coloringAssignment coloring)).2 both.1
-      have rightTrue : normalDecode (arguments ⟨1, by decide⟩)
+      have rightTrue : normalDecode (arguments 1)
           (coloringAssignment coloring) = true := by
-        exact (normalDecode_eq_true (arguments ⟨1, by decide⟩)
+        exact (normalDecode_eq_true (arguments 1)
           (coloringAssignment coloring)).2 both.2
-      simp only [AndOr.boolInterpretation, leftTrue, rightTrue,
-        Bool.true_and]
+      change (normalDecode (arguments 0) (coloringAssignment coloring) &&
+        normalDecode (arguments 1) (coloringAssignment coloring)) = true
+      simp [leftTrue, rightTrue]
 
 /-- The complete negative-side local approximation scheme. -/
 def scheme
@@ -810,5 +808,5 @@ end
 
 end Negative
 end Clique
-end Fusion
+end Monotone
 end Algebraic
