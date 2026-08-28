@@ -1,5 +1,5 @@
 import Algebraic.Applications
-import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Cover.Exponential
+import Algebraic.LowerBound.Fusion
 import AlgebraicTests.Circuit
 
 /-!
@@ -7,8 +7,9 @@ import AlgebraicTests.Circuit
 
 These tests apply one public endpoint from each lower-bound branch: bounded
 fan-in support bounds, the sharp Shannon theorem, De Morgan gate elimination,
-exact cyclic Fusion completeness, and the middle-layer rectangle-cover
-tradeoff.
+exact cyclic Fusion completeness, the middle-layer rectangle-cover tradeoff,
+homomorphic transport, crown-graph collision, and the exponential monotone
+CLIQUE lower bound.
 -/
 
 namespace AlgebraicTests.LowerBounds
@@ -83,5 +84,37 @@ example {K C : Type}
         coverBudget) :=
   Rectangular.Cover.Exponential.four_pow_lt_n_mul_cost_mul_coverBudget
     constant n nBig coverBudget circuit constructs covered
+
+example {σ : Signature} {U₁ U₂ : Type}
+    {i₁ : Interpretation σ U₁} {i₂ : Interpretation σ U₂}
+    {operationCost : OperationCost σ}
+    {problem : Fusion.Problem U₁}
+    (h : Homomorphism i₁ i₂)
+    {model : Fusion.Model operationCost i₂ (problem.map h.map)}
+    (framework : Fusion.Framework model)
+    (circuit : Algebraic.Circuit σ problem.inputCount g 1)
+    (constructs : problem.Constructs circuit i₁) :
+    framework.bound ≤ circuit.cost operationCost :=
+  Fusion.Framework.lowerBound_of_map h framework circuit constructs
+
+example
+    (circuit : Algebraic.Circuit AndOr.signature
+      ((2 ^ n) + (2 ^ n)) g 1)
+    (computes : ∀ assignment,
+      circuit.eval AndOr.boolInterpretation assignment 0 =
+        Fusion.CrownCollision.function assignment) :
+    n ≤ circuit.cost AndOr.andCost :=
+  Fusion.CrownCollision.and_lowerBound circuit computes
+
+example
+    (w : Nat)
+    (sixteen_le : 16 ≤ w)
+    (circuit : Algebraic.Circuit AndOr.signature
+      (Fusion.Clique.edgeCount (w ^ 20)) g 1)
+    (computes : ∀ assignment,
+      circuit.eval AndOr.boolInterpretation assignment 0 =
+        Fusion.Clique.function (w ^ 20) (w ^ 4) assignment) :
+    w ^ w < circuit.size :=
+  Applications.powSelf_lt_circuitSize w sixteen_le circuit computes
 
 end AlgebraicTests.LowerBounds

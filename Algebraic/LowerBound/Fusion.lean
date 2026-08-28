@@ -105,6 +105,10 @@ import Algebraic.LowerBound.Fusion.Conondeterministic
 import Algebraic.LowerBound.Fusion.Neq
 import Algebraic.LowerBound.Fusion.Conondeterministic.Neq
 import Algebraic.LowerBound.Fusion.Cyclic.Neq
+import Algebraic.LowerBound.Fusion.Comap
+import Algebraic.LowerBound.Fusion.Neq.Preimage
+import Algebraic.LowerBound.Fusion.CrownCollision
+import Algebraic.LowerBound.Fusion.Clique.Exponential
 
 /-!
 # Fusion lower bounds
@@ -117,6 +121,17 @@ modern cover-complexity presentation.  The converse via cyclic circuits is a
 different computational model and is intentionally not folded into
 `Program`.
 
+Fusion models and their lower bounds transport along homomorphisms without
+changing atom costs (`Comap`).
+
+Restricting crown-graph collision to one-hot assignments gives the inequality
+problem and hence a logarithmic AND-gate lower bound (`CrownCollision`).
+
+The bounded-width approximation branch formalizes sunflower plucking on
+shared DAGs and proves an explicit exponential lower bound for binary,
+constant-free monotone CLIQUE circuits: `w^w` gates for `w^4`-CLIQUE on
+`w^20` vertices (`Clique.Exponential`).
+
 References:
 
 * A. Wigderson, *The Fusion Method for Lower Bounds in Circuit Complexity*
@@ -125,4 +140,6 @@ References:
   Two-Dimensional Cover Problems* (2025), https://arxiv.org/abs/2503.14117.
 * J. Pich, *Localizability of the Approximation Method* (2022),
   https://arxiv.org/abs/2212.09285.
+* A. A. Razborov, *Lower Bounds on the Monotone Complexity of Some Boolean
+  Functions* (1985).
 -/

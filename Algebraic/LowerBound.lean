@@ -1,7 +1,7 @@
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.Counting
-
 import Algebraic.LowerBound.GateElimination
+import Algebraic.LowerBound.Approximation
 import Algebraic.LowerBound.Fusion
 
 /-!
