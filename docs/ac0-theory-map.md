@@ -72,7 +72,7 @@ coordinates, then
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantic layer validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Weighted-injection engine, exact canonical paths, and source-term block traces validated 2026-09-03; term-position decoder and final bound open |
+| Switching | Explicit finite switching lemma | Weighted-injection engine and bounded canonical advice extraction validated 2026-09-03; reconstruction decoder and final bound open |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -176,3 +176,14 @@ the constructors distinguish continuing within a term from returning to term
 selection. This is structural proof data, not an enumeration of paths or
 circuits. The next step is to turn each query into bounded source-term position,
 block-boundary, and path-bit advice and prove the corresponding decoder.
+
+The bounded-advice submilestone passed the same gates on 2026-09-03. A traced
+query is assigned its position in the selected source term, a block-boundary
+bit, and its original path bit. For a positive width bound `t`, the formal
+advice alphabet has exactly `4 * t` symbols and length-`s` advice has exactly
+`(4 * t)^s` possibilities. The hidden satisfying assignment is proved to fix
+exactly the path's `s` distinct coordinates and only coordinates initially
+live in the input restriction. Every encoded source position is also proved
+to recover the hidden coordinate from the selected source term. The explicit
+replay-and-clear decoder, hence injectivity and the probability bound, remains
+open.

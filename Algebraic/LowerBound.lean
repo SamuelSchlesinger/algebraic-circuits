@@ -3,6 +3,7 @@ import Algebraic.LowerBound.AC0.DecisionTree
 import Algebraic.LowerBound.AC0.CanonicalDecisionTree
 import Algebraic.LowerBound.AC0.RandomRestriction
 import Algebraic.LowerBound.AC0.Switching.Encoding
+import Algebraic.LowerBound.AC0.Switching.CanonicalEncoding
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.Counting
 import Algebraic.LowerBound.GateElimination
