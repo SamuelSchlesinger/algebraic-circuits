@@ -106,6 +106,56 @@ theorem ofFn_listToFn
   subst length
   exact List.ofFn_get values
 
+/-- Choose the source term currently being decoded. A term is retained inside
+a block; at a block boundary the canonical first-surviving selector is run on
+the replay state. -/
+def selectTerm
+    (formula : DNF n)
+    (state : PartialAssignment n) : Option (Term n) → Option (Term n)
+  | some term => some term
+  | none => formula.firstSurviving state
+
+/-- Replay switching advice and recover its queried coordinates. Malformed
+advice is handled totally by returning the successfully decoded prefix. -/
+def replayIndices
+    (formula : DNF n) :
+    PartialAssignment n → Option (Term n) →
+      List (QueryAdvice widthBound) → List (Fin n)
+  | _, _, [] => []
+  | state, currentTerm, symbol :: rest =>
+      match selectTerm formula state currentTerm with
+      | none => []
+      | some term =>
+          match term.orderedSupport[symbol.position.val]? with
+          | none => []
+          | some index =>
+              index :: replayIndices formula
+                ((PartialAssignment.fix index symbol.pathValue).refine state)
+                (if symbol.closesBlock then none else some term) rest
+
+/-- Decode an encoded restriction/advice pair by replaying its coordinates and
+clearing them from the refined restriction. -/
+def decode
+    (formula : DNF n)
+    (encoded : PartialAssignment n × Advice widthBound pathLength) :
+    PartialAssignment n :=
+  encoded.1.clear
+    (replayIndices formula encoded.1 none (List.ofFn encoded.2)).toFinset
+
+/-- If the canonical selector returns `term`, replay from a block boundary is
+the same as replay with `term` already selected. -/
+theorem replayIndices_none_eq_some_of_firstSurviving
+    (formula : DNF n)
+    (state : PartialAssignment n)
+    (term : Term n)
+    (found : formula.firstSurviving state = some term)
+    (advice : List (QueryAdvice widthBound)) :
+    replayIndices formula state none advice =
+      replayIndices formula state (some term) advice := by
+  cases advice with
+  | nil => rfl
+  | cons symbol rest => simp [replayIndices, selectTerm, found]
+
 end Switching
 
 namespace LiteralSet
@@ -421,6 +471,116 @@ def CanonicalTrace.adviceList
     (trace : DNF.CanonicalTrace formula rho steps) :
     List (Switching.QueryAdvice widthBound) :=
   trace.queryRecords.map Switching.QueryRecord.toAdvice
+
+/-- Variable-length advice for the remaining queries in one source-term
+block. -/
+def CanonicalBlockTrace.adviceList
+    [NeZero widthBound]
+    {formula : DNF n}
+    {term : Term n}
+    {rho : PartialAssignment n}
+    {indices : List (Fin n)}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : DNF.CanonicalBlockTrace formula term rho indices steps) :
+    List (Switching.QueryAdvice widthBound) :=
+  trace.queryRecords.map Switching.QueryRecord.toAdvice
+
+@[simp] theorem CanonicalTrace.satisfyingAssignment_start
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {term : Term n}
+    {indices : List (Fin n)}
+    {steps : List (DecisionTree.PathStep n)}
+    (found : formula.firstSurviving rho = some term)
+    (support_eq : liveSupport term rho = indices)
+    (nonempty : indices ≠ [])
+    (block : DNF.CanonicalBlockTrace formula term rho indices steps) :
+    (CanonicalTrace.start found support_eq nonempty block).satisfyingAssignment
+        (widthBound := widthBound) =
+      block.satisfyingAssignment (widthBound := widthBound) := rfl
+
+@[simp] theorem CanonicalTrace.adviceList_start
+    [NeZero widthBound]
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {term : Term n}
+    {indices : List (Fin n)}
+    {steps : List (DecisionTree.PathStep n)}
+    (found : formula.firstSurviving rho = some term)
+    (support_eq : liveSupport term rho = indices)
+    (nonempty : indices ≠ [])
+    (block : DNF.CanonicalBlockTrace formula term rho indices steps) :
+    (CanonicalTrace.start found support_eq nonempty block).adviceList
+        (widthBound := widthBound) =
+      block.adviceList (widthBound := widthBound) := rfl
+
+@[simp] theorem CanonicalBlockTrace.satisfyingAssignment_takeMore
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {term : Term n}
+    {rho : PartialAssignment n}
+    {index next : Fin n}
+    {rest : List (Fin n)}
+    {value : Bool}
+    {steps : List (DecisionTree.PathStep n)}
+    (tail : DNF.CanonicalBlockTrace formula term
+      (rho.refine (PartialAssignment.fix index value))
+      (next :: rest) steps) :
+    (CanonicalBlockTrace.takeMore tail).satisfyingAssignment
+        (widthBound := widthBound) =
+      (PartialAssignment.fix index (term.satisfyingValue index)).refine
+        (tail.satisfyingAssignment (widthBound := widthBound)) := rfl
+
+@[simp] theorem CanonicalBlockTrace.adviceList_takeMore
+    [NeZero widthBound]
+    {formula : DNF n}
+    {term : Term n}
+    {rho : PartialAssignment n}
+    {index next : Fin n}
+    {rest : List (Fin n)}
+    {value : Bool}
+    {steps : List (DecisionTree.PathStep n)}
+    (tail : DNF.CanonicalBlockTrace formula term
+      (rho.refine (PartialAssignment.fix index value))
+      (next :: rest) steps) :
+    (CanonicalBlockTrace.takeMore tail).adviceList
+        (widthBound := widthBound) =
+      ⟨term.sourcePosition index, false, value⟩ ::
+        tail.adviceList := rfl
+
+@[simp] theorem CanonicalBlockTrace.satisfyingAssignment_takeLast
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {term : Term n}
+    {rho : PartialAssignment n}
+    {index : Fin n}
+    {value : Bool}
+    {steps : List (DecisionTree.PathStep n)}
+    (tail : DNF.CanonicalTrace formula
+      (rho.refine (PartialAssignment.fix index value)) steps) :
+    (CanonicalBlockTrace.takeLast (term := term) tail).satisfyingAssignment
+        (widthBound := widthBound) =
+      (PartialAssignment.fix index (term.satisfyingValue index)).refine
+        (tail.satisfyingAssignment (widthBound := widthBound)) := rfl
+
+@[simp] theorem CanonicalBlockTrace.adviceList_takeLast
+    [NeZero widthBound]
+    {formula : DNF n}
+    {term : Term n}
+    {rho : PartialAssignment n}
+    {index : Fin n}
+    {value : Bool}
+    {steps : List (DecisionTree.PathStep n)}
+    (tail : DNF.CanonicalTrace formula
+      (rho.refine (PartialAssignment.fix index value)) steps) :
+    (CanonicalBlockTrace.takeLast (term := term) tail).adviceList
+        (widthBound := widthBound) =
+      ⟨term.sourcePosition index, true, value⟩ ::
+        tail.adviceList := rfl
 
 mutual
 
@@ -746,6 +906,117 @@ theorem CanonicalTrace.firstSurviving_refine_satisfyingAssignment
     (trace.satisfyingAssignment (widthBound := widthBound)) found
     (trace.not_conflicts_refine_satisfyingAssignment found)
 
+mutual
+
+/-- Replaying the advice extracted from a satisfying canonical trace recovers
+the original path's query coordinates exactly. -/
+theorem CanonicalTrace.replayIndices_satisfyingAssignment
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : DNF.CanonicalTrace formula rho steps)
+    (bounded : formula.WidthAtMost widthBound) :
+    Switching.replayIndices formula
+        (rho.refine
+          (trace.satisfyingAssignment (widthBound := widthBound)))
+        none (trace.adviceList (widthBound := widthBound)) =
+      DecisionTree.PathStep.indices steps :=
+  match trace with
+  | .nil _ => rfl
+  | @CanonicalTrace.start _ _ rho term indices steps found support_eq
+      nonempty block => by
+      change Switching.replayIndices formula
+          (rho.refine
+            (block.satisfyingAssignment (widthBound := widthBound)))
+          none (block.adviceList (widthBound := widthBound)) =
+        DecisionTree.PathStep.indices steps
+      have noConflict := firstSurvivingIn_not_conflicts
+        rho formula.terms found
+      have compatible :=
+        block.not_conflicts_refine_satisfyingAssignment
+          (widthBound := widthBound) support_eq noConflict
+      have selector := formula.firstSurviving_refine rho
+        (block.satisfyingAssignment (widthBound := widthBound))
+        found compatible
+      have boundary :=
+        Switching.replayIndices_none_eq_some_of_firstSurviving formula
+          (rho.refine
+            (block.satisfyingAssignment (widthBound := widthBound)))
+          term selector (block.adviceList (widthBound := widthBound))
+      rw [boundary]
+      exact block.replayIndices_satisfyingAssignment bounded
+        (bounded term (firstSurvivingIn_mem rho formula.terms found))
+        support_eq
+
+/-- The replay invariant inside one selected source-term block. -/
+theorem CanonicalBlockTrace.replayIndices_satisfyingAssignment
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {term : Term n}
+    {rho : PartialAssignment n}
+    {indices : List (Fin n)}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : DNF.CanonicalBlockTrace formula term rho indices steps)
+    (bounded : formula.WidthAtMost widthBound)
+    (termBound : term.width ≤ widthBound)
+    (support_eq : liveSupport term rho = indices) :
+    Switching.replayIndices formula
+        (rho.refine
+          (trace.satisfyingAssignment (widthBound := widthBound)))
+        (some term) (trace.adviceList (widthBound := widthBound)) =
+      DecisionTree.PathStep.indices steps :=
+  match trace with
+  | .nil _ index rest => rfl
+  | .takeMore (rho := rho) (index := index) (next := next)
+      (rest := rest) (value := value) tail => by
+      have indexData := (mem_liveSupport term rho index).1 (by
+        rw [support_eq]
+        simp)
+      have decoded := term.getElem?_sourcePosition_of_mem_support
+        index termBound indexData.1
+      have stateEqual := PartialAssignment.fix_refine_refine_fix
+        rho (tail.satisfyingAssignment (widthBound := widthBound))
+        index value (term.satisfyingValue index) indexData.2
+      have tailSupport :
+          liveSupport term
+              (rho.refine (PartialAssignment.fix index value)) =
+            next :: rest :=
+        liveSupport_refine_fix_eq_tail term rho index (next :: rest)
+          value support_eq
+      have tailReplay := tail.replayIndices_satisfyingAssignment
+        bounded termBound tailSupport
+      rw [CanonicalBlockTrace.satisfyingAssignment_takeMore,
+        CanonicalBlockTrace.adviceList_takeMore]
+      simp only [Switching.replayIndices, Switching.selectTerm]
+      rw [decoded]
+      simp only [Bool.false_eq_true, if_false]
+      rw [stateEqual]
+      simpa [DecisionTree.PathStep.indices] using
+        congrArg (List.cons index) tailReplay
+  | .takeLast (rho := rho) (index := index) (value := value) tail => by
+      have indexData := (mem_liveSupport term rho index).1 (by
+        rw [support_eq]
+        simp)
+      have decoded := term.getElem?_sourcePosition_of_mem_support
+        index termBound indexData.1
+      have stateEqual := PartialAssignment.fix_refine_refine_fix
+        rho (tail.satisfyingAssignment (widthBound := widthBound))
+        index value (term.satisfyingValue index) indexData.2
+      have tailReplay := tail.replayIndices_satisfyingAssignment bounded
+      rw [CanonicalBlockTrace.satisfyingAssignment_takeLast,
+        CanonicalBlockTrace.adviceList_takeLast]
+      simp only [Switching.replayIndices, Switching.selectTerm]
+      rw [decoded]
+      simp only [if_true]
+      rw [stateEqual]
+      simpa [DecisionTree.PathStep.indices] using
+        congrArg (List.cons index) tailReplay
+
+end
+
 /-- A traced satisfying assignment fixes exactly the prescribed canonical
 path length. -/
 theorem CanonicalPath.satisfyingAssignment_fixedCount
@@ -779,6 +1050,36 @@ theorem CanonicalPath.satisfyingAssignment_fixesOnlyLive
         (widthBound := widthBound)).fixedVariables ⊆ rho.liveVariables := by
   rw [trace.satisfyingAssignment_fixedVariables]
   exact path.assignment_fixesOnlyLive
+
+/-- The explicit replay-and-clear decoder is a left inverse of every valid
+canonical trace encoding. -/
+theorem CanonicalPath.decode_satisfyingEncoding
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {pathLength : Nat}
+    (path : DNF.CanonicalPath formula rho pathLength)
+    (trace : DNF.CanonicalTrace formula rho path.steps)
+    (bounded : formula.WidthAtMost widthBound) :
+    Switching.decode formula
+        (rho.refine
+          (trace.satisfyingAssignment (widthBound := widthBound)),
+          trace.advice (widthBound := widthBound) path.length_steps) =
+      rho := by
+  unfold Switching.decode
+  rw [trace.ofFn_advice]
+  rw [trace.replayIndices_satisfyingAssignment bounded]
+  have coordinatesEqual :
+      (DecisionTree.PathStep.indices path.steps).toFinset =
+        (trace.satisfyingAssignment
+          (widthBound := widthBound)).fixedVariables := by
+    rw [trace.satisfyingAssignment_fixedVariables,
+      DecisionTree.PathStep.fixedVariables_assignment]
+  rw [coordinatesEqual]
+  exact PartialAssignment.clear_refine_fixedVariables rho
+    (trace.satisfyingAssignment (widthBound := widthBound))
+    (path.satisfyingAssignment_fixesOnlyLive trace)
 
 end DNF
 end AC0

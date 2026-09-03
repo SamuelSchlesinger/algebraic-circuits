@@ -59,4 +59,20 @@ example
       some term :=
   trace.firstSurviving_refine_satisfyingAssignment found
 
+example
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {pathLength : Nat}
+    (path : DNF.CanonicalPath formula rho pathLength)
+    (trace : DNF.CanonicalTrace formula rho path.steps)
+    (bounded : formula.WidthAtMost widthBound) :
+    decode formula
+        (rho.refine
+          (trace.satisfyingAssignment (widthBound := widthBound)),
+          trace.advice (widthBound := widthBound) path.length_steps) =
+      rho :=
+  path.decode_satisfyingEncoding trace bounded
+
 end AlgebraicTests.AC0CanonicalEncoding

@@ -72,7 +72,7 @@ coordinates, then
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Weighted engine, bounded canonical advice, and selector preservation validated 2026-09-03; reconstruction decoder and final bound open |
+| Switching | Explicit finite switching lemma | Weighted engine and explicit canonical replay decoder validated 2026-09-03; event-wide injection and final bound open |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -203,3 +203,14 @@ satisfy the term: a path bit may falsify it while the encoding deliberately
 uses the satisfying bit. As a consequence, refining by the hidden extension
 preserves the first-surviving source term exactly. This selector equation is
 the semantic premise for deterministic decoder replay.
+
+The replay-decoder submilestone passed the same gates on 2026-09-03. The
+decoder is a total structural program: it selects the first surviving source
+term at block boundaries, reads the advised bounded support position,
+overwrites the satisfying value with the recorded path bit, and continues or
+restarts according to the block bit. A mutual trace proof shows that replay
+recovers the exact original query coordinates. Clearing precisely those
+coordinates from the refined output is then proved to recover the original
+restriction. Thus the decoder is a kernel-checked left inverse for every valid
+canonical trace encoding; choosing traces uniformly over the bad event and
+instantiating the weighted injection theorem remain open.
