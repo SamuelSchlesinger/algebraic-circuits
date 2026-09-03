@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | One-step advancement now preserves any `k` satisfying `delta*m+k < p*m`, for `delta=S(5pt)^(t+1)`; iteration open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Finite-layer semantic iteration proved for any explicit survivor schedule satisfying `delta*a_i+a_(i+1) < p*a_i`; closed-form parameters open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -97,6 +97,18 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The iterated semantic depth-reduction submilestone passed the full gates on
+2026-09-03. For a survivor schedule `a_i`, a common tree-depth allowance `t`,
+and `delta = S(5pt)^(t+1)`, the checked hypotheses `delta <= p` and
+`delta*a_i + a_(i+1) < p*a_i` now yield one cumulative restriction under
+which every wire through logical layer `d` has decision-tree depth at most
+`t` and at least `a_d` variables remain live. The proof separately establishes
+that the room inequality is monotone above each scheduled minimum, then uses
+finite induction and associative restriction refinement. It contains no
+sampling or witness search. Closed-form parameter selection and the parity
+contradiction remain open. The audited public theorems use no axioms beyond
+Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The existential layer-advancement submilestone passed the full gates on
 2026-09-03. Writing `m` for the current live count and

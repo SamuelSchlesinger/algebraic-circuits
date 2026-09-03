@@ -9,6 +9,7 @@ import AlgebraicTests.AC0Layer
 import AlgebraicTests.AC0LayerFormula
 import AlgebraicTests.AC0LayerSwitching
 import AlgebraicTests.AC0LayerExistence
+import AlgebraicTests.AC0LayerIteration
 import AlgebraicTests.AC0CanonicalDecisionTree
 import AlgebraicTests.AC0NormalForm
 import AlgebraicTests.AC0LiteralGate
