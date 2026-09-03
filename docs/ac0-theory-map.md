@@ -82,7 +82,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Finite-layer semantic iteration proved for any explicit survivor schedule satisfying `delta*a_i+a_(i+1) < p*a_i`; closed-form parameters open |
-| Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
+| Parity | Restriction resilience and quantitative depth-`k` lower bound | Restricted parity has decision-tree depth exactly its live-variable count; circuit contradiction and quantitative parameters open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
 ## Claim labels
@@ -97,6 +97,20 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The parity-resilience submilestone passed the full gates on 2026-09-03. The
+library now records the evaluation path followed by an arbitrary decision
+tree and proves that agreement on its queried coordinates forces the same
+output, without assuming read-once form. Reusing the canonical Boolean-ring
+parity function, Lean proves that flipping any coordinate left live by a
+partial assignment changes the restricted function. Hence every live
+coordinate lies on every evaluation path of every computing tree, giving the
+lower bound `liveCount rho`; the structural Shannon tree over the live set
+gives the matching upper bound. Thus restricted parity has decision-tree
+depth at most `t` exactly when `liveCount rho <= t`. No truth-table search or
+finite lower-bound certificate is involved. The audited public theorems use
+no axioms beyond Lean's standard `propext`, `Classical.choice`, and
+`Quot.sound`.
 
 The iterated semantic depth-reduction submilestone passed the full gates on
 2026-09-03. For a survivor schedule `a_i`, a common tree-depth allowance `t`,

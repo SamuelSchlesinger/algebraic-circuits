@@ -2,6 +2,7 @@ import Algebraic.LowerBound.AC0.NormalForm
 import Algebraic.LowerBound.AC0.LiteralGate
 import Algebraic.LowerBound.AC0.BottomGate
 import Algebraic.LowerBound.AC0.DecisionTree
+import Algebraic.LowerBound.AC0.DecisionTreeTrace
 import Algebraic.LowerBound.AC0.Duality
 import Algebraic.LowerBound.AC0.TreeNormalForm
 import Algebraic.LowerBound.AC0.Layer
@@ -23,6 +24,7 @@ import Algebraic.LowerBound.AC0.BottomFamily
 import Algebraic.LowerBound.AC0.LayerSwitching
 import Algebraic.LowerBound.AC0.LayerExistence
 import Algebraic.LowerBound.AC0.LayerIteration
+import Algebraic.LowerBound.AC0.Parity
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.Counting
 import Algebraic.LowerBound.GateElimination
