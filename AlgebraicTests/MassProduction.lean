@@ -500,6 +500,13 @@ example (numerator denominator : Nat)
   EqualBlock.massProducesAt_of_rateBelowHalf numerator denominator
     denominatorPositive rateBelowHalf
 
+/-- Eventual mass-production bounds extend uniformly to every positive input
+length through the generic padding API. -/
+example {numerator denominator : Nat}
+    (production : MassProducesAt numerator denominator) :
+    MassProducesAtAllLengths numerator denominator :=
+  production.allLengths
+
 example : ExponentialMassProduction :=
   BlockInduction.exponentialMassProduction
 

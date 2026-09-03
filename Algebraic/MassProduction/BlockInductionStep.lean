@@ -1,4 +1,5 @@
 import Algebraic.MassProduction.BlockInductionFiniteStep
+import Algebraic.MassProduction.Padding
 
 /-!
 # Arbitrary-width block induction step
@@ -19,33 +20,16 @@ open Sorting
 
 /-! ## Padding arbitrary widths to equal blocks -/
 
-/-- A floor-stable comparison of Shannon scales when the larger width adds
-at most `padding` variables. -/
+/-- Compatibility name for the generic Shannon-scale padding bound. -/
 theorem shannonScale_le_of_le_add
     (inputWidth targetWidth padding : Nat)
     (inputPositive : 0 < inputWidth)
     (fits : inputWidth <= targetWidth)
     (upper : targetWidth <= inputWidth + padding) :
     2 ^ targetWidth / targetWidth <=
-      (2 * 2 ^ padding) * (2 ^ inputWidth / inputWidth) := by
-  have powerBound : 2 ^ targetWidth <= 2 ^ padding * 2 ^ inputWidth := by
-    calc
-      2 ^ targetWidth <= 2 ^ (inputWidth + padding) :=
-        Nat.pow_le_pow_right (by omega) upper
-      _ = 2 ^ padding * 2 ^ inputWidth := by
-        rw [Nat.pow_add]
-        ring
-  have inputFitsPower : inputWidth <= 2 ^ inputWidth := by
-    exact (by omega : inputWidth <= 2 * inputWidth).trans
-      (Nat.mul_le_pow (by decide : 2 ≠ 1) inputWidth)
-  calc
-    2 ^ targetWidth / targetWidth <= 2 ^ targetWidth / inputWidth :=
-      Nat.div_le_div_left fits inputPositive
-    _ <= (2 ^ padding * 2 ^ inputWidth) / inputWidth :=
-      Nat.div_le_div_right powerBound
-    _ <= 2 * 2 ^ padding * (2 ^ inputWidth / inputWidth) :=
-      Growth.mul_div_le_two_mul_mul_div (2 ^ padding) (2 ^ inputWidth)
-        inputWidth inputPositive inputFitsPower
+      (2 * 2 ^ padding) * (2 ^ inputWidth / inputWidth) :=
+  _root_.Algebraic.MassProduction.shannonScale_le_of_le_add
+    inputWidth targetWidth padding inputPositive fits upper
 
 /-- Smallest equal-block width whose complete input covers `inputWidth`. -/
 def blockCeil (level inputWidth : Nat) : Nat :=
