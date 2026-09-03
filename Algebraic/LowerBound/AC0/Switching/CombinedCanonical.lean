@@ -198,6 +198,173 @@ theorem probability_canonicalDepthAtLeast_combined_scaled_le
         (Switching.card_combinedAdvice_cast_le_ennreal
           widthBound pathLength (NeZero.pos widthBound)) _
 
+private theorem combinedBase_mul_le_fixedWeight_mul_five
+    (width : Nat)
+    (widthPositive : 0 < width)
+    (p : NNReal)
+    (atMostOne : p ≤ 1)
+    (small : (5 : NNReal) * p * width ≤ 1) :
+    (((5 * width - 1 : Nat) : NNReal) / 2) * p ≤
+      fixedWeight p * ((5 : NNReal) * p * width) := by
+  rw [fixedWeight]
+  have subCancel : 1 - p + p = (1 : NNReal) :=
+    tsub_add_cancel_of_le atMostOne
+  have numerator :
+      ((5 * width - 1 : Nat) : NNReal) + 1 = 5 * width := by
+    norm_cast
+    omega
+  have twoPositive : (0 : NNReal) < 2 := by norm_num
+  rw [div_mul_eq_mul_div, div_mul_eq_mul_div]
+  apply (div_le_div_iff_of_pos_right twoPositive).2
+  have productSmall :
+      p * ((5 : NNReal) * p * width) ≤ p := by
+    simpa using mul_le_mul_right small p
+  have numeratorProduct :
+      ((5 * width - 1 : Nat) : NNReal) * p + p =
+        (5 : NNReal) * p * width := by
+    calc
+      ((5 * width - 1 : Nat) : NNReal) * p + p =
+          (((5 * width - 1 : Nat) : NNReal) + 1) * p := by ring
+      _ = ((5 : NNReal) * width) * p := by rw [numerator]
+      _ = (5 : NNReal) * p * width := by ring
+  have splitProduct :
+      (1 - p) * ((5 : NNReal) * p * width) +
+          p * ((5 : NNReal) * p * width) =
+        (5 : NNReal) * p * width := by
+    calc
+      (1 - p) * ((5 : NNReal) * p * width) +
+            p * ((5 : NNReal) * p * width) =
+          ((1 - p) + p) * ((5 : NNReal) * p * width) := by ring
+      _ = (5 : NNReal) * p * width := by rw [subCancel]; simp
+  apply (add_le_add_iff_right
+    (p * ((5 : NNReal) * p * width))).mp
+  calc
+    ((5 * width - 1 : Nat) : NNReal) * p +
+          p * ((5 : NNReal) * p * width) ≤
+        ((5 * width - 1 : Nat) : NNReal) * p + p :=
+      by simpa [add_comm] using
+        add_le_add_left productSmall
+          (((5 * width - 1 : Nat) : NNReal) * p)
+    _ = (5 : NNReal) * p * width := numeratorProduct
+    _ = (1 - p) * ((5 : NNReal) * p * width) +
+          p * ((5 : NNReal) * p * width) := splitProduct.symm
+
+private theorem le_of_mul_le_mul_left_finite
+    {factor left right : ENNReal}
+    (factorNonzero : factor ≠ 0)
+    (factorFinite : factor ≠ ⊤)
+    (scaled : factor * left ≤ factor * right) :
+    left ≤ right := by
+  by_contra notLe
+  have strict := ENNReal.mul_lt_mul_left factorNonzero factorFinite
+    (lt_of_not_ge notLe)
+  rw [mul_comm right factor, mul_comm left factor] at strict
+  exact (not_lt_of_ge scaled) strict
+
+/-- Positive-width canonical switching lemma with the standard `5pt` base. -/
+theorem probability_canonicalDepthAtLeast_le_five_of_pos
+    [NeZero widthBound]
+    (formula : DNF n)
+    (bounded : formula.WidthAtMost widthBound)
+    (pathLength : Nat)
+    (p : NNReal)
+    (atMostOne : p ≤ 1) :
+    probability n p atMostOne
+        (fun rho => formula.CanonicalDepthAtLeast rho pathLength) ≤
+      ((5 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal)) ^
+        pathLength := by
+  by_cases small : (5 : NNReal) * p * widthBound ≤ 1
+  · let factor : ENNReal := (fixedWeight p : ENNReal) ^ pathLength
+    let target : ENNReal :=
+      ((5 : ENNReal) * (p : ENNReal) *
+        (widthBound : ENNReal)) ^ pathLength
+    have oneLeWidth : (1 : NNReal) ≤ widthBound := by
+      exact_mod_cast Nat.one_le_iff_ne_zero.mpr (NeZero.ne widthBound)
+    have fivePLeFivePWidth :
+        (5 : NNReal) * p ≤ (5 : NNReal) * p * widthBound := by
+      simpa using mul_le_mul_right oneLeWidth ((5 : NNReal) * p)
+    have fivePLeOne : (5 : NNReal) * p ≤ 1 :=
+      fivePLeFivePWidth.trans small
+    have pLeFifth : p ≤ (1 / 5 : NNReal) := by
+      apply (le_div_iff₀ (by norm_num : (0 : NNReal) < 5)).2
+      simpa [mul_comm] using fivePLeOne
+    have pLtOne : p < 1 := pLeFifth.trans_lt (by norm_num)
+    have fixedPositive : 0 < fixedWeight p := by
+      rw [fixedWeight]
+      exact div_pos (tsub_pos_iff_lt.mpr pLtOne) (by norm_num)
+    have stepNN := combinedBase_mul_le_fixedWeight_mul_five
+      widthBound (NeZero.pos widthBound) p atMostOne small
+    have step :
+        ((((5 * widthBound - 1 : Nat) : ENNReal) / 2) *
+            (p : ENNReal)) ≤
+          (fixedWeight p : ENNReal) *
+            ((5 : ENNReal) * (p : ENNReal) *
+              (widthBound : ENNReal)) := by
+      simpa using (ENNReal.coe_le_coe.mpr stepNN)
+    have scaled :=
+      probability_canonicalDepthAtLeast_combined_scaled_le
+        formula bounded pathLength p atMostOne
+    have rightBound :
+        ((((5 * widthBound - 1 : Nat) : ENNReal) / 2) ^
+              pathLength) * (p : ENNReal) ^ pathLength ≤
+          factor * target := by
+      calc
+        ((((5 * widthBound - 1 : Nat) : ENNReal) / 2) ^
+              pathLength) * (p : ENNReal) ^ pathLength =
+            (((((5 * widthBound - 1 : Nat) : ENNReal) / 2) *
+              (p : ENNReal)) ^ pathLength) :=
+          (mul_pow _ _ pathLength).symm
+        _ ≤ (((fixedWeight p : ENNReal) *
+              ((5 : ENNReal) * (p : ENNReal) *
+                (widthBound : ENNReal))) ^ pathLength) :=
+          pow_le_pow_left' step pathLength
+        _ = factor * target := by
+          rw [mul_pow]
+    apply le_of_mul_le_mul_left_finite (factor := factor)
+    · dsimp [factor]
+      apply pow_ne_zero
+      exact ENNReal.coe_ne_zero.mpr (ne_of_gt fixedPositive)
+    · dsimp [factor]
+      exact ENNReal.pow_ne_top ENNReal.coe_ne_top
+    · exact scaled.trans rightBound
+  · have oneLtTargetNN :
+        (1 : NNReal) < (5 : NNReal) * p * widthBound :=
+      lt_of_not_ge small
+    have oneLeTarget :
+        (1 : ENNReal) ≤
+          (5 : ENNReal) * (p : ENNReal) *
+            (widthBound : ENNReal) := by
+      exact (ENNReal.coe_le_coe.mpr oneLtTargetNN.le)
+    exact (probability_le_one n p atMostOne
+      (fun rho => formula.CanonicalDepthAtLeast rho pathLength)).trans
+        (by simpa using pow_le_pow_left' oneLeTarget pathLength)
+
+/-- Canonical `5pt` switching lemma, including width-zero DNFs. -/
+theorem probability_canonicalDepthAtLeast_le_five
+    (formula : DNF n)
+    (bounded : formula.WidthAtMost widthBound)
+    (pathLength : Nat)
+    (p : NNReal)
+    (atMostOne : p ≤ 1) :
+    probability n p atMostOne
+        (fun rho => formula.CanonicalDepthAtLeast rho pathLength) ≤
+      ((5 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal)) ^
+        pathLength := by
+  cases widthBound with
+  | zero =>
+      cases pathLength with
+      | zero =>
+          simpa using probability_le_one n p atMostOne
+            (fun rho => formula.CanonicalDepthAtLeast rho 0)
+      | succ length =>
+          rw [probability_canonicalDepthAtLeast_eq_zero_of_widthAtMost_zero
+            formula bounded (Nat.succ length) (Nat.succ_pos length)
+            p atMostOne]
+          exact bot_le
+  | succ width =>
+      exact probability_canonicalDepthAtLeast_le_five_of_pos
+        formula bounded pathLength p atMostOne
+
 end RandomRestriction
 end AC0
 end Algebraic

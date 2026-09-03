@@ -327,3 +327,16 @@ This is the finite trusted core of the sharp switching estimate. The remaining
 analytic step is to cancel the fixed-coordinate weight and derive the standard
 readable `Pr[canonical depth >= s] <= (5pt)^s`, including the zero-width and
 large-parameter cases already handled for the earlier nine-constant theorem.
+
+The sharp canonical switching lemma passed the full gates on 2026-09-03. For
+`5pt <= 1`, Lean proves the one-step inequality
+`((5t-1)/2) * p <= ((1-p)/2) * (5pt)`, raises it to the `s`th power, and
+cancels the finite nonzero fixed-coordinate weight. For `5pt > 1`, the result
+follows from probability at most one; width zero and threshold zero are handled
+explicitly. Thus the public theorem now has no artificial small-`p` premise:
+`Pr[canonical depth >= s] <= (5pt)^s`
+
+for every width bound `t`, threshold `s`, and `0 <= p <= 1`. This completes the
+finite switching-lemma milestone. The next dependency is a formula-level
+simplification theorem connecting bounded canonical decision-tree depth to the
+usual restricted DNF/CNF decision-tree statement used in depth reduction.
