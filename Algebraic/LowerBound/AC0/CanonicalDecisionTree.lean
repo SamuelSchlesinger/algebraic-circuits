@@ -40,6 +40,189 @@ end LiteralSet
 
 namespace DNF
 
+/-- The first source term not already falsified by a partial assignment. -/
+def firstSurvivingIn
+    (rho : PartialAssignment n) : List (Term n) → Option (Term n)
+  | [] => none
+  | term :: rest =>
+      if term.ConflictsWith rho then firstSurvivingIn rho rest
+      else some term
+
+/-- The first term of an ordered DNF not falsified by the assignment. -/
+def firstSurviving
+    (formula : DNF n)
+    (rho : PartialAssignment n) : Option (Term n) :=
+  firstSurvivingIn rho formula.terms
+
+/-- Failure to find a surviving term means that every source term conflicts
+with the assignment. -/
+theorem firstSurvivingIn_eq_none_iff
+    (rho : PartialAssignment n)
+    (terms : List (Term n)) :
+    firstSurvivingIn rho terms = none ↔
+      ∀ term, term ∈ terms → term.ConflictsWith rho := by
+  induction terms with
+  | nil => simp [firstSurvivingIn]
+  | cons term rest inductionHypothesis =>
+      by_cases conflict : term.ConflictsWith rho
+      · simp [firstSurvivingIn, conflict, inductionHypothesis]
+      · simp [firstSurvivingIn, conflict]
+
+/-- A term returned by `firstSurvivingIn` occurs in the source list. -/
+theorem firstSurvivingIn_mem
+    (rho : PartialAssignment n)
+    (terms : List (Term n))
+    {term : Term n}
+    (found : firstSurvivingIn rho terms = some term) :
+    term ∈ terms := by
+  induction terms with
+  | nil => simp [firstSurvivingIn] at found
+  | cons head rest inductionHypothesis =>
+      by_cases conflict : head.ConflictsWith rho
+      · simp only [firstSurvivingIn, if_pos conflict] at found
+        exact List.mem_cons_of_mem head (inductionHypothesis found)
+      · simp only [firstSurvivingIn, if_neg conflict,
+          Option.some.injEq] at found
+        subst head
+        simp
+
+/-- A term returned by `firstSurvivingIn` is not falsified. -/
+theorem firstSurvivingIn_not_conflicts
+    (rho : PartialAssignment n)
+    (terms : List (Term n))
+    {term : Term n}
+    (found : firstSurvivingIn rho terms = some term) :
+    ¬term.ConflictsWith rho := by
+  induction terms with
+  | nil => simp [firstSurvivingIn] at found
+  | cons head rest inductionHypothesis =>
+      by_cases conflict : head.ConflictsWith rho
+      · simp only [firstSurvivingIn, if_pos conflict] at found
+        exact inductionHypothesis found
+      · simp only [firstSurvivingIn, if_neg conflict,
+          Option.some.injEq] at found
+        subst head
+        exact conflict
+
+/-- A first surviving term remains first after refinement whenever that term
+itself remains nonconflicting. -/
+theorem firstSurvivingIn_refine
+    (rho extension : PartialAssignment n)
+    (terms : List (Term n))
+    {term : Term n}
+    (found : firstSurvivingIn rho terms = some term)
+    (survives : ¬term.ConflictsWith (rho.refine extension)) :
+    firstSurvivingIn (rho.refine extension) terms = some term := by
+  induction terms with
+  | nil => simp [firstSurvivingIn] at found
+  | cons head rest inductionHypothesis =>
+      by_cases conflict : head.ConflictsWith rho
+      · have refinedConflict := conflict.refine extension
+        simp only [firstSurvivingIn, if_pos conflict] at found
+        simp only [firstSurvivingIn, if_pos refinedConflict]
+        exact inductionHypothesis found
+      · simp only [firstSurvivingIn, if_neg conflict,
+          Option.some.injEq] at found
+        subst head
+        simp [firstSurvivingIn, survives]
+
+/-- Variables of `term` still live under `rho`, retained in canonical input
+order. -/
+def liveSupport
+    (term : Term n)
+    (rho : PartialAssignment n) : List (Fin n) :=
+  term.orderedSupport.filter fun index => decide (rho index = none)
+
+@[simp] theorem mem_liveSupport
+    (term : Term n)
+    (rho : PartialAssignment n)
+    (index : Fin n) :
+    index ∈ liveSupport term rho ↔
+      index ∈ term.support ∧ rho index = none := by
+  simp [liveSupport]
+
+/-- Live-support lists contain no repeated coordinate. -/
+theorem nodup_liveSupport
+    (term : Term n)
+    (rho : PartialAssignment n) :
+    (liveSupport term rho).Nodup :=
+  (LiteralSet.nodup_orderedSupport term).filter _
+
+/-- Computing live support from the source term agrees with first taking its
+residual literal set. -/
+theorem orderedSupport_residual
+    (term : Term n)
+    (rho : PartialAssignment n) :
+    (term.residual rho).orderedSupport = liveSupport term rho := by
+  simp only [LiteralSet.orderedSupport, liveSupport, List.filter_filter]
+  apply List.filter_congr
+  intro index _
+  apply Bool.eq_iff_iff.mpr
+  simp only [decide_eq_true_eq, Bool.and_eq_true]
+  rw [LiteralSet.mem_support, LiteralSet.mem_support]
+  cases fixed : rho index <;>
+    simp [LiteralSet.residual, fixed]
+
+/-- A first surviving source term remains first after a refinement whenever
+that term itself remains nonconflicting. -/
+theorem firstSurviving_refine
+    (formula : DNF n)
+    (rho extension : PartialAssignment n)
+    {term : Term n}
+    (found : formula.firstSurviving rho = some term)
+    (survives : ¬term.ConflictsWith (rho.refine extension)) :
+    formula.firstSurviving (rho.refine extension) = some term := by
+  exact firstSurvivingIn_refine rho extension formula.terms found survives
+
+/-- If no source term survives, the restricted DNF is constantly false. -/
+theorem eval_apply_eq_false_of_firstSurviving_eq_none
+    (formula : DNF n)
+    (rho : PartialAssignment n)
+    (input : Fin n → Bool)
+    (noneSurvives : formula.firstSurviving rho = none) :
+    formula.eval (rho.apply input) = false := by
+  apply Bool.eq_false_iff.mpr
+  intro formulaTrue
+  obtain ⟨term, present, satisfied⟩ :=
+    (eval_eq_true formula (rho.apply input)).1 formulaTrue
+  have conflict : term.ConflictsWith rho :=
+    (firstSurvivingIn_eq_none_iff rho formula.terms).1 noneSurvives
+      term present
+  have termTrue : term.eval (rho.apply input) = true :=
+    (Term.eval_eq_true term (rho.apply input)).2 satisfied
+  rw [Term.eval_apply_eq_false_of_conflicts term rho input conflict] at termTrue
+  contradiction
+
+/-- A surviving term with no live variable makes the restricted DNF
+constantly true. -/
+theorem eval_apply_eq_true_of_firstSurviving_liveSupport_eq_nil
+    (formula : DNF n)
+    (rho : PartialAssignment n)
+    {term : Term n}
+    (found : formula.firstSurviving rho = some term)
+    (supportEmpty : liveSupport term rho = [])
+    (input : Fin n → Bool) :
+    formula.eval (rho.apply input) = true := by
+  have noConflict : ¬term.ConflictsWith rho :=
+    firstSurvivingIn_not_conflicts rho formula.terms found
+  have residualTrue : Term.eval (term.residual rho) input = true := by
+    apply (Term.eval_eq_true (term.residual rho) input).2
+    intro index value required
+    have supportPresent : index ∈ (term.residual rho).support :=
+      (LiteralSet.mem_support (term.residual rho) index).2 (by
+        simp [required])
+    have orderedPresent : index ∈ (term.residual rho).orderedSupport :=
+      (LiteralSet.mem_orderedSupport (term.residual rho) index).2
+        supportPresent
+    rw [orderedSupport_residual, supportEmpty] at orderedPresent
+    simp at orderedPresent
+  apply (eval_eq_true formula (rho.apply input)).2
+  refine ⟨term, firstSurvivingIn_mem rho formula.terms found, ?_⟩
+  apply (Term.eval_eq_true term (rho.apply input)).1
+  rw [← Term.eval_residual_eq_eval_apply_of_not_conflicts
+    term rho input noConflict]
+  exact residualTrue
+
 /-- Every term returned by DNF restriction uses only variables left live by
 the restriction. -/
 theorem support_subset_live_of_mem_restrict
@@ -198,6 +381,59 @@ private theorem depth_queryRemainingBelow_le_liveCount
       simp only [queryRemainingBelow, DecisionTree.depth_query]
       omega
 
+private theorem queryRemainingBelow_readOnceWithin
+    (indices : List (Fin n))
+    (rho : PartialAssignment n)
+    (bound : Nat)
+    (below : rho.liveCount < bound)
+    (recurse : (sigma : PartialAssignment n) →
+      sigma.liveCount < bound → DecisionTree n)
+    (nodup : indices.Nodup)
+    (allLive : ∀ index, index ∈ indices → rho index = none)
+    (recurseReadOnce : ∀ sigma below,
+      (recurse sigma below).ReadOnceWithin sigma.liveVariables) :
+    (queryRemainingBelow indices rho bound below recurse).ReadOnceWithin
+      rho.liveVariables := by
+  induction indices generalizing rho with
+  | nil =>
+      simpa [queryRemainingBelow] using recurseReadOnce rho below
+  | cons index rest inductionHypothesis =>
+      have indexAbsent : index ∉ rest := (List.nodup_cons.mp nodup).1
+      have restNodup : rest.Nodup := (List.nodup_cons.mp nodup).2
+      have indexLive : rho index = none := allLive index (by simp)
+      have indexPresent : index ∈ rho.liveVariables :=
+        (PartialAssignment.mem_liveVariables rho index).2 indexLive
+      have restLive : ∀ current, current ∈ rest →
+          rho current = none := by
+        intro current currentPresent
+        exact allLive current (by simp [currentPresent])
+      have refinedRestLive (value : Bool) :
+          ∀ current, current ∈ rest →
+            (rho.refine (PartialAssignment.fix index value)) current = none := by
+        intro current currentPresent
+        have different : current ≠ index := by
+          intro equal
+          subst current
+          exact indexAbsent currentPresent
+        simp [PartialAssignment.refine, restLive current currentPresent,
+          PartialAssignment.fix, different]
+      have falseReadOnce := inductionHypothesis
+        (rho.refine (PartialAssignment.fix index false))
+        ((PartialAssignment.liveCount_refine_le_left rho
+          (PartialAssignment.fix index false)).trans_lt below)
+        restNodup (refinedRestLive false)
+      have trueReadOnce := inductionHypothesis
+        (rho.refine (PartialAssignment.fix index true))
+        ((PartialAssignment.liveCount_refine_le_left rho
+          (PartialAssignment.fix index true)).trans_lt below)
+        restNodup (refinedRestLive true)
+      simp only [queryRemainingBelow, DecisionTree.ReadOnceWithin]
+      refine ⟨indexPresent, ?_, ?_⟩
+      · simpa [PartialAssignment.liveVariables_refine_fix] using
+          falseReadOnce
+      · simpa [PartialAssignment.liveVariables_refine_fix] using
+          trueReadOnce
+
 private def canonicalSupportStep
     (_formula : DNF n)
     (rho : PartialAssignment n)
@@ -222,30 +458,16 @@ private def canonicalSupportStep
             rho index true indexLive)
           recurse)
 
-private def canonicalTermsStep
-    (formula : DNF n)
-    (rho : PartialAssignment n)
-    (recurse : (sigma : PartialAssignment n) →
-      sigma.liveCount < rho.liveCount → DecisionTree n)
-    (terms : List (Term n))
-    (supportLive : ∀ term, term ∈ terms →
-      term.support ⊆ rho.liveVariables) : DecisionTree n :=
-  match terms with
-  | [] => .leaf false
-  | term :: _ =>
-      canonicalSupportStep formula rho recurse term.orderedSupport fun index
-          present => by
-        rw [← PartialAssignment.mem_liveVariables]
-        apply supportLive term (by simp)
-        exact (LiteralSet.mem_orderedSupport term index).1 present
-
 private def canonicalDecisionTreeStep
     (formula : DNF n)
     (rho : PartialAssignment n)
     (recurse : (sigma : PartialAssignment n) →
       sigma.liveCount < rho.liveCount → DecisionTree n) : DecisionTree n :=
-  canonicalTermsStep formula rho recurse (formula.restrict rho).terms
-    fun _ present => support_subset_live_of_mem_restrict formula rho present
+  match formula.firstSurviving rho with
+  | none => .leaf false
+  | some term =>
+      canonicalSupportStep formula rho recurse (liveSupport term rho)
+        fun index present => (mem_liveSupport term rho index).1 present |>.2
 
 private theorem depth_canonicalSupportStep_le_liveCount
     (formula : DNF n)
@@ -294,31 +516,58 @@ private theorem depth_canonicalSupportStep_le_liveCount
       simp only [canonicalSupportStep, DecisionTree.depth_query]
       omega
 
-private theorem depth_canonicalTermsStep_le_liveCount
+private theorem canonicalSupportStep_readOnceWithin
     (formula : DNF n)
     (rho : PartialAssignment n)
     (recurse : (sigma : PartialAssignment n) →
       sigma.liveCount < rho.liveCount → DecisionTree n)
-    (terms : List (Term n))
-    (supportLive : ∀ term, term ∈ terms →
-      term.support ⊆ rho.liveVariables)
-    (recurseDepth : ∀ sigma below,
-      (recurse sigma below).depth ≤ sigma.liveCount) :
-    (canonicalTermsStep formula rho recurse terms supportLive).depth ≤
-      rho.liveCount := by
-  cases terms with
-  | nil => simp [canonicalTermsStep]
-  | cons term rest =>
-      have allLive : ∀ index, index ∈ term.orderedSupport →
-          rho index = none := by
-        intro index present
-        rw [← PartialAssignment.mem_liveVariables]
-        apply supportLive term (by simp)
-        exact (LiteralSet.mem_orderedSupport term index).1 present
-      simpa only [canonicalTermsStep] using
-        depth_canonicalSupportStep_le_liveCount formula rho recurse
-          term.orderedSupport allLive
-          (LiteralSet.nodup_orderedSupport term) recurseDepth
+    (indices : List (Fin n))
+    (allLive : ∀ index, index ∈ indices → rho index = none)
+    (nodup : indices.Nodup)
+    (recurseReadOnce : ∀ sigma below,
+      (recurse sigma below).ReadOnceWithin sigma.liveVariables) :
+    (canonicalSupportStep formula rho recurse indices allLive).ReadOnceWithin
+      rho.liveVariables := by
+  cases indices with
+  | nil => simp [canonicalSupportStep, DecisionTree.ReadOnceWithin]
+  | cons index rest =>
+      have indexAbsent : index ∉ rest := (List.nodup_cons.mp nodup).1
+      have restNodup : rest.Nodup := (List.nodup_cons.mp nodup).2
+      have indexLive : rho index = none := allLive index (by simp)
+      have indexPresent : index ∈ rho.liveVariables :=
+        (PartialAssignment.mem_liveVariables rho index).2 indexLive
+      have restLive : ∀ current, current ∈ rest →
+          rho current = none := by
+        intro current currentPresent
+        exact allLive current (by simp [currentPresent])
+      have refinedRestLive (value : Bool) :
+          ∀ current, current ∈ rest →
+            (rho.refine (PartialAssignment.fix index value)) current = none := by
+        intro current currentPresent
+        have different : current ≠ index := by
+          intro equal
+          subst current
+          exact indexAbsent currentPresent
+        simp [PartialAssignment.refine, restLive current currentPresent,
+          PartialAssignment.fix, different]
+      have falseBelow :=
+        PartialAssignment.liveCount_refine_fix_lt_of_live
+          rho index false indexLive
+      have trueBelow :=
+        PartialAssignment.liveCount_refine_fix_lt_of_live
+          rho index true indexLive
+      have falseReadOnce := queryRemainingBelow_readOnceWithin
+        rest (rho.refine (PartialAssignment.fix index false)) rho.liveCount
+        falseBelow recurse restNodup (refinedRestLive false) recurseReadOnce
+      have trueReadOnce := queryRemainingBelow_readOnceWithin
+        rest (rho.refine (PartialAssignment.fix index true)) rho.liveCount
+        trueBelow recurse restNodup (refinedRestLive true) recurseReadOnce
+      simp only [canonicalSupportStep, DecisionTree.ReadOnceWithin]
+      refine ⟨indexPresent, ?_, ?_⟩
+      · simpa [PartialAssignment.liveVariables_refine_fix] using
+          falseReadOnce
+      · simpa [PartialAssignment.liveVariables_refine_fix] using
+          trueReadOnce
 
 private theorem canonicalSupportStep_computes
     (formula : DNF n)
@@ -391,45 +640,6 @@ private theorem canonicalSupportStep_computes
           rw [PartialAssignment.apply_refine,
             PartialAssignment.apply_fix_eq_self input index true inputValue]
 
-private theorem canonicalTermsStep_computes
-    (formula : DNF n)
-    (rho : PartialAssignment n)
-    (recurse : (sigma : PartialAssignment n) →
-      sigma.liveCount < rho.liveCount → DecisionTree n)
-    (terms : List (Term n))
-    (supportLive : ∀ term, term ∈ terms →
-      term.support ⊆ rho.liveVariables)
-    (recurseComputes : ∀ sigma below,
-      (recurse sigma below).Computes
-        fun input => formula.eval (sigma.apply input))
-    (semantics : ∀ input,
-      ({ terms := terms } : DNF n).eval input =
-        formula.eval (rho.apply input)) :
-    (canonicalTermsStep formula rho recurse terms supportLive).Computes
-      fun input => formula.eval (rho.apply input) := by
-  cases terms with
-  | nil =>
-      intro input
-      simp only [canonicalTermsStep, DecisionTree.eval_leaf]
-      rw [← semantics input]
-      rfl
-  | cons term rest =>
-      apply canonicalSupportStep_computes
-      · exact LiteralSet.nodup_orderedSupport term
-      · exact recurseComputes
-      · intro supportEmpty input
-        rw [← semantics input]
-        have termTrue : Term.eval term input = true := by
-          apply (Term.eval_eq_true term input).2
-          intro index value required
-          have supportPresent : index ∈ term.support :=
-            (LiteralSet.mem_support term index).2 (by simp [required])
-          have orderedPresent : index ∈ term.orderedSupport :=
-            (LiteralSet.mem_orderedSupport term index).2 supportPresent
-          rw [supportEmpty] at orderedPresent
-          simp at orderedPresent
-        simp [DNF.eval, termTrue]
-
 /-- The canonical decision tree of `formula` below a partial assignment.
 
 The whole formula is freshly restricted between queried terms. Hence later
@@ -453,11 +663,21 @@ theorem canonicalDecisionTree_computes
       (invImage PartialAssignment.liveCount Nat.lt_wfRel).wf.induction with
   | h rho inductionHypothesis =>
       rw [canonicalDecisionTree.eq_def]
-      unfold canonicalDecisionTreeStep
-      apply canonicalTermsStep_computes
-      · intro sigma below
-        exact inductionHypothesis sigma below
-      · exact restrict_sound formula rho
+      cases found : formula.firstSurviving rho with
+      | none =>
+          intro input
+          simp only [canonicalDecisionTreeStep, found,
+            DecisionTree.eval_leaf]
+          exact (eval_apply_eq_false_of_firstSurviving_eq_none
+            formula rho input found).symm
+      | some term =>
+          simp only [canonicalDecisionTreeStep, found]
+          apply canonicalSupportStep_computes
+          · exact nodup_liveSupport term rho
+          · intro sigma below
+            exact inductionHypothesis sigma below
+          · exact eval_apply_eq_true_of_firstSurviving_liveSupport_eq_nil
+              formula rho found
 
 /-- The canonical tree never queries more coordinates than remain live. -/
 theorem depth_canonicalDecisionTree_le_liveCount
@@ -468,10 +688,56 @@ theorem depth_canonicalDecisionTree_le_liveCount
       (invImage PartialAssignment.liveCount Nat.lt_wfRel).wf.induction with
   | h rho inductionHypothesis =>
       rw [canonicalDecisionTree.eq_def]
-      unfold canonicalDecisionTreeStep
-      apply depth_canonicalTermsStep_le_liveCount
-      intro sigma below
-      exact inductionHypothesis sigma below
+      cases found : formula.firstSurviving rho with
+      | none => simp [canonicalDecisionTreeStep, found]
+      | some term =>
+          have allLive : ∀ index, index ∈ liveSupport term rho →
+              rho index = none := by
+            intro index present
+            exact (mem_liveSupport term rho index).1 present |>.2
+          simpa only [canonicalDecisionTreeStep, found] using
+            depth_canonicalSupportStep_le_liveCount formula rho
+              (fun sigma _ => formula.canonicalDecisionTree sigma)
+              (liveSupport term rho) allLive (nodup_liveSupport term rho)
+              (fun sigma below => inductionHypothesis sigma below)
+
+/-- Every canonical root-to-leaf path queries each initially live coordinate
+at most once. -/
+theorem canonicalDecisionTree_readOnceWithin
+    (formula : DNF n)
+    (rho : PartialAssignment n) :
+    (formula.canonicalDecisionTree rho).ReadOnceWithin rho.liveVariables := by
+  induction rho using
+      (invImage PartialAssignment.liveCount Nat.lt_wfRel).wf.induction with
+  | h rho inductionHypothesis =>
+      rw [canonicalDecisionTree.eq_def]
+      cases found : formula.firstSurviving rho with
+      | none => simp [canonicalDecisionTreeStep, found,
+          DecisionTree.ReadOnceWithin]
+      | some term =>
+          have allLive : ∀ index, index ∈ liveSupport term rho →
+              rho index = none := by
+            intro index present
+            exact (mem_liveSupport term rho index).1 present |>.2
+          simpa only [canonicalDecisionTreeStep, found] using
+            canonicalSupportStep_readOnceWithin formula rho
+              (fun sigma _ => formula.canonicalDecisionTree sigma)
+              (liveSupport term rho) allLive (nodup_liveSupport term rho)
+              (fun sigma below => inductionHypothesis sigma below)
+
+/-- Every finite canonical path has distinct queried coordinates, all of which
+were live before the path began. -/
+theorem canonicalPath_indices_nodup_and_subset_live
+    (formula : DNF n)
+    (rho : PartialAssignment n)
+    {steps : List (DecisionTree.PathStep n)}
+    {endpoint : DecisionTree n}
+    (path : DecisionTree.Path (formula.canonicalDecisionTree rho)
+      steps endpoint) :
+    (DecisionTree.PathStep.indices steps).Nodup ∧
+      (DecisionTree.PathStep.indices steps).toFinset ⊆ rho.liveVariables :=
+  path.indices_nodup_and_subset_of_readOnceWithin
+    (formula.canonicalDecisionTree_readOnceWithin rho)
 
 /-- The numeric depth of the distinguished canonical tree. -/
 def canonicalDepth
@@ -492,6 +758,76 @@ def CanonicalDepthAtLeast
     (rho : PartialAssignment n)
     (threshold : Nat) : Prop :=
   threshold ≤ formula.canonicalDepth rho
+
+/-- An exact-length prefix of a path through a canonical DNF decision tree. -/
+structure CanonicalPath
+    (formula : DNF n)
+    (rho : PartialAssignment n)
+    (length : Nat) where
+  /-- Query-and-answer transcript. -/
+  steps : List (DecisionTree.PathStep n)
+  /-- Subtree reached after the transcript. -/
+  endpoint : DecisionTree n
+  /-- The transcript follows the canonical tree. -/
+  follows : DecisionTree.Path (formula.canonicalDecisionTree rho)
+    steps endpoint
+  /-- The transcript has the requested exact length. -/
+  length_steps : steps.length = length
+
+/-- A canonical-depth event supplies an exact-length canonical path prefix. -/
+theorem exists_canonicalPath
+    (formula : DNF n)
+    (rho : PartialAssignment n)
+    (length : Nat)
+    (deep : formula.CanonicalDepthAtLeast rho length) :
+    Nonempty (CanonicalPath formula rho length) := by
+  obtain ⟨steps, endpoint, follows, stepsLength⟩ :=
+    DecisionTree.exists_path_of_length_le_depth
+      (formula.canonicalDecisionTree rho) length deep
+  exact ⟨⟨steps, endpoint, follows, stepsLength⟩⟩
+
+/-- Canonical path coordinates contain no duplicates. -/
+theorem CanonicalPath.indices_nodup
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {length : Nat}
+    (path : CanonicalPath formula rho length) :
+    (DecisionTree.PathStep.indices path.steps).Nodup :=
+  (formula.canonicalPath_indices_nodup_and_subset_live rho path.follows).1
+
+/-- Every canonical path coordinate was live at the path's initial
+restriction. -/
+theorem CanonicalPath.indices_subset_live
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {length : Nat}
+    (path : CanonicalPath formula rho length) :
+    (DecisionTree.PathStep.indices path.steps).toFinset ⊆
+      rho.liveVariables :=
+  (formula.canonicalPath_indices_nodup_and_subset_live rho path.follows).2
+
+/-- The assignment carried by an exact canonical path fixes exactly the path
+length. -/
+theorem CanonicalPath.assignment_fixedCount
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {length : Nat}
+    (path : CanonicalPath formula rho length) :
+    (DecisionTree.PathStep.assignment path.steps).fixedCount = length := by
+  rw [DecisionTree.PathStep.fixedCount_assignment_eq_length path.steps
+    path.indices_nodup, path.length_steps]
+
+/-- The assignment carried by a canonical path fixes only variables live at
+the path's initial restriction. -/
+theorem CanonicalPath.assignment_fixesOnlyLive
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {length : Nat}
+    (path : CanonicalPath formula rho length) :
+    (DecisionTree.PathStep.assignment path.steps).fixedVariables ⊆
+      rho.liveVariables := by
+  rw [DecisionTree.PathStep.fixedVariables_assignment]
+  exact path.indices_subset_live
 
 instance canonicalDepthAtLeastDecidable
     (formula : DNF n)

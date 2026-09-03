@@ -281,6 +281,15 @@ theorem liveVariables_fix
   intro index
   simp [liveVariables, fix]
 
+/-- A one-variable assignment fixes exactly its selected coordinate. -/
+theorem fixedVariables_fix
+    (selected : Fin n)
+    (value : Bool) :
+    (fix selected value).fixedVariables = {selected} := by
+  apply Finset.ext
+  intro index
+  simp [fixedVariables, fix]
+
 /-- The live variables after sequential refinement are the variables left live
 by both constituent partial assignments. -/
 theorem liveVariables_refine

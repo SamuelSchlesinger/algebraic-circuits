@@ -50,4 +50,20 @@ example
     exampleDNF.CanonicalDepthAtLeast rho threshold :=
   exampleDNF.canonicalDepthAtLeast_of_depthAtLeast rho threshold lower
 
+example
+    (rho : PartialAssignment 3)
+    (length : Nat)
+    (deep : exampleDNF.CanonicalDepthAtLeast rho length) :
+    Nonempty (DNF.CanonicalPath exampleDNF rho length) :=
+  exampleDNF.exists_canonicalPath rho length deep
+
+example
+    {rho : PartialAssignment 3}
+    {length : Nat}
+    (path : DNF.CanonicalPath exampleDNF rho length) :
+    (DecisionTree.PathStep.assignment path.steps).fixedCount = length ∧
+      (DecisionTree.PathStep.assignment path.steps).fixedVariables ⊆
+        rho.liveVariables :=
+  ⟨path.assignment_fixedCount, path.assignment_fixesOnlyLive⟩
+
 end AlgebraicTests.AC0CanonicalDecisionTree

@@ -48,4 +48,12 @@ example (function : ScalarFunction Bool 4) :
     DecisionTree.DepthAtMost function 4 :=
   DecisionTree.depthAtMost_inputCount function
 
+example : Nonempty
+    { result : List (DecisionTree.PathStep 2) × DecisionTree 2 //
+      DecisionTree.Path xorTwoTree result.1 result.2 ∧
+        result.1.length = 2 } := by
+  obtain ⟨steps, endpoint, follows, length⟩ :=
+    DecisionTree.exists_path_of_length_le_depth xorTwoTree 2 (by decide)
+  exact ⟨⟨(steps, endpoint), follows, length⟩⟩
+
 end AlgebraicTests.AC0DecisionTree

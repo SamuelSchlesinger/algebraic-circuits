@@ -72,7 +72,7 @@ coordinates, then
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantic layer validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Exact weighted-injection engine validated 2026-09-03; canonical path encoding and final bound open |
+| Switching | Explicit finite switching lemma | Weighted-injection engine and exact canonical path transcripts validated 2026-09-03; term-position decoder and final bound open |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -157,3 +157,13 @@ infrastructure, not yet the switching lemma: the canonical path advice,
 decoder, injectivity proof, and advice-cardinality estimate remain open. The
 audited headline theorems use no axioms beyond Lean's standard `propext`,
 `Classical.choice`, and `Quot.sound`.
+
+The canonical-path submilestone passed the same gates on 2026-09-03. Source
+terms are selected by the first-not-falsified rule, and the implementation's
+live support is proved identical to the ordered support of the residual term.
+Canonical trees satisfy a structural read-once invariant. Consequently every
+canonical-depth event supplies an exact-length path whose queried coordinates
+are duplicate-free and initially live, and whose path assignment fixes exactly
+that many coordinates. The remaining switching work is to label these paths
+by bounded positions within source terms and prove the reconstruction decoder
+injective.

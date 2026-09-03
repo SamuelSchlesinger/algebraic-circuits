@@ -28,6 +28,33 @@ inductive DecisionTree (n : Nat)
 
 namespace DecisionTree
 
+/-- One query and branch choice along a decision-tree path. -/
+structure PathStep (n : Nat) where
+  /-- Coordinate queried at this step. -/
+  index : Fin n
+  /-- Branch selected at this step. -/
+  value : Bool
+  deriving DecidableEq
+
+/-- A finite root-to-subtree path. The endpoint need not be a leaf, which lets
+us take an exact-length prefix of any sufficiently deep branch. -/
+inductive Path : DecisionTree n → List (PathStep n) → DecisionTree n → Prop
+  | nil (tree : DecisionTree n) : Path tree [] tree
+  | takeFalse
+      {index : Fin n}
+      {onFalse onTrue endpoint : DecisionTree n}
+      {steps : List (PathStep n)}
+      (tail : Path onFalse steps endpoint) :
+      Path (.query index onFalse onTrue)
+        (⟨index, false⟩ :: steps) endpoint
+  | takeTrue
+      {index : Fin n}
+      {onFalse onTrue endpoint : DecisionTree n}
+      {steps : List (PathStep n)}
+      (tail : Path onTrue steps endpoint) :
+      Path (.query index onFalse onTrue)
+        (⟨index, true⟩ :: steps) endpoint
+
 /-- Evaluate a decision tree on a complete input. -/
 def eval : DecisionTree n -> (Fin n -> Bool) -> Bool
   | .leaf value, _ => value
@@ -60,6 +87,159 @@ def depth : DecisionTree n -> Nat
     (onFalse onTrue : DecisionTree n) :
     (query index onFalse onTrue).depth =
       Nat.succ (max onFalse.depth onTrue.depth) := rfl
+
+/-- Traversing a path consumes at most the depth of its source tree. The
+strong form retains the depth still available at the endpoint. -/
+theorem Path.length_add_endpoint_depth_le
+    {tree endpoint : DecisionTree n}
+    {steps : List (PathStep n)}
+    (path : Path tree steps endpoint) :
+    steps.length + endpoint.depth ≤ tree.depth := by
+  induction path with
+  | nil tree => simp
+  | takeFalse tail inductionHypothesis =>
+      simp only [List.length_cons, depth_query]
+      omega
+  | takeTrue tail inductionHypothesis =>
+      simp only [List.length_cons, depth_query]
+      omega
+
+/-- Every requested length not exceeding the tree depth occurs as the length
+of a root-to-subtree path. -/
+theorem exists_path_of_length_le_depth
+    (tree : DecisionTree n)
+    (length : Nat)
+    (available : length ≤ tree.depth) :
+    Exists fun steps : List (PathStep n) =>
+      Exists fun endpoint : DecisionTree n =>
+        Path tree steps endpoint ∧ steps.length = length := by
+  induction length generalizing tree with
+  | zero => exact ⟨[], tree, .nil tree, rfl⟩
+  | succ length inductionHypothesis =>
+      cases tree with
+      | leaf value => simp at available
+      | query index onFalse onTrue =>
+          have branchAvailable :
+              length ≤ max onFalse.depth onTrue.depth := by
+            simpa [depth] using available
+          by_cases falseAvailable : length ≤ onFalse.depth
+          · obtain ⟨steps, endpoint, path, stepsLength⟩ :=
+              inductionHypothesis onFalse falseAvailable
+            exact ⟨⟨index, false⟩ :: steps, endpoint,
+              .takeFalse path, by simp [stepsLength]⟩
+          · have trueAvailable : length ≤ onTrue.depth := by
+              omega
+            obtain ⟨steps, endpoint, path, stepsLength⟩ :=
+              inductionHypothesis onTrue trueAvailable
+            exact ⟨⟨index, true⟩ :: steps, endpoint,
+              .takeTrue path, by simp [stepsLength]⟩
+
+/-- The queried coordinates of a path transcript. -/
+def PathStep.indices (steps : List (PathStep n)) : List (Fin n) :=
+  steps.map PathStep.index
+
+/-- The partial assignment made by a path transcript. Earlier occurrences win;
+canonical paths will later be proved duplicate-free. -/
+def PathStep.assignment : List (PathStep n) → PartialAssignment n
+  | [] => PartialAssignment.empty
+  | step :: rest =>
+      (PartialAssignment.fix step.index step.value).refine (assignment rest)
+
+/-- Every root-to-leaf path queries distinct coordinates drawn from the given
+available set. At a query node, that coordinate is removed before checking
+either child. -/
+def ReadOnceWithin : DecisionTree n → Finset (Fin n) → Prop
+  | .leaf _, _ => True
+  | .query index onFalse onTrue, available =>
+      index ∈ available ∧
+        onFalse.ReadOnceWithin (available.erase index) ∧
+        onTrue.ReadOnceWithin (available.erase index)
+
+@[simp] theorem PathStep.assignment_nil :
+    assignment ([] : List (PathStep n)) = PartialAssignment.empty := rfl
+
+@[simp] theorem PathStep.assignment_cons
+    (step : PathStep n)
+    (rest : List (PathStep n)) :
+    assignment (step :: rest) =
+      (PartialAssignment.fix step.index step.value).refine (assignment rest) :=
+  rfl
+
+/-- A transcript assignment fixes exactly the coordinates appearing in its
+query list. -/
+theorem PathStep.fixedVariables_assignment
+    (steps : List (PathStep n)) :
+    (PathStep.assignment steps).fixedVariables =
+      (PathStep.indices steps).toFinset := by
+  induction steps with
+  | nil => simp [assignment, indices]
+  | cons step rest inductionHypothesis =>
+      rw [assignment_cons, PartialAssignment.fixedVariables_refine,
+        PartialAssignment.fixedVariables_fix, inductionHypothesis]
+      simp [indices]
+
+/-- A duplicate-free transcript of length `s` fixes exactly `s` variables. -/
+theorem PathStep.fixedCount_assignment_eq_length
+    (steps : List (PathStep n))
+    (nodup : (PathStep.indices steps).Nodup) :
+    (PathStep.assignment steps).fixedCount = steps.length := by
+  rw [PartialAssignment.fixedCount, fixedVariables_assignment,
+    List.toFinset_card_of_nodup nodup, indices, List.length_map]
+
+/-- A path through a read-once tree has no repeated coordinate, and all its
+coordinates lie in the original available set. -/
+theorem Path.indices_nodup_and_subset_of_readOnceWithin
+    {tree endpoint : DecisionTree n}
+    {steps : List (PathStep n)}
+    {available : Finset (Fin n)}
+    (path : Path tree steps endpoint)
+    (readOnce : tree.ReadOnceWithin available) :
+    (PathStep.indices steps).Nodup ∧
+      (PathStep.indices steps).toFinset ⊆ available := by
+  induction path generalizing available with
+  | nil tree => simp [PathStep.indices]
+  | @takeFalse queried onFalse onTrue pathEndpoint pathSteps tail
+      inductionHypothesis =>
+      rcases readOnce with ⟨indexPresent, falseReadOnce, _⟩
+      obtain ⟨tailNodup, tailSubset⟩ :=
+        inductionHypothesis falseReadOnce
+      constructor
+      · simp only [PathStep.indices, List.map_cons]
+        apply List.nodup_cons.mpr
+        refine ⟨?_, tailNodup⟩
+        intro indexInTail
+        have inFinset : queried ∈ (PathStep.indices _).toFinset :=
+          List.mem_toFinset.mpr indexInTail
+        have inErased := tailSubset inFinset
+        exact (Finset.mem_erase.mp inErased).1 rfl
+      · intro current currentPresent
+        simp only [PathStep.indices, List.map_cons,
+          List.toFinset_cons, Finset.mem_insert] at currentPresent
+        rcases currentPresent with equal | inTail
+        · simpa [equal] using indexPresent
+        · have inErased := tailSubset inTail
+          exact Finset.mem_of_mem_erase inErased
+  | @takeTrue queried onFalse onTrue pathEndpoint pathSteps tail
+      inductionHypothesis =>
+      rcases readOnce with ⟨indexPresent, _, trueReadOnce⟩
+      obtain ⟨tailNodup, tailSubset⟩ :=
+        inductionHypothesis trueReadOnce
+      constructor
+      · simp only [PathStep.indices, List.map_cons]
+        apply List.nodup_cons.mpr
+        refine ⟨?_, tailNodup⟩
+        intro indexInTail
+        have inFinset : queried ∈ (PathStep.indices _).toFinset :=
+          List.mem_toFinset.mpr indexInTail
+        have inErased := tailSubset inFinset
+        exact (Finset.mem_erase.mp inErased).1 rfl
+      · intro current currentPresent
+        simp only [PathStep.indices, List.map_cons,
+          List.toFinset_cons, Finset.mem_insert] at currentPresent
+        rcases currentPresent with equal | inTail
+        · simpa [equal] using indexPresent
+        · have inErased := tailSubset inTail
+          exact Finset.mem_of_mem_erase inErased
 
 /-- Number of leaves in a decision tree. -/
 def leafCount : DecisionTree n -> Nat

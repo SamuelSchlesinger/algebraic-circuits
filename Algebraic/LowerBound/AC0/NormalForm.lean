@@ -182,6 +182,18 @@ instance conflictsWithDecidable
   unfold ConflictsWith
   infer_instance
 
+/-- A conflict witnessed by an existing fixed variable persists under every
+later refinement. -/
+theorem ConflictsWith.refine
+    {set : LiteralSet n}
+    {rho : PartialAssignment n}
+    (conflict : set.ConflictsWith rho)
+    (extension : PartialAssignment n) :
+    set.ConflictsWith (rho.refine extension) := by
+  obtain ⟨index, required, fixed, setValue, rhoValue, different⟩ := conflict
+  refine ⟨index, required, fixed, setValue, ?_, different⟩
+  simp [PartialAssignment.refine, rhoValue]
+
 /-- Some fixed literal of `set` is satisfied by `rho`. -/
 def HitBy
     (set : LiteralSet n)
