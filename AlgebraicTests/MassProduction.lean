@@ -95,6 +95,15 @@ example : uhligResource uhligSourceValues 1 = true := by native_decide
 
 example : uhligResource uhligSourceValues 2 = false := by native_decide
 
+/-- Abstract punctured-line data depends only on field finiteness, without a
+chosen `Fintype` enumeration. -/
+noncomputable example
+    {K V : Type*}
+    [Field K] [Finite K] [AddCommGroup V] [Module K V]
+    (target : V)
+    (direction : ℙ K V) : Finset V :=
+  puncturedLine target direction
+
 /-- Regression: packed prefixes range over genuine data types, not merely
 propositions, and occupied lookup uses embedding injectivity. -/
 example

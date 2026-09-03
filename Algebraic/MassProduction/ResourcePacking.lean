@@ -13,7 +13,8 @@ returns the original Boolean coordinate.
 
 The placement embedding is data, not a serialization typeclass.  A later
 front-end circuit may implement any concrete placement satisfying the same
-interface without changing the algebraic recovery proof.
+interface without changing the algebraic recovery proof. Packing capacities
+use `Nat.card`, so their public types do not capture a field enumeration.
 -/
 
 namespace Algebraic
@@ -25,18 +26,11 @@ variable {Prefix : Type u}
 
 open scoped BigOperators LinearAlgebra.Projectivization
 
-/-- The binary extension is only `Finite` globally.  Evaluation-code
-definitions need an enumeration, so this module installs one locally rather
-than exporting another global instance. -/
-noncomputable local instance binaryExtensionFintype :
-    Fintype (BinaryExtension width) :=
-  Fintype.ofFinite (BinaryExtension width)
-
 /-- One Boolean information position consists of a tensor-grid symbol and a
 basis coordinate inside that binary-extension-field symbol. -/
 abbrev PackedBitPosition (dimension width : Nat) :=
   (Fin dimension ->
-      Fin (resourceGridWidth (Fintype.card (BinaryExtension width)) dimension))
+      Fin (resourceGridWidth (Nat.card (BinaryExtension width)) dimension))
     × Fin width
 
 /-- Concrete interpolation nodes: a grid index is represented by its
@@ -46,7 +40,7 @@ noncomputable def binaryResourceNodes
     (widthPositive : 0 < width)
     (dimension : Nat) :
     Fin (resourceGridWidth
-      (Fintype.card (BinaryExtension width)) dimension) ->
+      (Nat.card (BinaryExtension width)) dimension) ->
       BinaryExtension width :=
   fun point => encodeBinaryExtension widthPositive
     (finiteIndexBits width point)
@@ -56,11 +50,9 @@ theorem binaryResourceNodes_injective
     (dimension : Nat) :
     Function.Injective (binaryResourceNodes widthPositive dimension) := by
   have gridFits :
-      resourceGridWidth (Fintype.card (BinaryExtension width)) dimension <=
+      resourceGridWidth (Nat.card (BinaryExtension width)) dimension <=
         2 ^ width := by
-    rw [← show Fintype.card (BinaryExtension width) = 2 ^ width by
-      rw [← Nat.card_eq_fintype_card]
-      exact card_binaryExtension widthPositive]
+    rw [card_binaryExtension widthPositive]
     unfold resourceGridWidth
     exact (Nat.div_le_self _ _).trans (Nat.sub_le _ _)
   intro left right equal
@@ -103,7 +95,7 @@ noncomputable def packedMessage
     (values : Prefix -> Bool) :
     (Fin dimension ->
       Fin (resourceGridWidth
-        (Fintype.card (BinaryExtension width)) dimension)) ->
+        (Nat.card (BinaryExtension width)) dimension)) ->
       BinaryExtension width :=
   fun symbol => encodeBinaryExtension widthPositive fun bit =>
     packedBit placement values (symbol, bit)
@@ -205,15 +197,21 @@ theorem packedEvaluationResource_sum_puncturedLine
             point suffix) (placement source).2) =
       function source suffix := by
   classical
+  let _ : Fintype (BinaryExtension width) :=
+    Fintype.ofFinite (BinaryExtension width)
+  have fieldCardAtLeastTwo : 2 <= Nat.card (BinaryExtension width) := by
+    rw [card_binaryExtension widthPositive]
+    exact Nat.one_lt_two_pow_iff.mpr (Nat.ne_of_gt widthPositive)
   have degree :
       Fintype.card (Fin dimension) *
           (Fintype.card (Fin (resourceGridWidth
-            (Fintype.card (BinaryExtension width)) dimension)) - 1) <
+            (Nat.card (BinaryExtension width)) dimension)) - 1) <
         Fintype.card (BinaryExtension width) - 1 := by
-    simpa only [Fintype.card_fin] using
+    simpa only [Fintype.card_fin, Nat.card_fin,
+      ← Nat.card_eq_fintype_card] using
       resourceGridWidth_degree_lt
-        (Fintype.card (BinaryExtension width)) dimension
-        Fintype.one_lt_card dimensionPositive
+        (Nat.card (BinaryExtension width)) dimension
+        fieldCardAtLeastTwo dimensionPositive
   have fieldRecovery := evaluationCode_sum_puncturedLine
     (binaryResourceNodes widthPositive dimension)
     (packedMessage widthPositive placement
@@ -244,12 +242,9 @@ theorem packedEvaluationResource_sum_puncturedLine
 points times the extension-field bit width. -/
 theorem packedEvaluationResource_count
     (widthPositive : 0 < width) :
-    Fintype.card (Fin dimension -> BinaryExtension width) * width =
+    Nat.card (Fin dimension -> BinaryExtension width) * width =
       (2 ^ width) ^ dimension * width := by
-  rw [Fintype.card_fun, Fintype.card_fin]
-  rw [show Fintype.card (BinaryExtension width) = 2 ^ width by
-    rw [← Nat.card_eq_fintype_card]
-    exact card_binaryExtension widthPositive]
+  rw [Nat.card_fun, Nat.card_fin, card_binaryExtension widthPositive]
 
 /-- A semantic placement exists whenever the information-bit count fits in
 the tensor-grid symbol capacity.  This is deliberately separate from the
@@ -258,7 +253,7 @@ theorem nonempty_packedBitPlacement_of_card_le
     [Fintype Prefix]
     (capacity : Fintype.card Prefix <=
       (resourceGridWidth
-        (Fintype.card (BinaryExtension width)) dimension) ^ dimension *
+        (Nat.card (BinaryExtension width)) dimension) ^ dimension *
           width) :
     Nonempty (Prefix ↪ PackedBitPosition dimension width) := by
   apply Function.Embedding.nonempty_of_card_le

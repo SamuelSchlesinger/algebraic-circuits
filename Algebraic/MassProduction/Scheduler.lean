@@ -13,7 +13,9 @@ projective direction space.
 
 This is an existence theorem. It does not yet claim the manuscript's circuit
 cost for computing the schedule; that requires a separate concrete routing
-construction.
+construction. Public scheduler data requires only `Finite` fields and states
+cardinalities with `Nat.card`; concrete enumerations remain implementation
+details.
 -/
 
 namespace Algebraic
@@ -25,11 +27,12 @@ open scoped BigOperators LinearAlgebra.Projectivization
 projective direction. -/
 noncomputable def puncturedLine
     {K V : Type*}
-    [Field K] [Fintype K]
+    [Field K] [Finite K]
     [AddCommGroup V] [Module K V]
     (target : V)
     (direction : ℙ K V) : Finset V := by
   classical
+  let _ : Fintype K := Fintype.ofFinite K
   exact (Finset.univ.erase (0 : K)).image
     (fun scalar => target + scalar • direction.rep)
 
@@ -37,7 +40,7 @@ noncomputable def puncturedLine
 An unmatched suffix of either list is ignored. -/
 noncomputable def recoverySets
     {K V : Type*}
-    [Field K] [Fintype K]
+    [Field K] [Finite K]
     [AddCommGroup V] [Module K V] :
     List V -> List (ℙ K V) -> List (Finset V)
   | target :: targets, direction :: directions =>
@@ -48,7 +51,7 @@ noncomputable def recoverySets
 recovery sets. -/
 def ValidSchedule
     {K V : Type*}
-    [Field K] [Fintype K]
+    [Field K] [Finite K]
     [AddCommGroup V] [Module K V]
     (targets : List V)
     (directions : List (ℙ K V)) : Prop :=
@@ -91,18 +94,18 @@ private theorem pointMap_injective
 
 /-- A punctured affine line has one point per nonzero field scalar. -/
 theorem card_puncturedLine
-    [Fintype K]
+    [Finite K]
     (target : V)
     (direction : ℙ K V) :
-    (puncturedLine target direction).card = Fintype.card K - 1 := by
+    (puncturedLine target direction).card = Nat.card K - 1 := by
   classical
   rw [puncturedLine, Finset.card_image_iff.mpr]
-  · simp
+  · simp [← Nat.card_eq_fintype_card]
   · exact (pointMap_injective target direction).injOn
 
 /-- The center is not in its punctured affine line. -/
 theorem target_not_mem_puncturedLine
-    [Fintype K]
+    [Finite K]
     (target : V)
     (direction : ℙ K V) :
     target ∉ puncturedLine target direction := by
@@ -223,7 +226,7 @@ private theorem direction_mem_forbiddenDirections
   rfl
 
 private theorem direction_eq_of_mem_puncturedLine
-    [Fintype K]
+    [Finite K]
     (target point : V)
     (direction : ℙ K V)
     (pointOnLine : point ∈ puncturedLine target direction) :
@@ -249,7 +252,7 @@ private theorem direction_eq_of_mem_puncturedLine
 points.  This is the pointwise form consumed by the constructive scheduler
 circuit. -/
 theorem puncturedLine_disjoint_of_avoids_differences
-    [Fintype K]
+    [Finite K]
     (target : V)
     (direction : ℙ K V)
     (used : Finset V)
@@ -272,7 +275,7 @@ theorem puncturedLine_disjoint_of_avoids_differences
 /-- If fewer points are used than there are projective directions, some
 punctured line through a new target avoids the used set. -/
 theorem exists_puncturedLine_disjoint
-    [Fintype K] [Finite V]
+    [Finite K] [Finite V]
     (target : V)
     (used : Finset V)
     (cardBound : used.card < Nat.card (ℙ K V)) :
@@ -345,14 +348,14 @@ private theorem card_recoveryUnion_le_sum_card
 
 section Schedule
 
-variable {K V : Type*} [Field K] [Fintype K]
+variable {K V : Type*} [Field K] [Finite K]
   [AddCommGroup V] [Module K V]
 
 private theorem sum_card_recoverySets
     (targets : List V)
     (directions : List (ℙ K V)) :
     ((recoverySets targets directions).map Finset.card).sum =
-      min targets.length directions.length * (Fintype.card K - 1) := by
+      min targets.length directions.length * (Nat.card K - 1) := by
   induction targets generalizing directions with
   | nil => simp [recoverySets]
   | cons target targets inductionHypothesis =>
@@ -374,7 +377,7 @@ when its exact point budget is smaller than projective direction space. -/
 theorem exists_validSchedule
     [Finite V]
     (targets : List V)
-    (cardBound : targets.length * (Fintype.card K - 1) <
+    (cardBound : targets.length * (Nat.card K - 1) <
       Nat.card (ℙ K V)) :
     ∃ directions : List (ℙ K V), ValidSchedule targets directions := by
   classical
@@ -382,7 +385,7 @@ theorem exists_validSchedule
   | nil =>
       exact ⟨[], by simp [ValidSchedule, recoverySets]⟩
   | cons target targets inductionHypothesis =>
-      have tailBound : targets.length * (Fintype.card K - 1) <
+      have tailBound : targets.length * (Nat.card K - 1) <
           Nat.card (ℙ K V) := by
         apply lt_of_le_of_lt _ cardBound
         gcongr
@@ -411,7 +414,7 @@ recovery-set budget condition. -/
 theorem exists_validSchedule_of_mul_card_lt
     [Finite V]
     (targets : List V)
-    (cardBound : targets.length * Fintype.card K < Nat.card (ℙ K V)) :
+    (cardBound : targets.length * Nat.card K < Nat.card (ℙ K V)) :
     ∃ directions : List (ℙ K V), ValidSchedule targets directions := by
   apply exists_validSchedule targets
   apply lt_of_le_of_lt _ cardBound

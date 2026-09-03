@@ -105,7 +105,7 @@ theorem exists_disjoint_paperEvaluationCode_recovery
       (Fin dimension ->
         Fin (resourceGridWidth (Fintype.card K) dimension)) -> K)
     (targets : List (Fin dimension -> K))
-    (cardBound : targets.length * (Fintype.card K - 1) <
+    (cardBound : targets.length * (Nat.card K - 1) <
       Nat.card (ℙ K (Fin dimension -> K))) :
     ∃ directions : List (ℙ K (Fin dimension -> K)),
       ValidSchedule targets directions ∧
@@ -129,7 +129,7 @@ theorem exists_disjoint_paperEvaluationCode_recovery_of_mul_card_lt
       (Fin dimension ->
         Fin (resourceGridWidth (Fintype.card K) dimension)) -> K)
     (targets : List (Fin dimension -> K))
-    (cardBound : targets.length * Fintype.card K <
+    (cardBound : targets.length * Nat.card K <
       Nat.card (ℙ K (Fin dimension -> K))) :
     ∃ directions : List (ℙ K (Fin dimension -> K)),
       ValidSchedule targets directions ∧

@@ -17,23 +17,15 @@ namespace Algebraic
 namespace MassProduction
 namespace CanonicalPacking
 
-/-- Keep the finite enumeration needed by `PackedBitPosition` local to this
-module; no field enumeration instance is exported. -/
-noncomputable local instance binaryExtensionFintype :
-    Fintype (BinaryExtension width) :=
-  Fintype.ofFinite (BinaryExtension width)
-
 /-- Number of interpolation nodes available in each tensor coordinate. -/
 @[reducible] noncomputable def gridWidth (dimension width : Nat) : Nat :=
-  resourceGridWidth (Fintype.card (BinaryExtension width)) dimension
+  resourceGridWidth (Nat.card (BinaryExtension width)) dimension
 
 theorem gridWidth_eq
     (widthPositive : 0 < width) :
     gridWidth dimension width = resourceGridWidth (2 ^ width) dimension := by
   unfold gridWidth
-  congr 1
-  rw [← Nat.card_eq_fintype_card]
-  exact card_binaryExtension widthPositive
+  rw [card_binaryExtension widthPositive]
 
 /-- The canonical flat information-bit position for one prefix index. -/
 noncomputable def flatPosition
