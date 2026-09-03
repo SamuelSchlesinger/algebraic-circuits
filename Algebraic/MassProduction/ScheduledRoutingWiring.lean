@@ -19,14 +19,18 @@ open IncidenceRouting
 open LineEnumeration
 open SchedulerIteration
 
+/-- Number of Boolean wires in one grouped scheduler output. -/
+@[reducible] noncomputable def scheduleBitCount
+    (groups requestsPerGroup dimension width : Nat) : Nat :=
+  groups * (requestsPerGroup * lineBitWidth dimension width)
+
 /-- Scheduler-output wire containing one affine-point bit of a flattened
 scheduled incidence. -/
 noncomputable def scheduledIncidencePointBitIndex
     (capacity : totalRequests <= groups * requestsPerGroup)
     (incidence : Fin (totalRequests * nonzeroScalarCount width))
     (pointBit : Fin (dimension * width)) :
-    Fin (groups *
-      (requestsPerGroup * lineBitWidth dimension width)) :=
+    Fin (scheduleBitCount groups requestsPerGroup dimension width) :=
   let requestAndScalar := incidenceAt incidence
   let groupAndRequest := requestGroupSlot capacity requestAndScalar.1
   finProdFinEquiv
@@ -40,8 +44,8 @@ scheduler-output block. -/
 theorem scheduledIncidencePointBit
     (widthPositive : 0 < width)
     (capacity : totalRequests <= groups * requestsPerGroup)
-    (scheduleOutput : Fin (groups *
-      (requestsPerGroup * lineBitWidth dimension width)) -> Bool)
+    (scheduleOutput :
+      Fin (scheduleBitCount groups requestsPerGroup dimension width) -> Bool)
     (incidence : Fin (totalRequests * nonzeroScalarCount width))
     (pointBit : Fin (dimension * width)) :
     binaryExtensionVectorBits widthPositive
@@ -60,8 +64,8 @@ theorem scheduledIncidenceKeyBits_eq_wiring
     (widthPositive : 0 < width)
     (groupBitWidth : Nat)
     (capacity : totalRequests <= groups * requestsPerGroup)
-    (scheduleOutput : Fin (groups *
-      (requestsPerGroup * lineBitWidth dimension width)) -> Bool)
+    (scheduleOutput :
+      Fin (scheduleBitCount groups requestsPerGroup dimension width) -> Bool)
     (incidence : Fin (totalRequests * nonzeroScalarCount width)) :
     scheduledIncidenceKeyBits widthPositive groupBitWidth capacity
         scheduleOutput incidence =
