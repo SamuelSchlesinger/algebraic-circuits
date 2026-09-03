@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Charged-size one-step semantic layer advancement proved with failure at most `S(5pt)^(t+1)`; iteration open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | One-step advancement now preserves any `k` satisfying `delta*m+k < p*m`, for `delta=S(5pt)^(t+1)`; iteration open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -97,6 +97,18 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The existential layer-advancement submilestone passed the full gates on
+2026-09-03. Writing `m` for the current live count and
+`delta = S(5pt)^(t+1)` for the charged switching failure bound, Lean proves
+that `delta*m + k < p*m` yields one refinement which both advances
+`ShallowUpTo` by a full logical layer and retains at least `k` live variables.
+The proof combines the circuit-level failure estimate with exact survivor
+averaging; it does not compute or search for the witnessing restriction. The
+semantic invariant is also proved monotone in its common decision-tree depth
+allowance, furnishing the base conversion needed for iteration. The audited
+public theorems use no axioms beyond Lean's standard `propext`,
+`Classical.choice`, and `Quot.sound`.
 
 The live-variable averaging submilestone passed the full gates on 2026-09-03.
 Each coordinate is proved live with probability exactly `p`, and finite
