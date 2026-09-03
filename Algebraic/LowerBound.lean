@@ -35,6 +35,7 @@ import Algebraic.LowerBound.AC0.ParityNormalForm
 import Algebraic.LowerBound.AC0.ParityCircuit
 import Algebraic.LowerBound.AC0.ParityTopGate
 import Algebraic.LowerBound.AC0.ParityDepthReduction
+import Algebraic.LowerBound.AC0.ParityLowerBound
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.Counting
 import Algebraic.LowerBound.GateElimination

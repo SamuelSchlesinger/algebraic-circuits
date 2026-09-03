@@ -82,7 +82,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Concrete probabilities and exact floor-divided survivor schedule proved; final circuit instantiation and asymptotic simplification open |
-| Parity | Restriction resilience and depth reduction | The complete variable-parameter `d-1`-round contradiction is proved; closed-form parameter selection remains open |
+| Parity | Concrete bounded-depth lower bound | For all `d>=2`, the explicit switching-smallness and survivor inequalities now rule out parity; asymptotic size form remains open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
 ## Claim labels
@@ -97,6 +97,19 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The concrete finite parity lower bound passed the full gates on 2026-09-03.
+For every `d >= 2` and `t >= 1`, a checked input-negation-normal circuit of
+logical depth at most `d` cannot compute parity if
+`S*(1/2)^(t+1) < 1/(20t)` and
+`t < n/(20*(20t)^(d-2))`. Lean instantiates the probability, tree-bound, and
+floor-divided survivor schedules, discharges every strict first-moment room
+condition, performs exactly `d-1` restriction rounds, and applies the top-gate
+obstruction. This is a uniform symbolic theorem, not a fixed-arity experiment
+or circuit enumeration. Translating the two inequalities into the conventional
+closed asymptotic size bound is the remaining arithmetic step. The audited
+public theorems use no axioms beyond Lean's standard `propext`,
+`Classical.choice`, and `Quot.sound`.
 
 The integer survivor-schedule submilestone passed the full gates on
 2026-09-03. The target sequence divides by `20` once and then by `20t` each
