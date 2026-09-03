@@ -4,6 +4,7 @@ import AlgebraicTests.CircuitFamily
 import AlgebraicTests.AC0
 import AlgebraicTests.AC0DecisionTree
 import AlgebraicTests.AC0Parity
+import AlgebraicTests.AC0ParityNormalForm
 import AlgebraicTests.AC0ParityCircuit
 import AlgebraicTests.AC0Duality
 import AlgebraicTests.AC0TreeNormalForm

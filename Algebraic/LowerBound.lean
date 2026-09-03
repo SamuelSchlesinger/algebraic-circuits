@@ -28,6 +28,7 @@ import Algebraic.LowerBound.AC0.LayerExistenceBounds
 import Algebraic.LowerBound.AC0.LayerIteration
 import Algebraic.LowerBound.AC0.LayerIterationBounds
 import Algebraic.LowerBound.AC0.Parity
+import Algebraic.LowerBound.AC0.ParityNormalForm
 import Algebraic.LowerBound.AC0.ParityCircuit
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.Counting

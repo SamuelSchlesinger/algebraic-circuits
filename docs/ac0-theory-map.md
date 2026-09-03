@@ -82,7 +82,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Variable-probability, variable-tree-bound semantic iteration proved with explicit survivor schedules; closed-form parameters open |
-| Parity | Restriction resilience and quantitative depth-`k` lower bound | Exact restriction resilience and the parameterized iterated-switching contradiction are proved; closed-form parameters open |
+| Parity | Restriction resilience and normal-form obstruction | Exact decision-tree depth and exact DNF/CNF width lower bounds under every restriction proved; closed-form circuit parameters open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
 ## Claim labels
@@ -97,6 +97,18 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The restricted-parity normal-form submilestone passed the full gates on
+2026-09-03. Every DNF computing parity under a nonconstant restriction has a
+term containing all live variables, and every such CNF has a clause containing
+all live variables. Hence width at most `t` forces `liveCount rho <= t` in
+both cases. The proof is the standard sensitivity argument: flipping an
+absent live variable preserves the witnessing term or falsified clause but
+changes parity. This supplies the top-gate obstruction needed to stop depth
+reduction after `d-1` rounds, without forcing the entire top formula into a
+decision tree. It is uniform in arity and performs no formula enumeration or
+finite optimization. The audited public theorems use no axioms beyond Lean's
+standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The variable-parameter depth-reduction submilestone passed the full gates on
 2026-09-03. Lean now iterates explicit schedules `p_i`, `t_i`, and `a_i` under
