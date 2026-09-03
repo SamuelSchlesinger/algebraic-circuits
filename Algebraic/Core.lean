@@ -8,6 +8,8 @@ import Algebraic.Semantics
 import Algebraic.Support
 import Algebraic.Cost
 import Algebraic.Substitution
+import Algebraic.Parallel
+import Algebraic.Iteration
 import Algebraic.Translation
 
 /-!

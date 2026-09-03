@@ -58,7 +58,8 @@ def interpretation : (op : Op) → (Fin (arity op) → Bool) → Bool
   | .and, input => input ⟨0, by decide⟩ && input ⟨1, by decide⟩
   | .or, input => input ⟨0, by decide⟩ || input ⟨1, by decide⟩
 
-/-- Cost model charging exactly the binary gates. -/
+/-- Cost model charging exactly the binary gates. This is the convention used
+by the gate-elimination lower bounds, not the mass-production manuscript. -/
 def binaryCost : OperationCost signature
   | .and | .or => 1
   | .false | .true | .id | .not => 0
@@ -69,6 +70,19 @@ def binaryCost : OperationCost signature
 @[simp] theorem binaryCost_not : binaryCost .not = 0 := rfl
 @[simp] theorem binaryCost_and : binaryCost .and = 1 := rfl
 @[simp] theorem binaryCost_or : binaryCost .or = 1 := rfl
+
+/-- The manuscript's standard circuit-size convention: constants and
+structural identities are free, while NOT, AND, and OR each cost one gate. -/
+def standardCost : OperationCost signature
+  | .false | .true | .id => 0
+  | .not | .and | .or => 1
+
+@[simp] theorem standardCost_false : standardCost .false = 0 := rfl
+@[simp] theorem standardCost_true : standardCost .true = 0 := rfl
+@[simp] theorem standardCost_id : standardCost .id = 0 := rfl
+@[simp] theorem standardCost_not : standardCost .not = 1 := rfl
+@[simp] theorem standardCost_and : standardCost .and = 1 := rfl
+@[simp] theorem standardCost_or : standardCost .or = 1 := rfl
 
 end DeMorgan
 end Algebraic

@@ -2,6 +2,7 @@ import Algebraic.Core
 import Algebraic.Basis.Arithmetic
 import Algebraic.Basis.Arithmetic.Expression
 import Algebraic.Basis.Arithmetic.Power
+import Algebraic.Basis.DeMorgan.Expression
 import Algebraic.Basis.AndOr.Preimage
 import Algebraic.Translation.Optimal
 import Algebraic.Translation.Category
@@ -15,5 +16,6 @@ import Algebraic.Restriction
 import Algebraic.Reduction
 import Algebraic.Compaction
 import Algebraic.Counting
+import Algebraic.MassProduction
 import Algebraic.LowerBound
 import Algebraic.Applications

@@ -2,6 +2,7 @@ import AlgebraicTests.Core
 import AlgebraicTests.Circuit
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds
+import AlgebraicTests.MassProduction
 
 /-!
 # Algebraic public API regression suite
