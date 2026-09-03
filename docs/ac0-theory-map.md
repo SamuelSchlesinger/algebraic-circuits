@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Separate source-width/target-depth switching and finite-layer semantic iteration proved; closed-form parameters open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Separate-bound switching, live-variable extraction, and finite-layer semantic iteration proved; closed-form parameters open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Exact restriction resilience and the parameterized iterated-switching contradiction are proved; closed-form parameters open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -97,6 +97,16 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The two-parameter live-variable extraction submilestone passed the full gates
+on 2026-09-03. For source bound `s`, target bound `t >= s`, current live count
+`m`, and desired survivor count `k`, Lean now extracts a concrete refinement
+whenever `delta*m+k < p*m`, with `delta = S(5ps)^(t+1)`. The refinement both
+advances the shallow invariant one logical layer at target bound `t` and keeps
+at least `k` variables live. The proof combines the exact switching estimate
+with the exact survivor first moment; it defines no sampler, optimizer, or
+finite search. The audited public theorems use no axioms beyond Lean's
+standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The two-parameter layer-switching submilestone passed the full gates on
 2026-09-03. If layers through `i` have decision-tree depth at most `s`, a

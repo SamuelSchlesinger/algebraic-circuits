@@ -12,6 +12,7 @@ import AlgebraicTests.AC0LayerFormula
 import AlgebraicTests.AC0LayerSwitching
 import AlgebraicTests.AC0LayerSwitchingBounds
 import AlgebraicTests.AC0LayerExistence
+import AlgebraicTests.AC0LayerExistenceBounds
 import AlgebraicTests.AC0LayerIteration
 import AlgebraicTests.AC0CanonicalDecisionTree
 import AlgebraicTests.AC0NormalForm

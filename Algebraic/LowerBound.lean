@@ -24,6 +24,7 @@ import Algebraic.LowerBound.AC0.BottomFamily
 import Algebraic.LowerBound.AC0.LayerSwitching
 import Algebraic.LowerBound.AC0.LayerSwitchingBounds
 import Algebraic.LowerBound.AC0.LayerExistence
+import Algebraic.LowerBound.AC0.LayerExistenceBounds
 import Algebraic.LowerBound.AC0.LayerIteration
 import Algebraic.LowerBound.AC0.Parity
 import Algebraic.LowerBound.AC0.ParityCircuit
