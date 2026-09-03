@@ -10,6 +10,7 @@ import AlgebraicTests.AC0TreeNormalForm
 import AlgebraicTests.AC0Layer
 import AlgebraicTests.AC0LayerFormula
 import AlgebraicTests.AC0LayerSwitching
+import AlgebraicTests.AC0LayerSwitchingBounds
 import AlgebraicTests.AC0LayerExistence
 import AlgebraicTests.AC0LayerIteration
 import AlgebraicTests.AC0CanonicalDecisionTree
