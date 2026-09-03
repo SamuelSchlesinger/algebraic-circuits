@@ -18,6 +18,7 @@ import AlgebraicTests.AC0LayerExistence
 import AlgebraicTests.AC0LayerExistenceBounds
 import AlgebraicTests.AC0LayerIteration
 import AlgebraicTests.AC0LayerIterationBounds
+import AlgebraicTests.AC0LayerSchedule
 import AlgebraicTests.AC0CanonicalDecisionTree
 import AlgebraicTests.AC0NormalForm
 import AlgebraicTests.AC0LiteralGate

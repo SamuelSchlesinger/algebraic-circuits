@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Variable-probability, variable-tree-bound semantic iteration proved with explicit survivor schedules; closed-form parameters open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Explicit ratio-and-slack schedules now imply the complete variable-parameter iteration; concrete constants remain open |
 | Parity | Restriction resilience and depth reduction | The complete variable-parameter `d-1`-round contradiction is proved; closed-form parameter selection remains open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -97,6 +97,16 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The ratio-schedule depth-reduction submilestone passed the full gates on
+2026-09-03. A positive survivor schedule with
+`delta_i+q_i < p_i` and `a_(i+1) <= q_i*a_i` now implies both numerical
+premises of the raw iterator: `delta_i <= p_i` and the strict first-moment
+room inequality. The resulting public theorem directly produces the final
+cumulative restriction from these readable ratio conditions. This isolates
+the conceptual probability slack from integer rounding and concrete constant
+selection; it adds no sampling or search. The audited public theorems use no
+axioms beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The source-faithful parameterized parity contradiction passed the full gates
 on 2026-09-03. For any circuit of logical depth at most `r+1`, an explicit
