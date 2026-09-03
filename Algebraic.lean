@@ -11,6 +11,7 @@ import Algebraic.Translation.Block
 import Algebraic.Translation.Contextual
 import Algebraic.Simulation
 import Algebraic.Complexity
+import Algebraic.CircuitFamily
 import Algebraic.Analysis
 import Algebraic.Restriction
 import Algebraic.Reduction
