@@ -9,7 +9,7 @@ the switching-lemma injection. Each query is annotated with
 
 * its position in the selected source term,
 * whether it closes the current term block,
-* the original path bit, and
+* whether the original path bit differs from the satisfying literal value, and
 * the value satisfying that source literal.
 
 Only the first three fields become finite advice. The queried coordinate and
@@ -19,6 +19,18 @@ restriction and prove reconstruction. No paths or circuits are enumerated.
 
 namespace Algebraic
 namespace AC0
+
+namespace LiteralSet
+
+/-- Deterministic Boolean value extracted from a literal requirement. On the
+support of the literal set this is its unique satisfying value. -/
+def satisfyingValue
+    (set : LiteralSet n)
+    (index : Fin n) : Bool :=
+  (set.requirements index).getD false
+
+end LiteralSet
+
 namespace Switching
 
 /-- One symbol of switching advice. The position names a variable within the
@@ -28,9 +40,27 @@ structure QueryAdvice (widthBound : Nat) where
   position : Fin widthBound
   /-- Whether this query is the last one in the current source-term block. -/
   closesBlock : Bool
-  /-- Branch bit followed by the original canonical path. -/
-  pathValue : Bool
+  /-- Whether the path bit differs from the selected literal's satisfying
+  value. -/
+  difference : Bool
   deriving DecidableEq, Fintype
+
+/-- Recover the original path bit from its value relative to the selected
+literal's satisfying value. -/
+def QueryAdvice.decodeValue
+    (advice : QueryAdvice widthBound)
+    (satisfyingValue : Bool) : Bool :=
+  Bool.xor satisfyingValue advice.difference
+
+/-- Encoding a path bit by its difference from the satisfying value and then
+decoding it recovers that path bit. -/
+@[simp] theorem QueryAdvice.decodeValue_mk_xor
+    (position : Fin widthBound)
+    (closesBlock satisfyingValue pathValue : Bool) :
+    (QueryAdvice.mk position closesBlock
+        (Bool.xor satisfyingValue pathValue)).decodeValue satisfyingValue =
+      pathValue := by
+  cases satisfyingValue <;> cases pathValue <;> rfl
 
 /-- Fixed-length switching advice. -/
 abbrev Advice (widthBound pathLength : Nat) :=
@@ -71,7 +101,7 @@ def QueryRecord.toAdvice
 /-- Query advice is exactly a bounded position and two bits. -/
 def QueryAdvice.equivProduct (widthBound : Nat) :
     QueryAdvice widthBound ≃ Fin widthBound × Bool × Bool where
-  toFun advice := (advice.position, advice.closesBlock, advice.pathValue)
+  toFun advice := (advice.position, advice.closesBlock, advice.difference)
   invFun fields := ⟨fields.1, fields.2.1, fields.2.2⟩
   left_inv advice := by cases advice; rfl
   right_inv fields := by rcases fields with ⟨position, closes, value⟩; rfl
@@ -130,7 +160,9 @@ def replayIndices
           | none => []
           | some index =>
               index :: replayIndices formula
-                ((PartialAssignment.fix index symbol.pathValue).refine state)
+                ((PartialAssignment.fix index
+                    (symbol.decodeValue (term.satisfyingValue index))).refine
+                  state)
                 (if symbol.closesBlock then none else some term) rest
 
 /-- Decode an encoded restriction/advice pair by replaying its coordinates and
@@ -159,13 +191,6 @@ theorem replayIndices_none_eq_some_of_firstSurviving
 end Switching
 
 namespace LiteralSet
-
-/-- Deterministic Boolean value extracted from a literal requirement. On the
-support of the literal set this is its unique satisfying value. -/
-def satisfyingValue
-    (set : LiteralSet n)
-    (index : Fin n) : Bool :=
-  (set.requirements index).getD false
 
 /-- Position of a coordinate in a source term, reduced into the declared
 width bound. Valid traced queries are proved below to lie below the bound, so
@@ -399,11 +424,13 @@ def CanonicalBlockTrace.queryRecords
   | .nil _ _ _ => []
   | .takeMore (index := index) (value := value) tail =>
       ⟨term, index, term.satisfyingValue index,
-        ⟨term.sourcePosition index, false, value⟩⟩ ::
+        ⟨term.sourcePosition index, false,
+          Bool.xor (term.satisfyingValue index) value⟩⟩ ::
         tail.queryRecords
   | .takeLast (index := index) (value := value) tail =>
       ⟨term, index, term.satisfyingValue index,
-        ⟨term.sourcePosition index, true, value⟩⟩ ::
+        ⟨term.sourcePosition index, true,
+          Bool.xor (term.satisfyingValue index) value⟩⟩ ::
         tail.queryRecords
 
 end
@@ -548,7 +575,8 @@ def CanonicalBlockTrace.adviceList
       (next :: rest) steps) :
     (CanonicalBlockTrace.takeMore tail).adviceList
         (widthBound := widthBound) =
-      ⟨term.sourcePosition index, false, value⟩ ::
+      ⟨term.sourcePosition index, false,
+        Bool.xor (term.satisfyingValue index) value⟩ ::
         tail.adviceList := rfl
 
 @[simp] theorem CanonicalBlockTrace.satisfyingAssignment_takeLast
@@ -579,7 +607,8 @@ def CanonicalBlockTrace.adviceList
       (rho.refine (PartialAssignment.fix index value)) steps) :
     (CanonicalBlockTrace.takeLast (term := term) tail).adviceList
         (widthBound := widthBound) =
-      ⟨term.sourcePosition index, true, value⟩ ::
+      ⟨term.sourcePosition index, true,
+        Bool.xor (term.satisfyingValue index) value⟩ ::
         tail.adviceList := rfl
 
 mutual
@@ -993,6 +1022,7 @@ theorem CanonicalBlockTrace.replayIndices_satisfyingAssignment
       simp only [Switching.replayIndices, Switching.selectTerm]
       rw [decoded]
       simp only [Bool.false_eq_true, if_false]
+      rw [Switching.QueryAdvice.decodeValue_mk_xor]
       rw [stateEqual]
       simpa [DecisionTree.PathStep.indices] using
         congrArg (List.cons index) tailReplay
@@ -1011,6 +1041,7 @@ theorem CanonicalBlockTrace.replayIndices_satisfyingAssignment
       simp only [Switching.replayIndices, Switching.selectTerm]
       rw [decoded]
       simp only [if_true]
+      rw [Switching.QueryAdvice.decodeValue_mk_xor]
       rw [stateEqual]
       simpa [DecisionTree.PathStep.indices] using
         congrArg (List.cons index) tailReplay

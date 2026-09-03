@@ -190,11 +190,13 @@ procedure. Each block records the first surviving term and its live support;
 the constructors distinguish continuing within a term from returning to term
 selection. This is structural proof data, not an enumeration of paths or
 circuits. The next step is to turn each query into bounded source-term position,
-block-boundary, and path-bit advice and prove the corresponding decoder.
+block-boundary, and relative path-bit advice and prove the corresponding
+decoder.
 
 The bounded-advice submilestone passed the same gates on 2026-09-03. A traced
 query is assigned its position in the selected source term, a block-boundary
-bit, and its original path bit. For a positive width bound `t`, the formal
+bit, and whether its path bit differs from the satisfying literal value. For a
+positive width bound `t`, the formal
 advice alphabet has exactly `4 * t` symbols and length-`s` advice has exactly
 `(4 * t)^s` possibilities. The hidden satisfying assignment is proved to fix
 exactly the path's `s` distinct coordinates and only coordinates initially
@@ -215,7 +217,7 @@ the semantic premise for deterministic decoder replay.
 The replay-decoder submilestone passed the same gates on 2026-09-03. The
 decoder is a total structural program: it selects the first surviving source
 term at block boundaries, reads the advised bounded support position,
-overwrites the satisfying value with the recorded path bit, and continues or
+reconstructs the path bit from its recorded difference, and continues or
 restarts according to the block bit. A mutual trace proof shows that replay
 recovers the exact original query coordinates. Clearing precisely those
 coordinates from the refined output is then proved to recover the original
@@ -267,3 +269,11 @@ for positive `t`. The proof is symbolic and structural; it performs no
 formula, path, or circuit enumeration. Connecting canonical traces to this
 advice type and proving its replay decoder remain open, so this count is not
 yet advertised as a `(5pt)^s` switching lemma.
+
+The relative-value replay refinement passed the same gates on 2026-09-03. The
+elementary advice alphabet still has exactly `4t` symbols per query, but its
+value bit now records the XOR difference from the selected literal's satisfying
+value. The decoder derives that satisfying value from the reconstructed source
+term and cancels the XOR, so the existing replay, injection, scaled bound, and
+all-width `(9pt)^s` theorem remain kernel-checked. This semantic alignment is
+needed before the block-boundary bit can be removed by combined advice.

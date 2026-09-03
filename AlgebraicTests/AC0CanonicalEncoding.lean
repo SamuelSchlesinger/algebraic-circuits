@@ -10,6 +10,14 @@ open Algebraic
 open Algebraic.AC0
 open Algebraic.AC0.Switching
 
+example
+    (position : Fin widthBound)
+    (closesBlock satisfyingValue pathValue : Bool) :
+    (QueryAdvice.mk position closesBlock
+        (Bool.xor satisfyingValue pathValue)).decodeValue satisfyingValue =
+      pathValue :=
+  QueryAdvice.decodeValue_mk_xor position closesBlock satisfyingValue pathValue
+
 example (widthBound pathLength : Nat) :
     Fintype.card (Advice widthBound pathLength) =
       (4 * widthBound) ^ pathLength :=
