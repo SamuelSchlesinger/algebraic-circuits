@@ -82,7 +82,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Concrete probabilities and exact floor-divided survivor schedule proved; final circuit instantiation and asymptotic simplification open |
-| Parity | Concrete bounded-depth lower bound | Fully integral finite theorem proved from `20*t*S < 2^(t+1)` and the exact survivor inequality; asymptotic root selection open |
+| Parity | Quantitative bounded-depth lower bound | For every scale `t`, `(20(t+1))^(d-1) <= n` now implies `2^(t+1) <= 20tS`; root convenience and class separation open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
 ## Claim labels
@@ -97,6 +97,17 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The quantitative scale-form parity lower bound passed the full gates on
+2026-09-03. For every `d >= 2` and `t >= 1`, Lean proves that a checked
+input-negation-normal depth-`d` parity circuit obeys
+`2^(t+1) <= 20*t*S` whenever `(20*(t+1))^(d-1) <= n`. The proof first shows
+that this clean power condition implies the exact floor-divided survivor
+inequality, then contradicts the integral finite lower bound. This theorem
+displays the standard `1/(d-1)` exponent at an arbitrary scale without tying
+the core result to a root-rounding convention. It is uniform in all
+parameters and uses no finite search. The audited public theorems use no
+axioms beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The integral size-arithmetic submilestone passed the full gates on 2026-09-03.
 For `t >= 1`, Lean proves that the exact switching-smallness condition is

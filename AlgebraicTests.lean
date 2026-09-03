@@ -12,6 +12,7 @@ import AlgebraicTests.AC0ParityTopGate
 import AlgebraicTests.AC0ParityDepthReduction
 import AlgebraicTests.AC0ParityLowerBound
 import AlgebraicTests.AC0ParitySizeArithmetic
+import AlgebraicTests.AC0ParityScale
 import AlgebraicTests.AC0Duality
 import AlgebraicTests.AC0TreeNormalForm
 import AlgebraicTests.AC0Layer
