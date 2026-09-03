@@ -78,10 +78,10 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
-| Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality, restriction compatibility, and semantic depth invariance validated 2026-09-03 |
+| Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Simultaneous bounded-bottom-gate switching validated 2026-09-03; gate replacement open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Simultaneous bounded-bottom-gate switching and exact shallow-function normal forms validated 2026-09-03; gate substitution open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -407,3 +407,17 @@ as well as the explicit failure-of-depth-`d` form. The event is stated for the
 actual restricted internal gate functions, not merely their extracted syntax.
 The next obligation is to turn simultaneous shallow decision trees into an
 explicit depth-reduced program while controlling size and logical depth.
+
+The decision-tree normal-form bridge passed the full gates on 2026-09-03.
+Every tree is converted structurally to an exact DNF whose terms correspond
+to accepting paths. Repeated queries are handled semantically: matching
+literals are retained once and contradictory paths are discarded. Lean proves
+that every resulting term has width at most the tree depth. De Morgan duality
+then gives the matching CNF theorem, and both constructions lift to the
+representation-independent statement that every function of decision-tree
+depth at most `d` has exact width-`d` DNF and CNF representations. This is a
+symbolic traversal of a supplied tree, not a truth-table expansion or a search
+for an optimal tree. The next obligation is to substitute these bounded forms
+for simultaneously switched bottom gates while tracking program size and
+logical depth. The audited endpoint theorems use no axioms beyond Lean's
+standard `propext`, `Classical.choice`, and `Quot.sound`.
