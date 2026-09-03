@@ -82,7 +82,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Concrete probabilities and exact floor-divided survivor schedule proved; final circuit instantiation and asymptotic simplification open |
-| Parity | Concrete bounded-depth lower bound | For all `d>=2`, the explicit switching-smallness and survivor inequalities now rule out parity; asymptotic size form remains open |
+| Parity | Concrete bounded-depth lower bound | Fully integral finite theorem proved from `20*t*S < 2^(t+1)` and the exact survivor inequality; asymptotic root selection open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
 ## Claim labels
@@ -97,6 +97,17 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The integral size-arithmetic submilestone passed the full gates on 2026-09-03.
+For `t >= 1`, Lean proves that the exact switching-smallness condition is
+equivalent to `20*t*S < 2^(t+1)`. The public circuit theorem now uses only
+natural-number hypotheses: this size inequality and
+`t < n/(20*(20t)^(d-2))` rule out parity for every checked normal-form circuit
+of logical depth at most `d`, with `d >= 2`. All denominator cancellation is
+symbolic and exact. Selecting `t` as a controlled integer root to derive the
+conventional exponential size statement is the remaining step; no bounded
+search or numerical fitting is used. The audited public theorems use no
+axioms beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The concrete finite parity lower bound passed the full gates on 2026-09-03.
 For every `d >= 2` and `t >= 1`, a checked input-negation-normal circuit of
