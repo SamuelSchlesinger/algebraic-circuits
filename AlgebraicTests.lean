@@ -9,6 +9,7 @@ import AlgebraicTests.AC0RandomRestriction
 import AlgebraicTests.AC0SwitchingEncoding
 import AlgebraicTests.AC0CombinedAdvice
 import AlgebraicTests.AC0CanonicalEncoding
+import AlgebraicTests.AC0CombinedCanonicalEncoding
 import AlgebraicTests.AC0CanonicalSwitching
 import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation

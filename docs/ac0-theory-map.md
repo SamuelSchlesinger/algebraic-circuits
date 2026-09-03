@@ -277,3 +277,11 @@ value. The decoder derives that satisfying value from the reconstructed source
 term and cancels the XOR, so the existing replay, injection, scaled bound, and
 all-width `(9pt)^s` theorem remain kernel-checked. This semantic alignment is
 needed before the block-boundary bit can be removed by combined advice.
+
+The combined-advice replay surface passed the same gates on 2026-09-03. Each
+stored position subset is expanded in increasing source order, a closing marker
+is synthesized only for nonfinal blocks, and the flattened list is proved to
+have exactly length `s`. A generic replay theorem proves that clearing the last
+closing marker changes no decoded coordinate, and `decodeCombined` reuses the
+existing replay-and-clear semantics. The remaining obligation is to construct
+this advice from every canonical trace and prove the flattening correspondence.
