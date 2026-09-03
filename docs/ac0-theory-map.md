@@ -82,7 +82,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Variable-probability, variable-tree-bound semantic iteration proved with explicit survivor schedules; closed-form parameters open |
-| Parity | Restriction resilience and top-gate obstruction | Reducing every layer below a parity output now forces the final live count below the tree bound; closed-form parameters open |
+| Parity | Restriction resilience and depth reduction | The complete variable-parameter `d-1`-round contradiction is proved; closed-form parameter selection remains open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
 ## Claim labels
@@ -97,6 +97,18 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The source-faithful parameterized parity contradiction passed the full gates
+on 2026-09-03. For any circuit of logical depth at most `r+1`, an explicit
+`r`-round schedule satisfying the variable switching and survivor inequalities
+forces `a_r <= t_r`; a schedule with `t_r < a_r` therefore rules out parity.
+This composes the checked variable-parameter iteration with the unreduced
+top-gate obstruction, so a depth-`d` circuit uses exactly `d-1` restrictions.
+The first round may start at literal width one and later rounds at the common
+tree bound, preserving the standard exponent rather than the inferior
+all-layers decision-tree exponent. Closed-form choices of the schedules remain
+an explicit arithmetic obligation. The audited public theorems use no axioms
+beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The parity top-gate submilestone passed the full gates on 2026-09-03. If a
 parity circuit has logical depth at most `i+1` and every wire through depth

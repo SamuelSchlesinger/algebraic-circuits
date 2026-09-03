@@ -7,6 +7,7 @@ import AlgebraicTests.AC0Parity
 import AlgebraicTests.AC0ParityNormalForm
 import AlgebraicTests.AC0ParityCircuit
 import AlgebraicTests.AC0ParityTopGate
+import AlgebraicTests.AC0ParityDepthReduction
 import AlgebraicTests.AC0Duality
 import AlgebraicTests.AC0TreeNormalForm
 import AlgebraicTests.AC0Layer
