@@ -528,7 +528,7 @@ theorem routingRecordSequence_orderHeader_count_lt
     (paddingTails : Fin paddingCount -> Fin orderWidth -> Bool)
     (paddingValues : Fin paddingCount -> Fin valueWidth -> Bool)
     (target : Fin destinationCount) :
-    (Routing.matchingIndices
+    (Semantics.matchingIndices
       (fun record => complementedRecordHeader
         (Routing.routingRecordSequence sourceKeys
           (fun source => Fin.append (sourceMetadata source)
@@ -556,21 +556,21 @@ theorem routingRecordSequence_orderHeader_count_lt
   let paddingRecords := fun padding => packRecord (paddingKeys padding) true
     (paddingRoutingKey (paddingTails padding)) (paddingValues padding)
   have sourceCountZero :
-      (Routing.matchingIndices sourceRecords
+      (Semantics.matchingIndices sourceRecords
         (fun record => complementedRecordHeader record < targetHeader)).card =
           0 := by
-    unfold Routing.matchingIndices
+    unfold Semantics.matchingIndices
     rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
     intro source _member
     exact complementedSourceHeader_not_lt_destination
       (sourceKeys source) (sourceMetadata source) (sourceValues source)
       targetBits
   have destinationFilter :
-      Routing.matchingIndices destinationRecords
+      Semantics.matchingIndices destinationRecords
           (fun record => complementedRecordHeader record < targetHeader) =
         Finset.Iio target := by
     ext destination
-    simp only [Routing.matchingIndices, Finset.mem_filter,
+    simp only [Semantics.matchingIndices, Finset.mem_filter,
       Finset.mem_univ, true_and, Finset.mem_Iio]
     change complementedRecordHeader
         (packRecord (destinationKeys destination) true
@@ -585,16 +585,16 @@ theorem routingRecordSequence_orderHeader_count_lt
       ((lexBitVectorAt_strictMono (width := orderWidth)).lt_iff_lt)
       (by rfl)
   have destinationCountValue :
-      (Routing.matchingIndices destinationRecords
+      (Semantics.matchingIndices destinationRecords
         (fun record => complementedRecordHeader record < targetHeader)).card =
           target.val := by
     rw [destinationFilter]
     simp
   have paddingCountZero :
-      (Routing.matchingIndices paddingRecords
+      (Semantics.matchingIndices paddingRecords
         (fun record => complementedRecordHeader record < targetHeader)).card =
           0 := by
-    unfold Routing.matchingIndices
+    unfold Semantics.matchingIndices
     rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
     intro padding _member
     exact complementedPaddingHeader_not_lt_destination
@@ -602,13 +602,13 @@ theorem routingRecordSequence_orderHeader_count_lt
       targetBits
   unfold Routing.routingRecordSequence
   change
-    (Routing.matchingIndices
+    (Semantics.matchingIndices
       (Fin.append (Fin.append sourceRecords destinationRecords)
         paddingRecords)
       (fun record => complementedRecordHeader record < targetHeader)).card =
         target.val
-  rw [CanonicalRouting.matchingIndices_append_card,
-    CanonicalRouting.matchingIndices_append_card, sourceCountZero,
+  rw [Semantics.matchingIndices_append_card,
+    Semantics.matchingIndices_append_card, sourceCountZero,
     destinationCountValue, paddingCountZero]
   omega
 
@@ -636,7 +636,7 @@ theorem routingInputBits_orderHeader_count_lt
       paddingKeys
       (fun padding => Fin.append (paddingRoutingKey (paddingTails padding))
         (paddingValues padding)) recordCount
-    (Routing.matchingIndices
+    (Semantics.matchingIndices
       (fun record => complementedRecordHeader (flatRecords input record))
       (fun header => header < CanonicalRouting.activeDestinationHeader
         (lexBitVectorAt (Fin.castLE destinationFits target)))).card =
@@ -644,7 +644,7 @@ theorem routingInputBits_orderHeader_count_lt
   dsimp only
   rw [Routing.flatRecords_routingInputBits]
   unfold Routing.networkRoutingRecords
-  exact (CanonicalRouting.matchingIndices_cast_card
+  exact (Semantics.matchingIndices_cast_card
     (fun record => complementedRecordHeader
       (Routing.routingRecordSequence sourceKeys
         (fun source => Fin.append (sourceMetadata source)
@@ -900,26 +900,25 @@ theorem matchedCanonicalRoutingBits_fixed_header
       metadataOrderVirtualKey output right] at ordered
     simpa only [recordHeader_flatRecords] using ordered
   have outputRank :
-      (Routing.matchingIndices
+      (Semantics.matchingIndices
         (fun record => recordHeader (flatRecords output record))
         (fun header => header < targetHeader)).card = outputIndex.val := by
     rw [← outputMatches]
-    apply CanonicalRouting.matchingIndices_lt_card_eq_index
+    apply Semantics.matchingIndices_lt_card_eq_index
       (fun record => recordHeader (flatRecords output record))
       outputIncreasing outputIndex
     intro other equalHeader
     apply outputOnly other
     exact equalHeader.trans outputMatches
   have initialRank :
-      (Routing.matchingIndices
+      (Semantics.matchingIndices
         (fun record => complementedRecordHeader (flatRecords input record))
         (fun header => header < targetHeader)).card = target.val := by
     exact routingInputBits_orderHeader_count_lt destinationFits sourceKeys
       sourceMetadata sourceValues destinationKeys destinationValues paddingKeys
       paddingTails paddingValues recordCount target
-  have rankPreserved :=
-    CanonicalRouting.matchingIndices_card_eq_of_sequencePermutes
-      (fun header => header < targetHeader) headersPermute
+  have rankPreserved := headersPermute.matchingIndices_card_eq
+    (fun header => header < targetHeader)
   have outputIndexValue : outputIndex.val = target.val := by
     exact outputRank.symm.trans (rankPreserved.trans initialRank)
   have destinationFitsNetwork :

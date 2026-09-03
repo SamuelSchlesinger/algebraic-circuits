@@ -423,48 +423,42 @@ theorem recordHeader_predecessorCopyBits
       recordHeader (flatRecords input record) := by
   simp [recordHeader]
 
-/-- A sequence permutation preserves the number of positions satisfying an
-arbitrary predicate. -/
+/-- Canonical-routing compatibility theorem for preservation of matching
+position counts under a sequence permutation. -/
 theorem matchingIndices_card_eq_of_sequencePermutes
     {output input : Fin n -> α}
     (predicate : α -> Prop)
     (permuted : Semantics.SequencePermutes output input) :
-    (Routing.matchingIndices output predicate).card =
-      (Routing.matchingIndices input predicate).card := by
-  have counts := permuted.countP_eq (Routing.predicateBit predicate)
-  rw [Routing.countP_ofFn_eq_filter_card,
-    Routing.countP_ofFn_eq_filter_card] at counts
-  exact counts
+    (Semantics.matchingIndices output predicate).card =
+      (Semantics.matchingIndices input predicate).card :=
+  permuted.matchingIndices_card_eq predicate
 
-/-- Matching positions in an appended sequence split additively. -/
+/-- Canonical-routing compatibility theorem for matching-position counts in
+an appended sequence. -/
 theorem matchingIndices_append_card
     {α : Type*}
     (left : Fin leftCount -> α)
     (right : Fin rightCount -> α)
     (predicate : α -> Prop) :
-    (Routing.matchingIndices (Fin.append left right) predicate).card =
-      (Routing.matchingIndices left predicate).card +
-        (Routing.matchingIndices right predicate).card := by
-  rw [← Routing.countP_ofFn_eq_filter_card (Fin.append left right) predicate,
-    List.ofFn_fin_append, List.countP_append,
-    Routing.countP_ofFn_eq_filter_card left predicate,
-    Routing.countP_ofFn_eq_filter_card right predicate]
+    (Semantics.matchingIndices (Fin.append left right) predicate).card =
+      (Semantics.matchingIndices left predicate).card +
+        (Semantics.matchingIndices right predicate).card :=
+  Semantics.matchingIndices_append_card left right predicate
 
-/-- Reindexing a finite sequence along an equality of lengths preserves the
-number of matching positions. -/
+/-- Canonical-routing compatibility theorem for matching-position counts
+under an equality-of-lengths reindexing. -/
 theorem matchingIndices_cast_card
     (sequence : Fin leftCount -> α)
     (predicate : α -> Prop)
     (countEquality : leftCount = rightCount) :
-    (Routing.matchingIndices
+    (Semantics.matchingIndices
       (fun index : Fin rightCount =>
         sequence (Fin.cast countEquality.symm index)) predicate).card =
-      (Routing.matchingIndices sequence predicate).card := by
-  subst rightCount
-  rfl
+      (Semantics.matchingIndices sequence predicate).card :=
+  Semantics.matchingIndices_cast_card sequence predicate countEquality
 
-/-- In an increasing sequence, the index of a unique value equals the number
-of sequence entries strictly below it. -/
+/-- Canonical-routing compatibility theorem identifying a unique sorted
+value's index with the number of smaller entries. -/
 theorem matchingIndices_lt_card_eq_index
     [LinearOrder κ]
     (sequence : Fin n -> κ)
@@ -472,32 +466,9 @@ theorem matchingIndices_lt_card_eq_index
     (index : Fin n)
     (unique : forall other, sequence other = sequence index ->
       other = index) :
-    (Routing.matchingIndices sequence
-      (fun value => value < sequence index)).card = index.val := by
-  classical
-  have filterEquality :
-      Routing.matchingIndices sequence
-          (fun value => value < sequence index) =
-        Finset.Iio index := by
-    ext other
-    simp only [Routing.matchingIndices, Finset.mem_filter,
-      Finset.mem_univ, true_and, Finset.mem_Iio]
-    constructor
-    · intro below
-      by_contra notBefore
-      have indexLeOther : index <= other := le_of_not_gt notBefore
-      rcases indexLeOther.eq_or_lt with same | after
-      · subst other
-        exact (lt_irrefl _ below)
-      · exact (not_le_of_gt below) (increasing index other after)
-    · intro before
-      have belowOrEqual := increasing other index before
-      have different : sequence other ≠ sequence index := by
-        intro equal
-        exact (ne_of_lt before) (unique other equal)
-      exact lt_of_le_of_ne belowOrEqual different
-  rw [filterEquality]
-  simp
+    (Semantics.matchingIndices sequence
+      (fun value => value < sequence index)).card = index.val :=
+  Semantics.matchingIndices_lt_card_eq_index sequence increasing index unique
 
 /-! ## Rank of the complete active-destination block -/
 
@@ -513,7 +484,7 @@ theorem routingRecordSequence_fullDest_header_count_lt
     (paddingTails : Fin paddingCount -> Fin baseWidth -> Bool)
     (paddingPayloads : Fin paddingCount -> Fin payloadWidth -> Bool)
     (target : Fin (2 ^ baseWidth)) :
-    (Routing.matchingIndices
+    (Semantics.matchingIndices
       (fun record => complementedRecordHeader
         (Routing.routingRecordSequence sourceKeys sourcePayloads
           (fun destination => activeRoutingKey (lexBitVectorAt destination))
@@ -535,22 +506,22 @@ theorem routingRecordSequence_fullDest_header_count_lt
     Routing.packRecord (paddingRoutingKey (paddingTails padding)) true
       (paddingPayloads padding)
   have sourceCountZero :
-      (Routing.matchingIndices
+      (Semantics.matchingIndices
         sourceRecords
         (fun record => complementedRecordHeader record < targetHeader)).card =
           0 := by
-    unfold Routing.matchingIndices
+    unfold Semantics.matchingIndices
     rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
     intro source _member
     exact complementedSourceHeader_not_lt_active (baseWidth := baseWidth)
       (sourceKeys source) (sourcePayloads source) (lexBitVectorAt target)
   have destinationFilter :
-      Routing.matchingIndices
+      Semantics.matchingIndices
           destinationRecords
           (fun record => complementedRecordHeader record < targetHeader) =
         Finset.Iio target := by
     ext destination
-    simp only [Routing.matchingIndices, Finset.mem_filter,
+    simp only [Semantics.matchingIndices, Finset.mem_filter,
       Finset.mem_univ, true_and, Finset.mem_Iio]
     change
       complementedRecordHeader
@@ -563,18 +534,18 @@ theorem routingRecordSequence_fullDest_header_count_lt
     exact (lexBitVectorAt_strictMono
       (width := baseWidth)).lt_iff_lt
   have destinationCountValue :
-      (Routing.matchingIndices
+      (Semantics.matchingIndices
         destinationRecords
         (fun record => complementedRecordHeader record < targetHeader)).card =
           target.val := by
     rw [destinationFilter]
     simp
   have paddingCountZero :
-      (Routing.matchingIndices
+      (Semantics.matchingIndices
         paddingRecords
         (fun record => complementedRecordHeader record < targetHeader)).card =
           0 := by
-    unfold Routing.matchingIndices
+    unfold Semantics.matchingIndices
     rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
     intro padding _member
     exact complementedPaddingHeader_not_lt_active (baseWidth := baseWidth)
@@ -582,12 +553,13 @@ theorem routingRecordSequence_fullDest_header_count_lt
       (lexBitVectorAt target)
   unfold Routing.routingRecordSequence
   change
-    (Routing.matchingIndices
+    (Semantics.matchingIndices
       (Fin.append (Fin.append sourceRecords destinationRecords)
         paddingRecords)
       (fun record => complementedRecordHeader record < targetHeader)).card =
         target.val
-  rw [matchingIndices_append_card, matchingIndices_append_card,
+  rw [Semantics.matchingIndices_append_card,
+    Semantics.matchingIndices_append_card,
     sourceCountZero, destinationCountValue, paddingCountZero]
   omega
 
@@ -608,7 +580,7 @@ theorem routingInputBits_fullDest_header_count_lt
       destinationPayloads
       (fun padding => paddingRoutingKey (paddingTails padding))
       paddingPayloads recordCount
-    (Routing.matchingIndices
+    (Semantics.matchingIndices
       (fun record => complementedRecordHeader (flatRecords input record))
       (fun header => header <
         activeDestinationHeader (lexBitVectorAt target))).card =
@@ -616,7 +588,7 @@ theorem routingInputBits_fullDest_header_count_lt
   dsimp only
   rw [Routing.flatRecords_routingInputBits]
   unfold Routing.networkRoutingRecords
-  exact (matchingIndices_cast_card
+  exact (Semantics.matchingIndices_cast_card
     (fun record => complementedRecordHeader
       (Routing.routingRecordSequence sourceKeys sourcePayloads
         (fun destination => activeRoutingKey (lexBitVectorAt destination))
@@ -862,25 +834,25 @@ theorem matchedCanonicalRoutingBits_fullDest_fixed_header
       at ordered
     simpa only [recordHeader_flatRecords] using ordered
   have outputRank :
-      (Routing.matchingIndices
+      (Semantics.matchingIndices
         (fun record => recordHeader (flatRecords output record))
         (fun header => header < targetHeader)).card = outputIndex.val := by
     rw [← outputMatches]
-    apply matchingIndices_lt_card_eq_index
+    apply Semantics.matchingIndices_lt_card_eq_index
       (fun record => recordHeader (flatRecords output record))
       outputIncreasing outputIndex
     intro other equal
     apply outputOnly other
     exact equal.trans outputMatches
   have initialRank :
-      (Routing.matchingIndices
+      (Semantics.matchingIndices
         (fun record => complementedRecordHeader (flatRecords input record))
         (fun header => header < targetHeader)).card = target.val := by
     exact routingInputBits_fullDest_header_count_lt sourceKeys
       sourcePayloads destinationPayloads paddingTails paddingPayloads
       recordCount target
-  have rankPreserved := matchingIndices_card_eq_of_sequencePermutes
-    (fun header => header < targetHeader) headersPermute
+  have rankPreserved := headersPermute.matchingIndices_card_eq
+    (fun header => header < targetHeader)
   have outputIndexValue : outputIndex.val = target.val := by
     exact outputRank.symm.trans (rankPreserved.trans initialRank)
   have destinationFits : 2 ^ baseWidth <= networkRecords depth := by

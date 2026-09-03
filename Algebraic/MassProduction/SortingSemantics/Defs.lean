@@ -230,6 +230,19 @@ theorem cast
 
 end UniqueIndexWhere
 
+/-- Reindexing a finite sequence along an equality of lengths preserves the
+number of matching positions. -/
+theorem matchingIndices_cast_card
+    (sequence : Fin leftCount -> α)
+    (predicate : α -> Prop)
+    (countEquality : leftCount = rightCount) :
+    (matchingIndices
+      (fun index : Fin rightCount =>
+        sequence (Fin.cast countEquality.symm index)) predicate).card =
+      (matchingIndices sequence predicate).card := by
+  subst rightCount
+  rfl
+
 /-- Concatenation of two finite sequences. -/
 def appendSequence {n m : ℕ}
     (first : Fin n → α) (second : Fin m → α) : Fin (n + m) → α :=
@@ -290,6 +303,55 @@ theorem append_right
       other otherMatches
 
 end UniqueIndexWhere
+
+/-- Matching positions in an appended sequence split additively. -/
+theorem matchingIndices_append_card
+    {α : Type*}
+    (left : Fin leftCount -> α)
+    (right : Fin rightCount -> α)
+    (predicate : α -> Prop) :
+    (matchingIndices (Fin.append left right) predicate).card =
+      (matchingIndices left predicate).card +
+        (matchingIndices right predicate).card := by
+  rw [← countP_predicateBit_eq_matchingIndices_card
+      (Fin.append left right) predicate,
+    List.ofFn_fin_append, List.countP_append,
+    countP_predicateBit_eq_matchingIndices_card left predicate,
+    countP_predicateBit_eq_matchingIndices_card right predicate]
+
+/-- In an increasing sequence, the index of a unique value equals the number
+of sequence entries strictly below it. -/
+theorem matchingIndices_lt_card_eq_index
+    [LinearOrder κ]
+    (sequence : Fin n -> κ)
+    (increasing : SequenceIncreasing sequence)
+    (index : Fin n)
+    (unique : ∀ other, sequence other = sequence index -> other = index) :
+    (matchingIndices sequence
+      (fun value => value < sequence index)).card = index.val := by
+  classical
+  have filterEquality :
+      matchingIndices sequence (fun value => value < sequence index) =
+        Finset.Iio index := by
+    ext other
+    simp only [matchingIndices, Finset.mem_filter, Finset.mem_univ, true_and,
+      Finset.mem_Iio]
+    constructor
+    · intro below
+      by_contra notBefore
+      have indexLeOther : index ≤ other := le_of_not_gt notBefore
+      rcases indexLeOther.eq_or_lt with same | after
+      · subst other
+        exact lt_irrefl _ below
+      · exact (not_le_of_gt below) (increasing index other after)
+    · intro before
+      have belowOrEqual := increasing other index before
+      have different : sequence other ≠ sequence index := by
+        intro equal
+        exact (ne_of_lt before) (unique other equal)
+      exact lt_of_le_of_ne belowOrEqual different
+  rw [filterEquality]
+  simp
 
 namespace SequencePermutes
 

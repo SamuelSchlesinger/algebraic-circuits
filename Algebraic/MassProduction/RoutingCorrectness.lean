@@ -27,31 +27,25 @@ abbrev UniqueIndexWhere
     (predicate : α -> Prop) : Prop :=
   Sorting.Semantics.UniqueIndexWhere sequence predicate
 
-/-- Routing-namespace compatibility definition for generic matching
-positions. -/
-noncomputable def matchingIndices
+/-- Routing-namespace compatibility alias for generic matching positions. -/
+noncomputable abbrev matchingIndices
     (sequence : Fin n -> α)
-    (predicate : α -> Prop) : Finset (Fin n) := by
-  classical
-  exact Finset.univ.filter fun index => predicate (sequence index)
+    (predicate : α -> Prop) : Finset (Fin n) :=
+  Sorting.Semantics.matchingIndices sequence predicate
 
-/-- Routing-namespace compatibility definition for generic predicate
-reflection. -/
-noncomputable def predicateBit
-    (predicate : α -> Prop) (value : α) : Bool := by
-  classical
-  exact decide (predicate value)
+/-- Routing-namespace compatibility alias for generic predicate reflection. -/
+noncomputable abbrev predicateBit
+    (predicate : α -> Prop) (value : α) : Bool :=
+  Sorting.Semantics.predicateBit predicate value
 
 /-- Routing-namespace compatibility theorem for unique matching positions. -/
 theorem uniqueIndexWhere_iff_filter_card_eq_one
     (sequence : Fin n -> α)
     (predicate : α -> Prop) :
     UniqueIndexWhere sequence predicate ↔
-      (matchingIndices sequence predicate).card = 1 := by
-  simpa [UniqueIndexWhere, Sorting.Semantics.UniqueIndexWhere,
-    matchingIndices, Sorting.Semantics.matchingIndices] using
-      (Sorting.Semantics.UniqueIndexWhere.iff_matchingIndices_card_eq_one
-        sequence predicate)
+      (matchingIndices sequence predicate).card = 1 :=
+  Sorting.Semantics.UniqueIndexWhere.iff_matchingIndices_card_eq_one
+    sequence predicate
 
 /-- Routing-namespace compatibility theorem for predicate counting. -/
 theorem countP_ofFn_eq_filter_card
@@ -59,16 +53,9 @@ theorem countP_ofFn_eq_filter_card
     (predicate : α -> Prop) :
     (List.ofFn sequence).countP
       (predicateBit predicate) =
-      (matchingIndices sequence predicate).card := by
-  have predicateBitsEqual :
-      predicateBit predicate = Sorting.Semantics.predicateBit predicate := by
-    funext value
-    by_cases holds : predicate value <;>
-      simp [predicateBit, Sorting.Semantics.predicateBit, holds]
-  rw [predicateBitsEqual]
-  simpa [matchingIndices, Sorting.Semantics.matchingIndices] using
-    (Sorting.Semantics.countP_predicateBit_eq_matchingIndices_card
-      sequence predicate)
+      (matchingIndices sequence predicate).card :=
+  Sorting.Semantics.countP_predicateBit_eq_matchingIndices_card
+    sequence predicate
 
 /-- A complete-record permutation preserves the property that exactly one
 record position satisfies any fixed predicate. -/
