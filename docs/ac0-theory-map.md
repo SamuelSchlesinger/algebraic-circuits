@@ -49,6 +49,14 @@ injection extends every bad restriction by exactly `s` formerly live
 coordinates, then
 `((1 - p) / 2)^s * Pr[bad] <= |advice| * p^s`.
 
+The constant-sharpening layer follows the combined block encoding in Paul
+Beame's
+[*A Switching Lemma Primer*](https://homes.cs.washington.edu/~beame/papers/primer.ps).
+A block stores its queried source positions as a subset and records path bits
+relative to the assignment satisfying the selected term. Every block followed
+by another block must contain a mismatch. This removes the redundant boundary
+bit and excludes the all-zero difference string from every nonfinal block.
+
 ## Existing-library convention audit
 
 - `Circuit sigma n g m` is a shared, topologically ordered DAG with `g`
@@ -72,7 +80,7 @@ coordinates, then
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Exact scaled injection bound and all-width `(9pt)^s` corollary validated 2026-09-03; target `(5pt)^s` bound open |
+| Switching | Explicit finite switching lemma | Exact scaled injection bound, all-width `(9pt)^s` corollary, and combined-advice count validated 2026-09-03; trace integration for `(5pt)^s` open |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -247,3 +255,15 @@ contradicting its zero width. Therefore every positive canonical-depth event
 has probability zero; threshold zero is discharged by the general unit upper
 bound. The public `(9pt)^s` theorem now covers every natural width `t`. Only
 the sharper source-target constant remains open at this switching stage.
+
+The combined-advice counting submilestone passed the same gates on 2026-09-03.
+Advice is partitioned into source-term blocks. A block of length `i` chooses an
+`i`-element subset of the `t` bounded positions and an `i`-bit difference
+string; every block with a nonempty tail excludes the all-zero string. Lean
+proves the exact first-block cardinality recurrence and the uniform bound
+`|CombinedAdvice t s| <= ((5t - 1)/2)^s`
+
+for positive `t`. The proof is symbolic and structural; it performs no
+formula, path, or circuit enumeration. Connecting canonical traces to this
+advice type and proving its replay decoder remain open, so this count is not
+yet advertised as a `(5pt)^s` switching lemma.
