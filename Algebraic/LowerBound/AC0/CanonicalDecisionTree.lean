@@ -458,6 +458,20 @@ private def canonicalSupportStep
             rho index true indexLive)
           recurse)
 
+private theorem canonicalSupportStep_congr
+    (formula : DNF n)
+    (rho : PartialAssignment n)
+    (recurse : (sigma : PartialAssignment n) →
+      sigma.liveCount < rho.liveCount → DecisionTree n)
+    (left right : List (Fin n))
+    (leftLive : ∀ index, index ∈ left → rho index = none)
+    (rightLive : ∀ index, index ∈ right → rho index = none)
+    (equal : left = right) :
+    canonicalSupportStep formula rho recurse left leftLive =
+      canonicalSupportStep formula rho recurse right rightLive := by
+  subst right
+  rfl
+
 private def canonicalDecisionTreeStep
     (formula : DNF n)
     (rho : PartialAssignment n)
@@ -651,6 +665,243 @@ def canonicalDecisionTree
   canonicalDecisionTreeStep formula rho fun sigma _ =>
     canonicalDecisionTree formula sigma
 termination_by rho.liveCount
+
+mutual
+
+/-- A canonical path transcript partitioned into the successive source terms
+selected by the canonical procedure. -/
+inductive CanonicalTrace (formula : DNF n) :
+    PartialAssignment n → List (DecisionTree.PathStep n) → Type
+  /-- The empty path prefix is valid at every canonical state. -/
+  | nil (rho : PartialAssignment n) : CanonicalTrace formula rho []
+  /-- Begin the next nonempty query block at the first surviving source term.
+  -/
+  | start
+      {rho : PartialAssignment n}
+      {term : Term n}
+      {indices : List (Fin n)}
+      {steps : List (DecisionTree.PathStep n)}
+      (found : formula.firstSurviving rho = some term)
+      (support_eq : liveSupport term rho = indices)
+      (nonempty : indices ≠ [])
+      (block : CanonicalBlockTrace formula term rho indices steps) :
+      CanonicalTrace formula rho steps
+
+/-- The part of a canonical transcript currently querying one source term.
+The final constructor returns to `CanonicalTrace`, which selects the next
+source term after the completed block assignment. -/
+inductive CanonicalBlockTrace (formula : DNF n) :
+    Term n → PartialAssignment n → List (Fin n) →
+      List (DecisionTree.PathStep n) → Type
+  /-- A requested path prefix may stop in the middle of a query block. -/
+  | nil
+      (rho : PartialAssignment n)
+      (index : Fin n)
+      (rest : List (Fin n)) :
+      CanonicalBlockTrace formula term rho (index :: rest) []
+  /-- Consume a query when more variables remain in the current term. -/
+  | takeMore
+      {rho : PartialAssignment n}
+      {index next : Fin n}
+      {rest : List (Fin n)}
+      {value : Bool}
+      {steps : List (DecisionTree.PathStep n)}
+      (tail : CanonicalBlockTrace formula term
+        (rho.refine (PartialAssignment.fix index value))
+        (next :: rest) steps) :
+      CanonicalBlockTrace formula term rho (index :: next :: rest)
+        (⟨index, value⟩ :: steps)
+  /-- Consume the last query of a block and restart canonical term selection.
+  -/
+  | takeLast
+      {rho : PartialAssignment n}
+      {index : Fin n}
+      {value : Bool}
+      {steps : List (DecisionTree.PathStep n)}
+      (tail : CanonicalTrace formula
+        (rho.refine (PartialAssignment.fix index value)) steps) :
+      CanonicalBlockTrace formula term rho [index]
+        (⟨index, value⟩ :: steps)
+
+end
+
+private theorem canonicalBlockTrace_of_queryRemaining_path
+    (formula : DNF n)
+    (term : Term n)
+    (indices : List (Fin n))
+    (indicesNonempty : indices ≠ [])
+    (rho : PartialAssignment n)
+    (bound : Nat)
+    (below : rho.liveCount < bound)
+    (recurse : (sigma : PartialAssignment n) →
+      sigma.liveCount < bound → DecisionTree n)
+    {steps : List (DecisionTree.PathStep n)}
+    {endpoint : DecisionTree n}
+    (path : DecisionTree.Path
+      (queryRemainingBelow indices rho bound below recurse) steps endpoint)
+    (recurseTrace : ∀ sigma below steps endpoint,
+      DecisionTree.Path (recurse sigma below) steps endpoint →
+        Nonempty (CanonicalTrace formula sigma steps)) :
+    Nonempty (CanonicalBlockTrace formula term rho indices steps) := by
+  induction indices generalizing rho below steps endpoint with
+  | nil => contradiction
+  | cons index rest inductionHypothesis =>
+      simp only [queryRemainingBelow] at path
+      cases path with
+      | nil => exact ⟨CanonicalBlockTrace.nil rho index rest⟩
+      | takeFalse tail =>
+          cases rest with
+          | nil =>
+              have trace := recurseTrace
+                (rho.refine (PartialAssignment.fix index false))
+                ((PartialAssignment.liveCount_refine_le_left rho
+                  (PartialAssignment.fix index false)).trans_lt below)
+                _ _ (by simpa [queryRemainingBelow] using tail)
+              exact ⟨CanonicalBlockTrace.takeLast trace.some⟩
+          | cons next remaining =>
+              have block := inductionHypothesis (by simp)
+                (rho.refine (PartialAssignment.fix index false))
+                ((PartialAssignment.liveCount_refine_le_left rho
+                  (PartialAssignment.fix index false)).trans_lt below) tail
+              exact ⟨CanonicalBlockTrace.takeMore block.some⟩
+      | takeTrue tail =>
+          cases rest with
+          | nil =>
+              have trace := recurseTrace
+                (rho.refine (PartialAssignment.fix index true))
+                ((PartialAssignment.liveCount_refine_le_left rho
+                  (PartialAssignment.fix index true)).trans_lt below)
+                _ _ (by simpa [queryRemainingBelow] using tail)
+              exact ⟨CanonicalBlockTrace.takeLast trace.some⟩
+          | cons next remaining =>
+              have block := inductionHypothesis (by simp)
+                (rho.refine (PartialAssignment.fix index true))
+                ((PartialAssignment.liveCount_refine_le_left rho
+                  (PartialAssignment.fix index true)).trans_lt below) tail
+              exact ⟨CanonicalBlockTrace.takeMore block.some⟩
+
+private theorem canonicalBlockTrace_of_supportStep_path
+    (formula : DNF n)
+    (term : Term n)
+    (rho : PartialAssignment n)
+    (recurse : (sigma : PartialAssignment n) →
+      sigma.liveCount < rho.liveCount → DecisionTree n)
+    (indices : List (Fin n))
+    (allLive : ∀ index, index ∈ indices → rho index = none)
+    (indicesNonempty : indices ≠ [])
+    {steps : List (DecisionTree.PathStep n)}
+    {endpoint : DecisionTree n}
+    (path : DecisionTree.Path
+      (canonicalSupportStep formula rho recurse indices allLive)
+      steps endpoint)
+    (recurseTrace : ∀ sigma below steps endpoint,
+      DecisionTree.Path (recurse sigma below) steps endpoint →
+        Nonempty (CanonicalTrace formula sigma steps)) :
+    Nonempty (CanonicalBlockTrace formula term rho indices steps) := by
+  cases indices with
+  | nil => contradiction
+  | cons index rest =>
+      simp only [canonicalSupportStep] at path
+      cases path with
+      | nil => exact ⟨CanonicalBlockTrace.nil rho index rest⟩
+      | takeFalse tail =>
+          have indexLive : rho index = none := allLive index (by simp)
+          cases rest with
+          | nil =>
+              have trace := recurseTrace
+                (rho.refine (PartialAssignment.fix index false))
+                (PartialAssignment.liveCount_refine_fix_lt_of_live
+                  rho index false indexLive)
+                _ _ (by simpa [queryRemainingBelow] using tail)
+              exact ⟨CanonicalBlockTrace.takeLast trace.some⟩
+          | cons next remaining =>
+              have block := canonicalBlockTrace_of_queryRemaining_path
+                formula term (next :: remaining) (by simp)
+                (rho.refine (PartialAssignment.fix index false)) rho.liveCount
+                (PartialAssignment.liveCount_refine_fix_lt_of_live
+                  rho index false indexLive)
+                recurse tail recurseTrace
+              exact ⟨CanonicalBlockTrace.takeMore block.some⟩
+      | takeTrue tail =>
+          have indexLive : rho index = none := allLive index (by simp)
+          cases rest with
+          | nil =>
+              have trace := recurseTrace
+                (rho.refine (PartialAssignment.fix index true))
+                (PartialAssignment.liveCount_refine_fix_lt_of_live
+                  rho index true indexLive)
+                _ _ (by simpa [queryRemainingBelow] using tail)
+              exact ⟨CanonicalBlockTrace.takeLast trace.some⟩
+          | cons next remaining =>
+              have block := canonicalBlockTrace_of_queryRemaining_path
+                formula term (next :: remaining) (by simp)
+                (rho.refine (PartialAssignment.fix index true)) rho.liveCount
+                (PartialAssignment.liveCount_refine_fix_lt_of_live
+                  rho index true indexLive)
+                recurse tail recurseTrace
+              exact ⟨CanonicalBlockTrace.takeMore block.some⟩
+
+/-- Every path through the canonical decision tree carries a source-term block
+trace matching the canonical selection procedure. -/
+theorem canonicalTrace_of_path
+    (formula : DNF n)
+    (rho : PartialAssignment n)
+    {steps : List (DecisionTree.PathStep n)}
+    {endpoint : DecisionTree n}
+    (path : DecisionTree.Path (formula.canonicalDecisionTree rho)
+      steps endpoint) :
+    Nonempty (CanonicalTrace formula rho steps) := by
+  induction rho using
+      (invImage PartialAssignment.liveCount Nat.lt_wfRel).wf.induction
+      generalizing steps endpoint with
+  | h rho inductionHypothesis =>
+      rw [canonicalDecisionTree.eq_def] at path
+      cases found : formula.firstSurviving rho with
+      | none =>
+          have leafPath : DecisionTree.Path (.leaf false) steps endpoint := by
+            simpa [canonicalDecisionTreeStep, found] using path
+          cases leafPath
+          exact ⟨CanonicalTrace.nil rho⟩
+      | some term =>
+          cases support : liveSupport term rho with
+          | nil =>
+              have stepEqual :
+                  canonicalSupportStep formula rho
+                    (fun sigma _ => formula.canonicalDecisionTree sigma)
+                    (liveSupport term rho)
+                    (fun current present =>
+                      (mem_liveSupport term rho current).1 present |>.2) =
+                    .leaf true := by
+                calc
+                  _ = canonicalSupportStep formula rho
+                        (fun sigma _ => formula.canonicalDecisionTree sigma)
+                        [] (by simp) :=
+                    canonicalSupportStep_congr formula rho _ _ _ _ _ support
+                  _ = .leaf true := by rfl
+              have leafPath : DecisionTree.Path (.leaf true) steps endpoint := by
+                simp only [canonicalDecisionTreeStep, found] at path
+                rw [stepEqual] at path
+                exact path
+              cases leafPath
+              exact ⟨CanonicalTrace.nil rho⟩
+          | cons index rest =>
+              have allLive : ∀ current,
+                  current ∈ index :: rest → rho current = none := by
+                intro current present
+                exact (mem_liveSupport term rho current).1 (by
+                  simpa [support] using present) |>.2
+              have supportPath : DecisionTree.Path
+                  (canonicalSupportStep formula rho
+                    (fun sigma _ => formula.canonicalDecisionTree sigma)
+                    (index :: rest) allLive) steps endpoint := by
+                simpa [canonicalDecisionTreeStep, found, support] using path
+              have block := canonicalBlockTrace_of_supportStep_path
+                formula term rho
+                (fun sigma _ => formula.canonicalDecisionTree sigma)
+                (index :: rest) allLive (by simp) supportPath
+                (fun sigma below _ _ tail =>
+                  inductionHypothesis sigma below tail)
+              exact ⟨CanonicalTrace.start found support (by simp) block.some⟩
 
 /-- The canonical tree computes exactly the DNF under the supplied partial
 assignment. -/

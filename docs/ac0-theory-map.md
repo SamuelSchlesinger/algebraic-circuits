@@ -72,7 +72,7 @@ coordinates, then
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantic layer validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Weighted-injection engine and exact canonical path transcripts validated 2026-09-03; term-position decoder and final bound open |
+| Switching | Explicit finite switching lemma | Weighted-injection engine, exact canonical paths, and source-term block traces validated 2026-09-03; term-position decoder and final bound open |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -167,3 +167,12 @@ are duplicate-free and initially live, and whose path assignment fixes exactly
 that many coordinates. The remaining switching work is to label these paths
 by bounded positions within source terms and prove the reconstruction decoder
 injective.
+
+The canonical-trace submilestone passed the same gates on 2026-09-03. Every
+path through the canonical tree now has a typed transcript partitioning its
+queries into the successive source terms chosen by the dynamic canonical
+procedure. Each block records the first surviving term and its live support;
+the constructors distinguish continuing within a term from returning to term
+selection. This is structural proof data, not an enumeration of paths or
+circuits. The next step is to turn each query into bounded source-term position,
+block-boundary, and path-bit advice and prove the corresponding decoder.

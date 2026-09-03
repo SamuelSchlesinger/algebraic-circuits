@@ -66,4 +66,13 @@ example
         rho.liveVariables :=
   ⟨path.assignment_fixedCount, path.assignment_fixesOnlyLive⟩
 
+example
+    {rho : PartialAssignment 3}
+    {steps : List (DecisionTree.PathStep 3)}
+    {endpoint : DecisionTree 3}
+    (path : DecisionTree.Path
+      (exampleDNF.canonicalDecisionTree rho) steps endpoint) :
+    Nonempty (DNF.CanonicalTrace exampleDNF rho steps) :=
+  exampleDNF.canonicalTrace_of_path rho path
+
 end AlgebraicTests.AC0CanonicalDecisionTree
