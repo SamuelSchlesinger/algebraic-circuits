@@ -32,6 +32,14 @@ restricted function has decision-tree depth at least `s` is at most
 probability and small-`p` side conditions will remain visible in the finite
 theorem.
 
+The distinguished DNF decision tree follows the standard dynamic canonical
+construction: restrict the full ordered DNF at the current path, choose the
+first surviving term, query all of its live variables in input-coordinate
+order, and repeat after the resulting path assignment. This is deliberately
+not an optimal-tree computation. The formal switching event is the depth of
+this concrete tree; semantic correctness then relates it to ordinary
+existential decision-tree depth.
+
 ## Existing-library convention audit
 
 - `Circuit sigma n g m` is a shared, topologically ordered DAG with `g`
@@ -53,7 +61,7 @@ theorem.
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantic layer validated 2026-09-03; circuit simplification open |
-| Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Literal, formula, and decision-tree foundations validated 2026-09-03; canonical DNF tree construction open |
+| Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Not started |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
@@ -108,7 +116,19 @@ depth monotonicity. A constructive Shannon expansion proves the universal
 `n`-variable depth upper bound without defining an optimizer or performing a
 search. The audited headline theorems use no axioms beyond Lean's standard
 `propext`, `Classical.choice`, and `Quot.sound`. The canonical tree used in the
-switching proof remains open.
+switching proof is supplied by the following submilestone.
+
+The canonical-DNF-tree submilestone passed the same gates on 2026-09-03. At
+each path it restricts the entire ordered formula before selecting the first
+surviving term, so assignments to earlier terms simplify all later terms. It
+queries that term's remaining coordinates in canonical input order and
+recurses on the strictly smaller live-variable set. The tree is proved to
+compute the restricted DNF, its depth is proved at most the live-variable
+count, and its decidable depth event is related to the representation-
+independent decision-tree lower-depth predicate. No optimal-tree search or
+finite lower-bound experiment is defined. The audited headline theorems use
+no axioms beyond Lean's standard `propext`, `Classical.choice`, and
+`Quot.sound`.
 
 The random-restriction distribution passed the same gates on 2026-09-03. For
 `0 <= p <= 1`, each coordinate has exact masses `p`, `(1-p)/2`, and `(1-p)/2`

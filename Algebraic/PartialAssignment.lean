@@ -294,6 +294,35 @@ theorem liveVariables_refine
   | none => simp [refine, fixed]
   | some value => simp [refine, fixed]
 
+/-- Sequential refinement cannot increase the number of live variables. -/
+theorem liveCount_refine_le_left
+    (rho sigma : PartialAssignment n) :
+    (rho.refine sigma).liveCount ≤ rho.liveCount := by
+  rw [liveCount, liveVariables_refine]
+  exact Finset.card_le_card Finset.inter_subset_left
+
+/-- Refining by a one-variable assignment removes exactly that variable from
+the live set. If it was already fixed, the set is unchanged. -/
+theorem liveVariables_refine_fix
+    (rho : PartialAssignment n)
+    (selected : Fin n)
+    (value : Bool) :
+    (rho.refine (fix selected value)).liveVariables =
+      rho.liveVariables.erase selected := by
+  rw [liveVariables_refine, liveVariables_fix, Finset.inter_erase]
+  simp
+
+/-- Fixing a currently live variable strictly decreases the live count. -/
+theorem liveCount_refine_fix_lt_of_live
+    (rho : PartialAssignment n)
+    (selected : Fin n)
+    (value : Bool)
+    (live : rho selected = none) :
+    (rho.refine (fix selected value)).liveCount < rho.liveCount := by
+  rw [liveCount, liveVariables_refine_fix]
+  exact Finset.card_erase_lt_of_mem
+    ((mem_liveVariables rho selected).2 live)
+
 /-- Inputs that agree on every live variable become equal after applying the
 partial assignment. -/
 theorem apply_eq_of_agree_live

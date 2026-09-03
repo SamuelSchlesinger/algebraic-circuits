@@ -147,6 +147,20 @@ theorem support_residual_subset
   | none => simpa [residual, fixed] using present
   | some value => simp [residual, fixed] at present
 
+/-- Every literal remaining after restriction is on a variable left live by
+the restriction. -/
+theorem support_residual_subset_live
+    (set : LiteralSet n)
+    (rho : PartialAssignment n) :
+    (set.residual rho).support ⊆ rho.liveVariables := by
+  intro index present
+  rw [PartialAssignment.mem_liveVariables]
+  cases fixed : rho index with
+  | none => rfl
+  | some value =>
+      rw [mem_support] at present
+      simp [residual, fixed] at present
+
 /-- Restriction cannot increase the width of a literal collection. -/
 theorem width_residual_le
     (set : LiteralSet n)
