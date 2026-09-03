@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Exact bounded normal forms now compose through the next arbitrary-fan-in layer; probabilistic advancement open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Charged-size one-step semantic layer advancement proved with failure at most `S(5pt)^(t+1)`; iteration open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -129,6 +129,22 @@ width-`t` CNF, independent of the gate's fan-in. This is the deterministic
 composition premise for the next switching step; the charged-gate union bound
 remains open. The audited public theorems use no axioms beyond Lean's standard
 `propext`, `Classical.choice`, and `Quot.sound`.
+
+The one-step semantic layer-switching theorem passed the full gates on
+2026-09-03. Under checked input-negation form, every non-connective gate is
+proved to have logical depth zero, so advancing a layer only requires new
+bounds for charged AND/OR gates. For a base witness
+`ShallowUpTo program rho i t`, exact DNF/CNF gate representations and the
+switching lemma give each next-layer gate failure probability at most
+`(5pt)^(t+1)`. A finite union over the proved connective-gate set yields the
+circuit-level endpoint
+`Pr[not ShallowUpTo program (rho.refine sigma) (i+1) t]
+  <= S * (5pt)^(t+1)`,
+where `S = program.cost andOrCost`. The event predicates are classical only
+for exact finite probability formation; no decision-tree optimizer or finite
+circuit experiment is implemented. Iterating this step while retaining enough
+live variables is the next open obligation. The audited public theorems use no
+axioms beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The semantic-layer invariant submilestone passed the full gates on 2026-09-03.
 `Program.ShallowUpTo rho i t` states that every wire through source logical
