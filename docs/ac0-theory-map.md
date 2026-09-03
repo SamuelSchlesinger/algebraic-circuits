@@ -82,7 +82,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Variable-probability, variable-tree-bound semantic iteration proved with explicit survivor schedules; closed-form parameters open |
-| Parity | Restriction resilience and normal-form obstruction | Exact decision-tree depth and exact DNF/CNF width lower bounds under every restriction proved; closed-form circuit parameters open |
+| Parity | Restriction resilience and top-gate obstruction | Reducing every layer below a parity output now forces the final live count below the tree bound; closed-form parameters open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
 ## Claim labels
@@ -97,6 +97,18 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The parity top-gate submilestone passed the full gates on 2026-09-03. If a
+parity circuit has logical depth at most `i+1` and every wire through depth
+`i` becomes a decision tree of depth at most `t`, Lean proves that at most
+`t` variables remain live. If the output is already in the reduced layers,
+the exact decision-tree lower bound applies. Otherwise checked input-negation
+normal form forces the output to be an AND or OR in the next layer, where the
+exact bounded CNF or DNF representation and its parity width lower bound
+apply. The theorem makes no syntactic top-gate assumption and is the bridge
+that permits only `d-1` restriction rounds for depth `d`. The audited public
+theorem uses no axioms beyond Lean's standard `propext`, `Classical.choice`,
+and `Quot.sound`.
 
 The restricted-parity normal-form submilestone passed the full gates on
 2026-09-03. Every DNF computing parity under a nonconstant restriction has a
