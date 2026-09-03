@@ -44,4 +44,19 @@ example
     path.satisfyingAssignment_fixesOnlyLive trace,
     trace.length_adviceList.trans path.length_steps⟩
 
+example
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : DNF.CanonicalTrace formula rho steps)
+    {term : Term n}
+    (found : formula.firstSurviving rho = some term) :
+    formula.firstSurviving
+        (rho.refine
+          (trace.satisfyingAssignment (widthBound := widthBound))) =
+      some term :=
+  trace.firstSurviving_refine_satisfyingAssignment found
+
 end AlgebraicTests.AC0CanonicalEncoding

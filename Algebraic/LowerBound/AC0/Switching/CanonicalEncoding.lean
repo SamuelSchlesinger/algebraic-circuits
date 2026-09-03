@@ -179,9 +179,147 @@ theorem getElem?_sourcePosition_of_mem_support
   rw [set.sourcePosition_val_of_mem_support index bounded present]
   exact List.getElem?_idxOf ((mem_orderedSupport set index).2 present)
 
+/-- Assigning a live support coordinate its satisfying value preserves
+nonconflict with the literal set. -/
+theorem not_conflicts_refine_fix_satisfying
+    (set : LiteralSet n)
+    (rho : PartialAssignment n)
+    (index : Fin n)
+    (noConflict : ¬set.ConflictsWith rho)
+    (live : rho index = none)
+    (present : index ∈ set.support) :
+    ¬set.ConflictsWith
+      (rho.refine (PartialAssignment.fix index (set.satisfyingValue index))) := by
+  intro conflict
+  obtain ⟨current, required, fixed, setValue, refinedValue, different⟩ :=
+    conflict
+  by_cases equal : current = index
+  · subst current
+    have requiredValue :=
+      set.requirements_satisfyingValue_of_mem_support index present
+    rw [requiredValue] at setValue
+    injection setValue with requiredEqual
+    subst required
+    simp [PartialAssignment.refine, PartialAssignment.fix, live] at refinedValue
+    exact different refinedValue
+  · cases sourceValue : rho current with
+    | none =>
+        simp [PartialAssignment.refine, PartialAssignment.fix, equal,
+          sourceValue] at refinedValue
+    | some source =>
+        have fixedEqual : fixed = source := by
+          simpa [PartialAssignment.refine, sourceValue] using refinedValue.symm
+        subst fixed
+        exact noConflict
+          ⟨current, required, source, setValue, sourceValue, different⟩
+
+/-- Once a nonconflicting literal set has no live support, no later
+refinement can create a conflict with it. -/
+theorem not_conflicts_refine_of_liveSupport_eq_nil
+    (set : LiteralSet n)
+    (rho extension : PartialAssignment n)
+    (noConflict : ¬set.ConflictsWith rho)
+    (supportEmpty : DNF.liveSupport set rho = []) :
+    ¬set.ConflictsWith (rho.refine extension) := by
+  intro conflict
+  obtain ⟨index, required, fixed, setValue, refinedValue, different⟩ :=
+    conflict
+  cases sourceValue : rho index with
+  | some source =>
+      have fixedEqual : fixed = source := by
+        simpa [PartialAssignment.refine, sourceValue] using refinedValue.symm
+      subst fixed
+      exact noConflict
+        ⟨index, required, source, setValue, sourceValue, different⟩
+  | none =>
+      have supportPresent : index ∈ set.support :=
+        (mem_support set index).2 (by simp [setValue])
+      have livePresent : index ∈ DNF.liveSupport set rho :=
+        (DNF.mem_liveSupport set rho index).2 ⟨supportPresent, sourceValue⟩
+      rw [supportEmpty] at livePresent
+      simp at livePresent
+
+/-- A refinement cannot falsify a nonconflicting literal set when every value
+it adds on the set's live support is either absent or the satisfying value. -/
+theorem not_conflicts_refine_of_satisfying_on_liveSupport
+    (set : LiteralSet n)
+    (rho extension : PartialAssignment n)
+    (noConflict : ¬set.ConflictsWith rho)
+    (compatible : ∀ index, index ∈ DNF.liveSupport set rho →
+      extension index = none ∨
+        extension index = some (set.satisfyingValue index)) :
+    ¬set.ConflictsWith (rho.refine extension) := by
+  intro conflict
+  obtain ⟨index, required, fixed, setValue, refinedValue, different⟩ :=
+    conflict
+  cases sourceValue : rho index with
+  | some source =>
+      have fixedEqual : fixed = source := by
+        simpa [PartialAssignment.refine, sourceValue] using refinedValue.symm
+      subst fixed
+      exact noConflict
+        ⟨index, required, source, setValue, sourceValue, different⟩
+  | none =>
+      have supportPresent : index ∈ set.support :=
+        (mem_support set index).2 (by simp [setValue])
+      have livePresent : index ∈ DNF.liveSupport set rho :=
+        (DNF.mem_liveSupport set rho index).2 ⟨supportPresent, sourceValue⟩
+      rcases compatible index livePresent with extensionLive | extensionValue
+      · simp [PartialAssignment.refine, sourceValue, extensionLive] at refinedValue
+      · have requiredValue :=
+          set.requirements_satisfyingValue_of_mem_support index supportPresent
+        rw [requiredValue] at setValue
+        injection setValue with requiredEqual
+        subst required
+        have fixedEqual : fixed = set.satisfyingValue index := by
+          simpa [PartialAssignment.refine, sourceValue, extensionValue] using
+            refinedValue.symm
+        exact different fixedEqual.symm
+
 end LiteralSet
 
 namespace DNF
+
+/-- Fixing the head of a live-support list removes exactly that coordinate. -/
+theorem liveSupport_refine_fix_eq_tail
+    (term : Term n)
+    (rho : PartialAssignment n)
+    (index : Fin n)
+    (rest : List (Fin n))
+    (value : Bool)
+    (support_eq : liveSupport term rho = index :: rest) :
+    liveSupport term
+        (rho.refine (PartialAssignment.fix index value)) = rest := by
+  have filterEq :
+      liveSupport term (rho.refine (PartialAssignment.fix index value)) =
+        (liveSupport term rho).filter fun current => decide (current ≠ index) := by
+    unfold liveSupport
+    rw [List.filter_filter]
+    apply List.filter_congr
+    intro current _
+    apply Bool.eq_iff_iff.mpr
+    by_cases sourceLive : rho current = none
+    · by_cases equal : current = index
+      · subst current
+        simp [PartialAssignment.refine, PartialAssignment.fix, sourceLive]
+      · simp [PartialAssignment.refine, PartialAssignment.fix, sourceLive,
+          equal]
+    · cases sourceValue : rho current with
+      | none => contradiction
+      | some fixed =>
+          simp [PartialAssignment.refine, sourceValue]
+  rw [filterEq, support_eq]
+  have nodup : (index :: rest).Nodup := by
+    simpa [support_eq] using nodup_liveSupport term rho
+  have indexAbsent : index ∉ rest := (List.nodup_cons.mp nodup).1
+  have allDifferent : ∀ current ∈ rest, current ≠ index := by
+    intro current present equal
+    subst current
+    exact indexAbsent present
+  rw [List.filter_cons_of_neg (by simp)]
+  apply List.filter_eq_self.mpr
+  intro current present
+  simp [allDifferent current present]
 
 mutual
 
@@ -232,6 +370,21 @@ def CanonicalTrace.satisfyingSteps
   trace.queryRecords (widthBound := widthBound) |>.map
     Switching.QueryRecord.satisfyingStep
 
+/-- Satisfying transcript for the remaining queries of one source-term
+block. -/
+def CanonicalBlockTrace.satisfyingSteps
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {term : Term n}
+    {rho : PartialAssignment n}
+    {indices : List (Fin n)}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : DNF.CanonicalBlockTrace formula term rho indices steps) :
+    List (DecisionTree.PathStep n) :=
+  trace.queryRecords (widthBound := widthBound) |>.map
+    Switching.QueryRecord.satisfyingStep
+
 /-- Satisfying assignment placed into the injection's output restriction. -/
 def CanonicalTrace.satisfyingAssignment
     {widthBound : Nat}
@@ -240,6 +393,21 @@ def CanonicalTrace.satisfyingAssignment
     {rho : PartialAssignment n}
     {steps : List (DecisionTree.PathStep n)}
     (trace : DNF.CanonicalTrace formula rho steps) : PartialAssignment n :=
+  DecisionTree.PathStep.assignment
+    (trace.satisfyingSteps (widthBound := widthBound))
+
+/-- Satisfying assignment for the remaining queries of one source-term
+block. -/
+def CanonicalBlockTrace.satisfyingAssignment
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {term : Term n}
+    {rho : PartialAssignment n}
+    {indices : List (Fin n)}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : DNF.CanonicalBlockTrace formula term rho indices steps) :
+    PartialAssignment n :=
   DecisionTree.PathStep.assignment
     (trace.satisfyingSteps (widthBound := widthBound))
 
@@ -432,6 +600,151 @@ theorem CanonicalTrace.ofFn_advice
       trace.adviceList := by
   unfold CanonicalTrace.advice
   apply Switching.ofFn_listToFn
+
+/-- On every pending coordinate, a block's satisfying assignment either
+leaves the variable live or assigns the selected term's satisfying value. -/
+theorem CanonicalBlockTrace.satisfyingAssignment_compatible
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {term : Term n}
+    {rho : PartialAssignment n}
+    {indices : List (Fin n)}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : DNF.CanonicalBlockTrace formula term rho indices steps)
+    (nodup : indices.Nodup) :
+    ∀ index, index ∈ indices →
+      trace.satisfyingAssignment (widthBound := widthBound) index = none ∨
+        trace.satisfyingAssignment (widthBound := widthBound) index =
+          some (term.satisfyingValue index) :=
+  match trace with
+  | .nil _ index rest => by
+      intro current present
+      left
+      simp [CanonicalBlockTrace.satisfyingAssignment,
+        CanonicalBlockTrace.satisfyingSteps,
+        CanonicalBlockTrace.queryRecords, PartialAssignment.empty]
+  | .takeMore (index := index) (next := next) (rest := rest) tail =>
+      by
+        intro current present
+        have data := List.mem_cons.mp present
+        rcases data with equal | inRest
+        · subst current
+          right
+          simp [CanonicalBlockTrace.satisfyingAssignment,
+            CanonicalBlockTrace.satisfyingSteps,
+            CanonicalBlockTrace.queryRecords,
+            Switching.QueryRecord.satisfyingStep,
+            PartialAssignment.refine, PartialAssignment.fix]
+        · have headAbsent : index ∉ next :: rest :=
+            (List.nodup_cons.mp nodup).1
+          have different : current ≠ index := by
+            intro equal
+            subst current
+            exact headAbsent inRest
+          have tailCompatible :=
+            tail.satisfyingAssignment_compatible
+              (widthBound := widthBound)
+              (List.nodup_cons.mp nodup).2 current inRest
+          simpa [CanonicalBlockTrace.satisfyingAssignment,
+            CanonicalBlockTrace.satisfyingSteps,
+            CanonicalBlockTrace.queryRecords,
+            Switching.QueryRecord.satisfyingStep,
+            PartialAssignment.refine, PartialAssignment.fix, different] using
+            tailCompatible
+  | .takeLast (index := index) tail =>
+      by
+        intro current present
+        have equal : current = index := by simpa using present
+        subst current
+        right
+        simp [CanonicalBlockTrace.satisfyingAssignment,
+          CanonicalBlockTrace.satisfyingSteps,
+          CanonicalBlockTrace.queryRecords,
+          Switching.QueryRecord.satisfyingStep,
+          PartialAssignment.refine, PartialAssignment.fix]
+
+/-- Satisfying all queries remaining in one source-term block never falsifies
+that term. The invariant `support_eq` says precisely which of its source
+coordinates are still live at the current state. -/
+theorem CanonicalBlockTrace.not_conflicts_refine_satisfyingAssignment
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {term : Term n}
+    {rho : PartialAssignment n}
+    {indices : List (Fin n)}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : DNF.CanonicalBlockTrace formula term rho indices steps)
+    (support_eq : liveSupport term rho = indices)
+    (noConflict : ¬term.ConflictsWith rho) :
+    ¬term.ConflictsWith
+      (rho.refine
+        (trace.satisfyingAssignment (widthBound := widthBound))) := by
+  apply term.not_conflicts_refine_of_satisfying_on_liveSupport
+    rho trace.satisfyingAssignment noConflict
+  intro index present
+  apply trace.satisfyingAssignment_compatible
+  · rw [← support_eq]
+    exact nodup_liveSupport term rho
+  · simpa [support_eq] using present
+
+/-- A source term surviving at the start of a canonical trace still survives
+after the trace's satisfying assignment is added. -/
+theorem CanonicalTrace.not_conflicts_refine_satisfyingAssignment
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : DNF.CanonicalTrace formula rho steps)
+    {term : Term n}
+    (found : formula.firstSurviving rho = some term) :
+    ¬term.ConflictsWith
+      (rho.refine
+        (trace.satisfyingAssignment (widthBound := widthBound))) :=
+  match trace with
+  | .nil _ => by
+      have noConflict := firstSurvivingIn_not_conflicts
+        rho formula.terms found
+      simpa [CanonicalTrace.satisfyingAssignment,
+        CanonicalTrace.satisfyingSteps,
+        CanonicalTrace.queryRecords] using noConflict
+  | @CanonicalTrace.start _ _ rho selected indices steps selectedFound
+      support_eq nonempty block => by
+      have termEqual : term = selected := by
+        rw [selectedFound] at found
+        exact (Option.some.inj found).symm
+      subst term
+      have noConflict := firstSurvivingIn_not_conflicts
+        rho formula.terms selectedFound
+      have compatible :=
+        block.not_conflicts_refine_satisfyingAssignment
+          (widthBound := widthBound) support_eq noConflict
+      change ¬selected.ConflictsWith
+        (rho.refine
+          (block.satisfyingAssignment (widthBound := widthBound)))
+      exact compatible
+
+/-- The first-surviving source-term selector is unchanged when the satisfying
+assignment extracted from the trace is added. This is the selector equation
+used by the reconstruction decoder. -/
+theorem CanonicalTrace.firstSurviving_refine_satisfyingAssignment
+    {widthBound : Nat}
+    [NeZero widthBound]
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : DNF.CanonicalTrace formula rho steps)
+    {term : Term n}
+    (found : formula.firstSurviving rho = some term) :
+    formula.firstSurviving
+        (rho.refine
+          (trace.satisfyingAssignment (widthBound := widthBound))) =
+      some term :=
+  formula.firstSurviving_refine rho
+    (trace.satisfyingAssignment (widthBound := widthBound)) found
+    (trace.not_conflicts_refine_satisfyingAssignment found)
 
 /-- A traced satisfying assignment fixes exactly the prescribed canonical
 path length. -/
