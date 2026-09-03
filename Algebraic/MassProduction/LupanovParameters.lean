@@ -14,9 +14,6 @@ namespace Algebraic
 namespace MassProduction
 namespace LupanovSynthesis
 
-open scoped BigOperators
-open ShannonSynthesis
-
 /-! ## Uniform sharp parameters -/
 
 /-- Three logarithmic address variables.  The cap only handles the finite

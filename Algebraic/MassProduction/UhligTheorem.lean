@@ -19,7 +19,6 @@ namespace MassProduction
 namespace UhligTheorem
 
 open Filter
-open UhligCircuit
 open UhligRecursion
 
 /-! ## Conditional sharp Uhlig theorem -/

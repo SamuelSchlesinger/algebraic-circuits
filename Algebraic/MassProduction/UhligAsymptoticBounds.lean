@@ -14,7 +14,6 @@ namespace MassProduction
 namespace UhligTheorem
 
 open Filter
-open UhligCircuit
 open UhligRecursion
 
 /-! ## Finite leading-term arithmetic -/

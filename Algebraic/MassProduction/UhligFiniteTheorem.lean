@@ -13,7 +13,6 @@ namespace MassProduction
 namespace UhligTheorem
 
 open Filter
-open UhligCircuit
 open UhligRecursion
 
 /-! ## Finite end-to-end theorem -/

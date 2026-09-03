@@ -12,7 +12,6 @@ namespace Algebraic
 namespace MassProduction
 namespace LupanovSynthesis
 
-open scoped BigOperators
 open ShannonSynthesis
 
 /-! ## Recombination and the complete finite circuit -/

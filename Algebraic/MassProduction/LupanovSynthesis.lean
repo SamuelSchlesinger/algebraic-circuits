@@ -16,7 +16,6 @@ namespace Algebraic
 namespace MassProduction
 namespace LupanovSynthesis
 
-open scoped BigOperators
 open ShannonSynthesis
 
 /-! ## The coefficient-one synthesis family -/
