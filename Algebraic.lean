@@ -15,6 +15,7 @@ import Algebraic.Complexity
 import Algebraic.CircuitFamily
 import Algebraic.Analysis
 import Algebraic.Restriction
+import Algebraic.PartialAssignment
 import Algebraic.Reduction
 import Algebraic.Compaction
 import Algebraic.Counting

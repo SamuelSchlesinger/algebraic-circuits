@@ -52,7 +52,7 @@ theorem.
 | --- | --- | --- |
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
-| Restrictions | Partial assignments, composition, and restricted semantics | Not started |
+| Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantic layer validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Not started |
 | Probability | Finite `p`-random restriction distribution | Not started |
 | Switching | Explicit finite switching lemma | Not started |
@@ -84,3 +84,10 @@ suite checks arbitrary-fan-in OR semantics, AND/OR cost, the distinction between
 generic depth and source logical depth, checked input-negation normal form, and
 a nonvacuous AC0 family computing disjunction. A normalization construction for
 arbitrary internal negations has not yet been proved.
+
+The partial-assignment submilestone passed the same gates on 2026-09-03. It
+defines same-variable Boolean restrictions, sequential refinement, exact live
+sets and counts, conversion to `InputSubstitution`, restriction of scalar and
+multi-output targets, and the proof that restricted semantics depend only on
+live coordinates. Its public theorem audit uses no axioms beyond Lean's
+standard `propext`, `Classical.choice`, and `Quot.sound`.
