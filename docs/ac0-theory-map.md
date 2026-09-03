@@ -78,9 +78,9 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
-| Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
+| Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality, restriction compatibility, and semantic depth invariance validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` decision-tree theorem validated 2026-09-03 |
+| Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -354,3 +354,13 @@ Semantic depth-event decidability is classical and noncomputable; it exists
 only to form the exact finite probability. No optimizer, circuit enumeration,
 or finite lower-bound search is implemented. The complementary CNF statement
 and its explicit De Morgan bridge are the next switching-layer obligation.
+
+The De Morgan duality and CNF switching submilestone passed the full gates on
+2026-09-03. Literal negation is involutive, preserves support and width, swaps
+term conflicts with clause hits, and commutes with residual restriction.
+Consequently DNF/CNF negation commutes exactly with syntactic restriction and
+complements semantics. Negating every leaf preserves both upper and lower
+semantic decision-tree depth, so the checked DNF theorem yields the matching
+CNF bound and its explicit `d+1` off-by-one form without a second encoding
+argument. The next dependency is simultaneous simplification of many bottom
+gates for circuit-level depth reduction.

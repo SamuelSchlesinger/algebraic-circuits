@@ -1,4 +1,5 @@
 import Algebraic.LowerBound.AC0.Switching.CombinedCanonical
+import Algebraic.LowerBound.AC0.Duality
 
 /-!
 # The semantic switching lemma
@@ -68,6 +69,61 @@ theorem probability_not_depthAtMost_restrict_le_five
         (depthBound + 1) := by
   simpa only [DecisionTree.depthAtLeast_succ_iff_not_depthAtMost] using
     probability_depthAtLeast_restrict_le_five
+      formula bounded (depthBound + 1) p atMostOne
+
+/-- **Hastad's switching lemma, CNF form.** A width-`t` CNF left under a
+`p`-random restriction has semantic decision-tree depth at least `s` with
+probability at most `(5pt)^s`. This is the exact De Morgan dual of the DNF
+theorem. -/
+theorem probability_cnf_depthAtLeast_restrict_le_five
+    (formula : CNF n)
+    (bounded : formula.WidthAtMost widthBound)
+    (pathLength : Nat)
+    (p : NNReal)
+    (atMostOne : p ≤ 1) :
+    probability n p atMostOne
+        (fun rho => DecisionTree.DepthAtLeast
+          (formula.restrict rho).eval pathLength) ≤
+      ((5 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal)) ^
+        pathLength := by
+  calc
+    probability n p atMostOne
+          (fun rho => DecisionTree.DepthAtLeast
+            (formula.restrict rho).eval pathLength) =
+        probability n p atMostOne
+          (fun rho => DecisionTree.DepthAtLeast
+            (formula.negate.restrict rho).eval pathLength) := by
+      apply probability_congr n p atMostOne
+      intro rho
+      rw [← formula.negate_restrict rho]
+      have evalEqual : (formula.restrict rho).negate.eval =
+          fun input => !(formula.restrict rho).eval input := by
+        funext input
+        exact CNF.eval_negate (formula.restrict rho) input
+      rw [evalEqual]
+      exact
+        (DecisionTree.depthAtLeast_negate_iff
+          (formula.restrict rho).eval pathLength).symm
+    _ ≤ ((5 : ENNReal) * (p : ENNReal) *
+          (widthBound : ENNReal)) ^ pathLength :=
+      probability_depthAtLeast_restrict_le_five
+        formula.negate bounded.negate pathLength p atMostOne
+
+/-- Equivalent off-by-one CNF form: failure to have a depth-`d` computing
+tree has probability at most `(5pt)^(d + 1)`. -/
+theorem probability_cnf_not_depthAtMost_restrict_le_five
+    (formula : CNF n)
+    (bounded : formula.WidthAtMost widthBound)
+    (depthBound : Nat)
+    (p : NNReal)
+    (atMostOne : p ≤ 1) :
+    probability n p atMostOne
+        (fun rho => ¬DecisionTree.DepthAtMost
+          (formula.restrict rho).eval depthBound) ≤
+      ((5 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal)) ^
+        (depthBound + 1) := by
+  simpa only [DecisionTree.depthAtLeast_succ_iff_not_depthAtMost] using
+    probability_cnf_depthAtLeast_restrict_le_five
       formula bounded (depthBound + 1) p atMostOne
 
 end RandomRestriction

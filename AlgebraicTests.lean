@@ -3,6 +3,7 @@ import AlgebraicTests.Circuit
 import AlgebraicTests.CircuitFamily
 import AlgebraicTests.AC0
 import AlgebraicTests.AC0DecisionTree
+import AlgebraicTests.AC0Duality
 import AlgebraicTests.AC0CanonicalDecisionTree
 import AlgebraicTests.AC0NormalForm
 import AlgebraicTests.AC0RandomRestriction
@@ -14,6 +15,7 @@ import AlgebraicTests.AC0CombinedCanonicalTrace
 import AlgebraicTests.AC0CombinedCanonicalPacking
 import AlgebraicTests.AC0CanonicalSwitching
 import AlgebraicTests.AC0CombinedCanonical
+import AlgebraicTests.AC0Switching
 import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds
