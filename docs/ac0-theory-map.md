@@ -53,7 +53,7 @@ theorem.
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantic layer validated 2026-09-03; circuit simplification open |
-| Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Literal, term, clause, DNF, and CNF layers validated 2026-09-03; decision trees open |
+| Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Literal, formula, and decision-tree foundations validated 2026-09-03; canonical DNF tree construction open |
 | Probability | Finite `p`-random restriction distribution | Not started |
 | Switching | Explicit finite switching lemma | Not started |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
@@ -100,3 +100,12 @@ terms, clauses, DNF, and CNF, and is proved not to increase width. The audited
 headline theorems use no axioms beyond Lean's standard `propext`,
 `Classical.choice`, and `Quot.sound`. Decision trees are not part of this
 submilestone.
+
+The decision-tree foundation passed the same gates on 2026-09-03. It includes
+explicit false/true branching syntax, evaluation, depth and leaf counts,
+negation, semantic restriction, structural composition of restrictions, and
+depth monotonicity. A constructive Shannon expansion proves the universal
+`n`-variable depth upper bound without defining an optimizer or performing a
+search. The audited headline theorems use no axioms beyond Lean's standard
+`propext`, `Classical.choice`, and `Quot.sound`. The canonical tree used in the
+switching proof remains open.

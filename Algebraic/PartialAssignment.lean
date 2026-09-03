@@ -99,6 +99,20 @@ def apply
   funext index
   simp [apply]
 
+/-- Fixing a variable to the value it already has leaves a complete input
+unchanged. -/
+theorem apply_fix_eq_self
+    (input : Fin n -> Bool)
+    (selected : Fin n)
+    (value : Bool)
+    (selectedValue : input selected = value) :
+    (fix selected value).apply input = input := by
+  funext index
+  by_cases equal : index = selected
+  · subst index
+    simp [apply, fix, selectedValue]
+  · simp [apply, fix, equal]
+
 /-- Refine `rho` with `sigma`, retaining every value already fixed by `rho`. -/
 def refine
     (rho sigma : PartialAssignment n) : PartialAssignment n :=

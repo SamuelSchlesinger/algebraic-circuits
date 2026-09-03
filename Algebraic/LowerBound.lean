@@ -1,4 +1,5 @@
 import Algebraic.LowerBound.AC0.NormalForm
+import Algebraic.LowerBound.AC0.DecisionTree
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.Counting
 import Algebraic.LowerBound.GateElimination
