@@ -15,6 +15,23 @@ example (advice : CombinedAdvice width pathLength) :
   advice.length_toQueryList
 
 example
+    (block : BlockAdvice width (remaining + 1))
+    (lengthLeWidth : remaining + 1 ≤ width) :
+    (CombinedAdvice.ofFinalBlock block lengthLeWidth).toQueryList =
+      block.toQueryList false := by
+  simp
+
+example
+    (block : ContinuingBlockAdvice width (blockRemaining + 1))
+    (tail : CombinedAdvice width tailLength)
+    (blockLeWidth : blockRemaining + 1 ≤ width)
+    (tailPositive : 0 < tailLength) :
+    (CombinedAdvice.prependBlock block tail blockLeWidth
+      tailPositive).toQueryList =
+      block.val.toQueryList true ++ tail.toQueryList := by
+  simp
+
+example
     (formula : DNF n)
     (state : PartialAssignment n)
     (currentTerm : Option (Term n))

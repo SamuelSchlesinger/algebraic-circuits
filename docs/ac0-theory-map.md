@@ -285,3 +285,10 @@ have exactly length `s`. A generic replay theorem proves that clearing the last
 closing marker changes no decoded coordinate, and `decodeCombined` reuses the
 existing replay-and-clear semantics. The remaining obligation is to construct
 this advice from every canonical trace and prove the flattening correspondence.
+
+The replay surface also exposes checked smart constructors for a final block
+and for prepending a continuing block to a nonempty tail. Their flattening
+equations are definitional interfaces for the forthcoming trace packer: the
+final block receives no closing marker, while every prepended continuing block
+receives exactly one at its last query. This is structural assembly, not a new
+switching estimate; the trace-to-advice construction remains open.
