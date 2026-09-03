@@ -1,5 +1,6 @@
 import Algebraic.LowerBound.AC0.DecisionTreeTrace
 import Algebraic.LowerBound.GateElimination.Xor
+import Algebraic.CircuitFamily
 
 /-!
 # Parity under partial assignments
@@ -24,6 +25,22 @@ namespace Parity
 definition. -/
 def function (n : Nat) : ScalarFunction Bool n :=
   GateElimination.Xor.parity
+
+/-- Parity as a one-output circuit target. -/
+def target (n : Nat) : Target Bool n 1 :=
+  GateElimination.Xor.parityTarget n
+
+@[simp] theorem target_apply
+    (input : Fin n -> Bool)
+    (output : Fin 1) :
+    target n input output = function n input := rfl
+
+/-- The all-input-width family of parity targets. -/
+def targetFamily : Target.Family Bool 1 :=
+  target
+
+@[simp] theorem targetFamily_apply (n : Nat) :
+    targetFamily n = target n := rfl
 
 /-- Flip one coordinate of a Boolean input. -/
 def flip

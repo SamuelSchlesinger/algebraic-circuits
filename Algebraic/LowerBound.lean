@@ -25,6 +25,7 @@ import Algebraic.LowerBound.AC0.LayerSwitching
 import Algebraic.LowerBound.AC0.LayerExistence
 import Algebraic.LowerBound.AC0.LayerIteration
 import Algebraic.LowerBound.AC0.Parity
+import Algebraic.LowerBound.AC0.ParityCircuit
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.Counting
 import Algebraic.LowerBound.GateElimination

@@ -82,7 +82,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Finite-layer semantic iteration proved for any explicit survivor schedule satisfying `delta*a_i+a_(i+1) < p*a_i`; closed-form parameters open |
-| Parity | Restriction resilience and quantitative depth-`k` lower bound | Restricted parity has decision-tree depth exactly its live-variable count; circuit contradiction and quantitative parameters open |
+| Parity | Restriction resilience and quantitative depth-`k` lower bound | Exact restriction resilience and the parameterized iterated-switching contradiction are proved; closed-form parameters open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
 ## Claim labels
@@ -97,6 +97,17 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The parameterized parity-circuit contradiction passed the full gates on
+2026-09-03. A shallow invariant covering the unique designated output of a
+parity circuit now forces `liveCount rho <= t`. Combining this with iterated
+depth reduction proves that any explicit survivor schedule ending above `t`
+rules out the circuit, provided `delta <= p` and every scheduled step satisfies
+`delta*a_i + a_(i+1) < p*a_i`, with
+`delta = S(5pt)^(t+1)`. This is the complete structural switching argument at
+the circuit level; choosing closed-form values for `p`, `t`, and `a_i` is the
+remaining quantitative obligation. The audited public theorems use no axioms
+beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The parity-resilience submilestone passed the full gates on 2026-09-03. The
 library now records the evaluation path followed by an arbitrary decision
