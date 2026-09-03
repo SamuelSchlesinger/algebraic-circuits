@@ -12,6 +12,7 @@ import Algebraic.LowerBound.AC0.Switching.CombinedCanonicalPacking
 import Algebraic.LowerBound.AC0.Switching.Canonical
 import Algebraic.LowerBound.AC0.Switching.CombinedCanonical
 import Algebraic.LowerBound.AC0.Switching
+import Algebraic.LowerBound.AC0.Switching.Family
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.Counting
 import Algebraic.LowerBound.GateElimination

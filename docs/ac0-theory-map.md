@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality, restriction compatibility, and semantic depth invariance validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Finite-family switching union bound validated 2026-09-03; gate extraction open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -364,3 +364,12 @@ semantic decision-tree depth, so the checked DNF theorem yields the matching
 CNF bound and its explicit `d+1` off-by-one form without a second encoding
 argument. The next dependency is simultaneous simplification of many bottom
 gates for circuit-level depth reduction.
+
+The finite-family switching submilestone passed the full gates on 2026-09-03.
+For `M` width-`t` DNFs, and separately for CNFs, Lean proves
+`Pr[exists i, DT(F_i restricted by rho) >= s] <= M * (5pt)^s`, together with
+the explicit failure-of-depth-`d` form using exponent `d+1`. The proof is the
+exact finite union bound over the single-formula theorem. It is not advertised
+as the stronger multi-switching lemma, since it does not construct one common
+decision tree for all formulas. The next obligation is to extract the bottom
+normal-form gates of an alternating AC0 circuit into such a finite family.

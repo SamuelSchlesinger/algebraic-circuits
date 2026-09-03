@@ -52,4 +52,30 @@ example
       RandomRestriction.probability 2 p atMostOne right :=
   RandomRestriction.probability_mono 2 p atMostOne included
 
+example
+    (p : NNReal)
+    (atMostOne : p ≤ 1)
+    (left right : PartialAssignment 2 -> Prop)
+    [DecidablePred left]
+    [DecidablePred right] :
+    RandomRestriction.probability 2 p atMostOne
+        (fun rho => left rho ∨ right rho) ≤
+      RandomRestriction.probability 2 p atMostOne left +
+        RandomRestriction.probability 2 p atMostOne right :=
+  RandomRestriction.probability_or_le 2 p atMostOne left right
+
+example
+    {indexType : Type*}
+    (p : NNReal)
+    (atMostOne : p ≤ 1)
+    (indices : Finset indexType)
+    (events : indexType -> PartialAssignment 2 -> Prop)
+    [(index : indexType) -> DecidablePred (events index)] :
+    RandomRestriction.probability 2 p atMostOne
+        (fun rho => ∃ index ∈ indices, events index rho) ≤
+      ∑ index ∈ indices,
+        RandomRestriction.probability 2 p atMostOne (events index) :=
+  RandomRestriction.probability_exists_mem_le_sum
+    2 p atMostOne indices events
+
 end AlgebraicTests.AC0RandomRestriction

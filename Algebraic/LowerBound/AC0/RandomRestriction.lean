@@ -233,6 +233,61 @@ theorem probability_mono
   rw [Finset.mem_filter] at present ⊢
   exact ⟨present.1, included rho present.2⟩
 
+/-- The exact probability of a union of two finite events is at most the sum
+of their probabilities. -/
+theorem probability_or_le
+    (n : Nat)
+    (p : NNReal)
+    (atMostOne : p ≤ 1)
+    (left right : PartialAssignment n -> Prop)
+    [DecidablePred left]
+    [DecidablePred right] :
+    probability n p atMostOne (fun rho => left rho ∨ right rho) ≤
+      probability n p atMostOne left +
+        probability n p atMostOne right := by
+  classical
+  unfold probability
+  simp_rw [Finset.sum_filter]
+  rw [← Finset.sum_add_distrib]
+  apply Finset.sum_le_sum
+  intro rho _
+  by_cases leftHolds : left rho <;>
+    by_cases rightHolds : right rho <;>
+      simp [leftHolds, rightHolds]
+
+/-- Finite union bound for an indexed family of exact restriction events. -/
+theorem probability_exists_mem_le_sum
+    {indexType : Type*}
+    (n : Nat)
+    (p : NNReal)
+    (atMostOne : p ≤ 1)
+    (indices : Finset indexType)
+    (events : indexType -> PartialAssignment n -> Prop)
+    [(index : indexType) -> DecidablePred (events index)] :
+    probability n p atMostOne
+        (fun rho => ∃ index ∈ indices, events index rho) ≤
+      ∑ index ∈ indices, probability n p atMostOne (events index) := by
+  classical
+  unfold probability
+  simp_rw [Finset.sum_filter]
+  rw [Finset.sum_comm]
+  apply Finset.sum_le_sum
+  intro rho _
+  by_cases anyEvent : ∃ index ∈ indices, events index rho
+  · simp only [if_pos anyEvent]
+    obtain ⟨index, present, holds⟩ := anyEvent
+    calc
+      distribution n p atMostOne rho =
+          ∑ current ∈ {index},
+            if events current rho then
+              distribution n p atMostOne rho else 0 := by
+        simp [holds]
+      _ ≤ ∑ current ∈ indices,
+            if events current rho then
+              distribution n p atMostOne rho else 0 :=
+        Finset.sum_le_sum_of_subset (Finset.singleton_subset_iff.mpr present)
+  · simp [anyEvent]
+
 /-- A singleton event has the point mass specified by the product formula. -/
 theorem probability_singleton
     (n : Nat)

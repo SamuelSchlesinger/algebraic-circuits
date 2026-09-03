@@ -16,6 +16,7 @@ import AlgebraicTests.AC0CombinedCanonicalPacking
 import AlgebraicTests.AC0CanonicalSwitching
 import AlgebraicTests.AC0CombinedCanonical
 import AlgebraicTests.AC0Switching
+import AlgebraicTests.AC0SwitchingFamily
 import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds
