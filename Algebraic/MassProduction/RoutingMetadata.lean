@@ -578,7 +578,7 @@ theorem sortedPredecessorCopyCircuit_routes_unique_key
     · exact sourceFields.2
     · exact destinationFields.2
   obtain ⟨correspondingInput, sourceRecordEquality⟩ :=
-    Routing.FlatRecordsPermute.rangeContained recordsPermute sourceSorted
+    Sorting.FlatRecordsPermute.rangeContained recordsPermute sourceSorted
   have correspondingMatches : Routing.recordHasKeyTag key false
       (flatRecords input correspondingInput) := by
     rw [← sourceRecordEquality]

@@ -1087,7 +1087,7 @@ theorem matchedCanonicalRoutingBits_fixed_value
   obtain ⟨uniqueDestinationIndex, _uniqueDestinationMatches,
       uniqueDestinationOnly⟩ := uniqueDestination
   obtain ⟨correspondingInput, sortedRecordEquality⟩ :=
-    Routing.FlatRecordsPermute.rangeContained initiallySortedPermutes
+    Sorting.FlatRecordsPermute.rangeContained initiallySortedPermutes
       destinationSorted
   have correspondingDestinationMatches : Routing.recordHasKeyTag
       (destinationKeys target) true
@@ -1116,7 +1116,7 @@ theorem matchedCanonicalRoutingBits_fixed_value
       complemented
     exact canonicalSortBits_recordsPermute routed
   obtain ⟨preCanonicalIndex, canonicalRecordEquality⟩ :=
-    Routing.FlatRecordsPermute.rangeContained canonicalRecords fixedIndex
+    Sorting.FlatRecordsPermute.rangeContained canonicalRecords fixedIndex
   have preCanonicalHeader :
       recordHeader (flatRecords complemented preCanonicalIndex) =
         targetHeader := by

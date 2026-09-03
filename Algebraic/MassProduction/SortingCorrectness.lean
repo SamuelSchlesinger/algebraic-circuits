@@ -75,6 +75,14 @@ def FlatRecordsPermute
     (output input : Fin (networkBits depth recordWidth) -> Bool) : Prop :=
   SequencePermutes (flatRecords output) (flatRecords input)
 
+/-- Every output record of a complete-record permutation occurs in the input
+record array. -/
+theorem FlatRecordsPermute.rangeContained
+    {output input : Fin (networkBits depth recordWidth) -> Bool}
+    (permuted : FlatRecordsPermute output input) :
+    SequenceRangeContained (flatRecords output) (flatRecords input) :=
+  SequencePermutes.rangeContained permuted
+
 private theorem flatRecords_firstHalfBits
     (input : Fin (networkBits (depth + 1) recordWidth) -> Bool) :
     flatRecords (firstHalfBits input) =

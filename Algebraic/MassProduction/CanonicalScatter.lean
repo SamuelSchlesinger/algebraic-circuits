@@ -219,7 +219,7 @@ theorem canonicalFullScatterBits_routes_incidence
       complemented
     exact canonicalSortBits_recordsPermute routed
   obtain ⟨preCanonicalIndex, recordEquality⟩ :=
-    Routing.FlatRecordsPermute.rangeContained canonicalRecords fixedIndex
+    Sorting.FlatRecordsPermute.rangeContained canonicalRecords fixedIndex
   have preCanonicalHeader :
       recordHeader (flatRecords complemented preCanonicalIndex) =
         activeDestinationHeader (lexBitVectorAt destination) := by

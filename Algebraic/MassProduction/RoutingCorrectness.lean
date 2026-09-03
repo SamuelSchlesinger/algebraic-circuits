@@ -124,26 +124,18 @@ theorem UniqueIndexWhere.of_flatRecordsPermute
   unfold FlatRecordsPermute at permuted
   exact uniqueInput.of_sequencePermutes permuted
 
-/-- Every output of a sequence permutation is some input value. -/
+/-- Routing-namespace compatibility theorem for the generic sequence result. -/
 theorem SequencePermutes.rangeContained
     {output input : Fin n -> α}
     (permuted : SequencePermutes output input) :
-    SequenceRangeContained output input := by
-  intro outputIndex
-  have outputMember : output outputIndex ∈ List.ofFn output :=
-    (List.mem_ofFn' output (output outputIndex)).mpr
-      ⟨outputIndex, rfl⟩
-  have inputMember : output outputIndex ∈ List.ofFn input :=
-    permuted.mem_iff.mp outputMember
-  obtain ⟨inputIndex, equality⟩ :=
-    (List.mem_ofFn' input (output outputIndex)).mp inputMember
-  exact ⟨inputIndex, equality.symm⟩
+    SequenceRangeContained output input :=
+  Sorting.Semantics.SequencePermutes.rangeContained permuted
 
 theorem FlatRecordsPermute.rangeContained
     {output input : Fin (networkBits depth packedWidth) -> Bool}
     (permuted : FlatRecordsPermute output input) :
-    SequenceRangeContained (flatRecords output) (flatRecords input) := by
-  exact SequencePermutes.rangeContained permuted
+    SequenceRangeContained (flatRecords output) (flatRecords input) :=
+  Sorting.FlatRecordsPermute.rangeContained permuted
 
 /-- In an increasing finite sequence, two uniquely occurring keys related by
 `CovBy` occupy adjacent indices. -/

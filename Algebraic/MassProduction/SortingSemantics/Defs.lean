@@ -90,6 +90,20 @@ theorem map {n : ℕ} {output input : Fin n → α}
   rw [List.ofFn_comp' output observe, List.ofFn_comp' input observe]
   exact permuted.map observe
 
+/-- Every output of a finite-sequence permutation is an input value. -/
+theorem rangeContained {n : ℕ} {output input : Fin n -> α}
+    (permuted : SequencePermutes output input) :
+    SequenceRangeContained output input := by
+  intro outputIndex
+  have outputMember : output outputIndex ∈ List.ofFn output :=
+    (List.mem_ofFn' output (output outputIndex)).mpr
+      ⟨outputIndex, rfl⟩
+  have inputMember : output outputIndex ∈ List.ofFn input :=
+    permuted.mem_iff.mp outputMember
+  obtain ⟨inputIndex, equality⟩ :=
+    (List.mem_ofFn' input (output outputIndex)).mp inputMember
+  exact ⟨inputIndex, equality.symm⟩
+
 end SequencePermutes
 
 /-- Concatenation of two finite sequences. -/
