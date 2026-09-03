@@ -5,6 +5,7 @@ import AlgebraicTests.AC0
 import AlgebraicTests.AC0DecisionTree
 import AlgebraicTests.AC0Parity
 import AlgebraicTests.AC0ParityParameters
+import AlgebraicTests.AC0ParitySurvivors
 import AlgebraicTests.AC0ParityNormalForm
 import AlgebraicTests.AC0ParityCircuit
 import AlgebraicTests.AC0ParityTopGate

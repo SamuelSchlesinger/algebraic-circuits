@@ -30,6 +30,7 @@ import Algebraic.LowerBound.AC0.LayerIterationBounds
 import Algebraic.LowerBound.AC0.LayerSchedule
 import Algebraic.LowerBound.AC0.Parity
 import Algebraic.LowerBound.AC0.ParityParameters
+import Algebraic.LowerBound.AC0.ParitySurvivors
 import Algebraic.LowerBound.AC0.ParityNormalForm
 import Algebraic.LowerBound.AC0.ParityCircuit
 import Algebraic.LowerBound.AC0.ParityTopGate
