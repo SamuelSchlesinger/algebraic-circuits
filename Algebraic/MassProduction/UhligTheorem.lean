@@ -235,11 +235,6 @@ theorem exists_finite_uhlig_circuit_at_width
   exact exists_finite_uhlig_circuit prefixWidth baseWidth depth base
     baseBound baseCost function copies copiesPositive copiesBound
 
-/-- Width-indexed one-copy synthesis data.  This is a dependent function, not
-a typeclass, so using it introduces no synthesis instances. -/
-abbrev ScalarSynthesisFamily :=
-  (width : Nat) -> ScalarSynthesis width
-
 /-- Denominator-free formulation of a sharp one-copy upper bound.  For every
 positive integer precision `q`, the normalized coefficient is eventually at
 most `(q + 1) / q`. -/

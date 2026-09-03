@@ -1,11 +1,12 @@
+import Algebraic.MassProduction.ScalarSynthesis
 import Algebraic.MassProduction.UhligCircuit
 
 /-!
 # Recursive Uhlig mass production
 
-This module iterates the exact finite two-copy layer.  A scalar synthesis
-family is passed explicitly as data; it is deliberately not a typeclass, so
-the recursion introduces no global or local instance-search burden.
+This module iterates the exact finite two-copy layer. Scalar synthesis data is
+passed explicitly, so the recursion introduces no global or local
+instance-search burden.
 -/
 
 namespace Algebraic
@@ -14,19 +15,6 @@ namespace UhligRecursion
 
 open UhligCircuit
 open scoped BigOperators
-
-/-- Explicit data for synthesizing every Boolean function at one fixed input
-width.  This is a structure parameter, not a typeclass. -/
-structure ScalarSynthesis (width : Nat) where
-  /-- Program-gate count selected for each scalar target. -/
-  gateCount : ScalarFunction Bool width -> Nat
-  /-- Concrete one-output circuit selected for each scalar target. -/
-  circuit : (function : ScalarFunction Bool width) ->
-    Circuit DeMorgan.signature width (gateCount function) 1
-  /-- Proof that every selected circuit computes its requested target. -/
-  computes : forall function,
-    (circuit function).Computes DeMorgan.interpretation
-      (scalarTarget function)
 
 /-- Width left after `depth` equal prefix blocks have been restored. -/
 @[reducible] def recursiveWidth

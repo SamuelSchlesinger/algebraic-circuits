@@ -1109,7 +1109,7 @@ theorem lupanovCircuit_cost_le
 
 /-- Explicit one-copy synthesis data at every width. -/
 noncomputable def lupanovScalarSynthesis
-    (inputs : Nat) : UhligRecursion.ScalarSynthesis inputs where
+    (inputs : Nat) : ScalarSynthesis inputs where
   gateCount function :=
     synthesisGateCount
       (reindexFunction (lupanovAddressDataSum inputs) function)
@@ -1118,7 +1118,7 @@ noncomputable def lupanovScalarSynthesis
   computes := lupanovCircuit_computes inputs
 
 /-- The Lupanov family as explicit dependent data, not a typeclass. -/
-noncomputable def lupanovFamily : UhligTheorem.ScalarSynthesisFamily :=
+noncomputable def lupanovFamily : ScalarSynthesisFamily :=
   lupanovScalarSynthesis
 
 @[simp] theorem lupanovFamily_circuit
