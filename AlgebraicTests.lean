@@ -13,6 +13,7 @@ import AlgebraicTests.AC0CombinedCanonicalEncoding
 import AlgebraicTests.AC0CombinedCanonicalTrace
 import AlgebraicTests.AC0CombinedCanonicalPacking
 import AlgebraicTests.AC0CanonicalSwitching
+import AlgebraicTests.AC0CombinedCanonical
 import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds

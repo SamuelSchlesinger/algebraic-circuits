@@ -315,3 +315,15 @@ replay-and-clear decoder is now a checked left inverse for combined advice on
 every bounded canonical path. The remaining switching-stage task is to replace
 the elementary total encoder by this combined encoder and apply the already
 proved `((5t - 1)/2)^s` cardinality bound in the weighted probability argument.
+
+The combined canonical-injection submilestone passed the full gates on
+2026-09-03. The bad-event encoder now stores `CombinedAdvice t s`, and the
+explicit combined decoder proves that this encoder is injective. Applying the
+general weighted restriction engine and the checked cardinality theorem gives
+the exact positive-width inequality
+`((1-p)/2)^s * Pr[canonical depth >= s] <= (((5t-1)/2)^s) * p^s`.
+
+This is the finite trusted core of the sharp switching estimate. The remaining
+analytic step is to cancel the fixed-coordinate weight and derive the standard
+readable `Pr[canonical depth >= s] <= (5pt)^s`, including the zero-width and
+large-parameter cases already handled for the earlier nine-constant theorem.
