@@ -89,7 +89,8 @@ def RelativeBlocksHaveContinuingMismatch :
       RelativeBlockHasMismatch block ∧
         RelativeBlocksHaveContinuingMismatch (next :: rest)
 
-private def prependToFirstBlock
+/-- Prepend a query to the first block, creating that block when necessary. -/
+def prependToFirstBlock
     (query : α) : List (List α) → List (List α)
   | [] => [[query]]
   | block :: rest => (query :: block) :: rest

@@ -304,3 +304,14 @@ has a nonzero relative difference string. If all its bits were zero, the
 selected term would remain first surviving after its last live variable was
 fixed, contradicting the start of a later nonempty block. Packaging these raw
 blocks into the indexed `CombinedAdvice` type remains open.
+
+The combined canonical-packing submilestone passed the full gates on
+2026-09-03. Strictly ordered raw blocks are converted to finite position
+subsets and indexed difference functions; the proved nonzero condition is
+carried into every continuing `CombinedAdvice` block. Re-expansion is proved
+to synthesize exactly the elementary boundary transcript, with only the final
+closing marker cleared because replay ignores it. Consequently the existing
+replay-and-clear decoder is now a checked left inverse for combined advice on
+every bounded canonical path. The remaining switching-stage task is to replace
+the elementary total encoder by this combined encoder and apply the already
+proved `((5t - 1)/2)^s` cardinality bound in the weighted probability argument.

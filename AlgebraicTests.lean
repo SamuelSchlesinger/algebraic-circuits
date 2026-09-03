@@ -11,6 +11,7 @@ import AlgebraicTests.AC0CombinedAdvice
 import AlgebraicTests.AC0CanonicalEncoding
 import AlgebraicTests.AC0CombinedCanonicalEncoding
 import AlgebraicTests.AC0CombinedCanonicalTrace
+import AlgebraicTests.AC0CombinedCanonicalPacking
 import AlgebraicTests.AC0CanonicalSwitching
 import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation
