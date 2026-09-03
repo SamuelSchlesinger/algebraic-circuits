@@ -1,6 +1,7 @@
 import AlgebraicTests.Core
 import AlgebraicTests.Circuit
 import AlgebraicTests.CircuitFamily
+import AlgebraicTests.AC0
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds
 import AlgebraicTests.MassProduction

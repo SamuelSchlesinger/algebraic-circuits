@@ -51,7 +51,7 @@ theorem.
 | Milestone | Formal endpoint | Status |
 | --- | --- | --- |
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
-| AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Not started |
+| AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
 | Restrictions | Partial assignments, composition, and restricted semantics | Not started |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Not started |
 | Probability | Finite `p`-random restriction distribution | Not started |
@@ -78,3 +78,9 @@ The family milestone passed `lake build Algebraic AlgebraicTests --wfail`,
 resource lemmas use no axioms or only Lean's standard `propext`,
 `Classical.choice`, and `Quot.sound`; they do not use `sorryAx`, custom axioms,
 or executable proof certificates.
+
+The AC0 basis submilestone passed the same gates on 2026-09-03. The regression
+suite checks arbitrary-fan-in OR semantics, AND/OR cost, the distinction between
+generic depth and source logical depth, checked input-negation normal form, and
+a nonvacuous AC0 family computing disjunction. A normalization construction for
+arbitrary internal negations has not yet been proved.
