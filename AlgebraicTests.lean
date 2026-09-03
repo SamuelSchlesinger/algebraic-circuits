@@ -2,6 +2,7 @@ import AlgebraicTests.Core
 import AlgebraicTests.Circuit
 import AlgebraicTests.CircuitFamily
 import AlgebraicTests.AC0
+import AlgebraicTests.AC0NormalForm
 import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds

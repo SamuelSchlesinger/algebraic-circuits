@@ -1,3 +1,4 @@
+import Algebraic.LowerBound.AC0.NormalForm
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.Counting
 import Algebraic.LowerBound.GateElimination

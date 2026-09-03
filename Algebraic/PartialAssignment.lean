@@ -178,6 +178,20 @@ def liveVariables (rho : PartialAssignment n) : Finset (Fin n) :=
 def liveCount (rho : PartialAssignment n) : Nat :=
   rho.liveVariables.card
 
+/-- The finite set of variables fixed by a partial assignment. -/
+def fixedVariables (rho : PartialAssignment n) : Finset (Fin n) :=
+  Finset.univ.filter fun index => rho index ≠ none
+
+@[simp] theorem mem_fixedVariables
+    (rho : PartialAssignment n)
+    (index : Fin n) :
+    index ∈ rho.fixedVariables ↔ rho index ≠ none := by
+  simp [fixedVariables]
+
+/-- The number of variables fixed by a partial assignment. -/
+def fixedCount (rho : PartialAssignment n) : Nat :=
+  rho.fixedVariables.card
+
 @[simp] theorem liveVariables_empty :
     (empty : PartialAssignment n).liveVariables = Finset.univ := by
   apply Finset.ext
@@ -197,6 +211,32 @@ def liveCount (rho : PartialAssignment n) : Nat :=
 @[simp] theorem liveCount_total (input : Fin n -> Bool) :
     (total input).liveCount = 0 := by
   simp [liveCount]
+
+/-- Every variable is either live or fixed, but not both. -/
+theorem liveVariables_union_fixedVariables
+    (rho : PartialAssignment n) :
+    rho.liveVariables ∪ rho.fixedVariables = Finset.univ := by
+  apply Finset.ext
+  intro index
+  cases fixed : rho index <;> simp [fixed]
+
+/-- The live and fixed variable sets are disjoint. -/
+theorem disjoint_liveVariables_fixedVariables
+    (rho : PartialAssignment n) :
+    Disjoint rho.liveVariables rho.fixedVariables := by
+  rw [Finset.disjoint_left]
+  intro index live fixed
+  exact (mem_fixedVariables rho index).1 fixed
+    ((mem_liveVariables rho index).1 live)
+
+/-- Live and fixed variables partition the input coordinates exactly. -/
+theorem liveCount_add_fixedCount
+    (rho : PartialAssignment n) :
+    rho.liveCount + rho.fixedCount = n := by
+  rw [liveCount, fixedCount,
+    ← Finset.card_union_of_disjoint
+      (disjoint_liveVariables_fixedVariables rho),
+    liveVariables_union_fixedVariables, Finset.card_fin]
 
 /-- Fixing one variable removes exactly that variable from the live set. -/
 theorem liveVariables_fix

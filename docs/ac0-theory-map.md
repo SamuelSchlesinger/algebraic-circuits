@@ -53,7 +53,7 @@ theorem.
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantic layer validated 2026-09-03; circuit simplification open |
-| Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Not started |
+| Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Literal, term, clause, DNF, and CNF layers validated 2026-09-03; decision trees open |
 | Probability | Finite `p`-random restriction distribution | Not started |
 | Switching | Explicit finite switching lemma | Not started |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
@@ -91,3 +91,12 @@ sets and counts, conversion to `InputSubstitution`, restriction of scalar and
 multi-output targets, and the proof that restricted semantics depend only on
 live coordinates. Its public theorem audit uses no axioms beyond Lean's
 standard `propext`, `Classical.choice`, and `Quot.sound`.
+
+The literal-normal-form submilestone passed the same gates on 2026-09-03.
+Terms and clauses contain at most one signed occurrence of each variable by
+construction; outer DNF and CNF lists retain a deterministic order for the
+later canonical decision tree. Restriction is proved semantically exact for
+terms, clauses, DNF, and CNF, and is proved not to increase width. The audited
+headline theorems use no axioms beyond Lean's standard `propext`,
+`Classical.choice`, and `Quot.sound`. Decision trees are not part of this
+submilestone.
