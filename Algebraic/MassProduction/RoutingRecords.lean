@@ -88,59 +88,30 @@ def routingRecordSequence
     (fun padding =>
       packRecord (paddingKeys padding) true (paddingPayloads padding))
 
-/-- Unique matching in a left sequence remains unique after appending a
-right sequence with no matches. -/
+/-- Routing-namespace compatibility theorem for preserving a unique left
+match when a match-free right sequence is appended. -/
 theorem UniqueIndexWhere.append_left
     {left : Fin leftCount -> α}
     {right : Fin rightCount -> α}
     {predicate : α -> Prop}
     (uniqueLeft : UniqueIndexWhere left predicate)
     (noneRight : ∀ index, ¬predicate (right index)) :
-    UniqueIndexWhere (Fin.append left right) predicate := by
-  obtain ⟨leftIndex, leftMatches, leftOnly⟩ := uniqueLeft
-  refine ⟨Fin.castAdd rightCount leftIndex, ?_, ?_⟩
-  · simpa using leftMatches
-  · intro other otherMatches
-    refine Fin.addCases (motive := fun other =>
-      predicate (Fin.append left right other) ->
-        other = Fin.castAdd rightCount leftIndex)
-      (fun leftOther => by
-        intro hmatch
-        have equalLeft := leftOnly leftOther (by simpa using hmatch)
-        subst leftOther
-        rfl)
-      (fun rightOther => by
-        intro hmatch
-        exact False.elim (noneRight rightOther (by simpa using hmatch)))
-      other otherMatches
+    UniqueIndexWhere (Fin.append left right) predicate :=
+  Sorting.Semantics.UniqueIndexWhere.append_left uniqueLeft noneRight
 
-/-- The symmetric append rule for a unique match in the right sequence. -/
+/-- Routing-namespace compatibility theorem for the symmetric right-match
+append rule. -/
 theorem UniqueIndexWhere.append_right
     {left : Fin leftCount -> α}
     {right : Fin rightCount -> α}
     {predicate : α -> Prop}
     (noneLeft : ∀ index, ¬predicate (left index))
     (uniqueRight : UniqueIndexWhere right predicate) :
-    UniqueIndexWhere (Fin.append left right) predicate := by
-  obtain ⟨rightIndex, rightMatches, rightOnly⟩ := uniqueRight
-  refine ⟨Fin.natAdd leftCount rightIndex, ?_, ?_⟩
-  · simpa using rightMatches
-  · intro other otherMatches
-    refine Fin.addCases (motive := fun other =>
-      predicate (Fin.append left right other) ->
-        other = Fin.natAdd leftCount rightIndex)
-      (fun leftOther => by
-        intro hmatch
-        exact False.elim (noneLeft leftOther (by simpa using hmatch)))
-      (fun rightOther => by
-        intro hmatch
-        have equalRight := rightOnly rightOther (by simpa using hmatch)
-        subst rightOther
-        rfl)
-      other otherMatches
+    UniqueIndexWhere (Fin.append left right) predicate :=
+  Sorting.Semantics.UniqueIndexWhere.append_right noneLeft uniqueRight
 
-/-- Reindexing a finite sequence along an equality of lengths preserves its
-unique matching position. -/
+/-- Routing-namespace compatibility theorem for reindexing a unique match
+along an equality of lengths. -/
 theorem UniqueIndexWhere.cast
     {sequence : Fin leftCount -> α}
     {predicate : α -> Prop}
@@ -148,16 +119,8 @@ theorem UniqueIndexWhere.cast
     (countEquality : leftCount = rightCount) :
     UniqueIndexWhere
       (fun index : Fin rightCount =>
-        sequence (Fin.cast countEquality.symm index)) predicate := by
-  obtain ⟨index, indexMatches, indexOnly⟩ := unique
-  refine ⟨Fin.cast countEquality index, ?_, ?_⟩
-  · simpa using indexMatches
-  · intro other otherMatches
-    have castEquality := indexOnly (Fin.cast countEquality.symm other)
-      (by simpa using otherMatches)
-    apply Fin.ext
-    have valueEquality := congrArg Fin.val castEquality
-    simpa using valueEquality
+        sequence (Fin.cast countEquality.symm index)) predicate :=
+  Sorting.Semantics.UniqueIndexWhere.cast unique countEquality
 
 theorem sourceRecordSequence_unique
     (sourceKeys : Fin sourceCount -> Fin keyWidth -> Bool)

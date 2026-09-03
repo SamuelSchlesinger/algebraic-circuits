@@ -494,9 +494,9 @@ theorem sortedPredecessorCopyCircuit_routes_unique_key
     (input : Fin (networkBits depth
       (recordWidth keyWidth metadataWidth valueWidth)) -> Bool)
     (key : Fin keyWidth -> Bool)
-    (uniqueSource : Routing.UniqueIndexWhere (flatRecords input)
+    (uniqueSource : Sorting.Semantics.UniqueIndexWhere (flatRecords input)
       (Routing.recordHasKeyTag key false))
-    (uniqueDestination : Routing.UniqueIndexWhere (flatRecords input)
+    (uniqueDestination : Sorting.Semantics.UniqueIndexWhere (flatRecords input)
       (Routing.recordHasKeyTag key true)) :
     let sorted := bitonicSortBits
       (Routing.keyAndTagFitsRecord keyWidth (metadataWidth + valueWidth))
@@ -520,9 +520,9 @@ theorem sortedPredecessorCopyCircuit_routes_unique_key
       (Routing.keyAndTagFitsRecord keyWidth (metadataWidth + valueWidth))
       depth true input
   have uniqueSourceSorted :=
-    Routing.UniqueIndexWhere.of_flatRecordsPermute recordsPermute uniqueSource
+    Sorting.FlatRecordsPermute.uniqueIndexWhere recordsPermute uniqueSource
   have uniqueDestinationSorted :=
-    Routing.UniqueIndexWhere.of_flatRecordsPermute recordsPermute
+    Sorting.FlatRecordsPermute.uniqueIndexWhere recordsPermute
       uniqueDestination
   obtain ⟨sourceInput, sourceInputMatches, sourceInputOnly⟩ := uniqueSource
   obtain ⟨sourceSorted, sourceSortedMatches, sourceSortedOnly⟩ :=

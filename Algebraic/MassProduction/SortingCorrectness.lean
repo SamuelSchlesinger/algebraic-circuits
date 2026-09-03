@@ -83,6 +83,16 @@ theorem FlatRecordsPermute.rangeContained
     SequenceRangeContained (flatRecords output) (flatRecords input) :=
   SequencePermutes.rangeContained permuted
 
+/-- A complete-record permutation preserves unique satisfaction of every
+record predicate. -/
+theorem FlatRecordsPermute.uniqueIndexWhere
+    {output input : Fin (networkBits depth recordWidth) -> Bool}
+    {predicate : (Fin recordWidth -> Bool) -> Prop}
+    (permuted : FlatRecordsPermute output input)
+    (uniqueInput : UniqueIndexWhere (flatRecords input) predicate) :
+    UniqueIndexWhere (flatRecords output) predicate :=
+  UniqueIndexWhere.of_sequencePermutes permuted uniqueInput
+
 private theorem flatRecords_firstHalfBits
     (input : Fin (networkBits (depth + 1) recordWidth) -> Bool) :
     flatRecords (firstHalfBits input) =

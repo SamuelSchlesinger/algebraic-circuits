@@ -691,7 +691,7 @@ theorem routingRecordSequence_unique_order_header
     (paddingTails : Fin paddingCount -> Fin orderWidth -> Bool)
     (paddingValues : Fin paddingCount -> Fin valueWidth -> Bool)
     (target : Fin destinationCount) :
-    Routing.UniqueIndexWhere
+    Sorting.Semantics.UniqueIndexWhere
       (Routing.routingRecordSequence sourceKeys
         (fun source => Fin.append (sourceMetadata source)
           (sourceValues source))
@@ -727,8 +727,8 @@ theorem routingRecordSequence_unique_order_header
         (sourceRecords source) targetBits).mp sourceMatches).1
     simp [sourceRecords] at tagMatches
   have uniqueDestination :
-      Routing.UniqueIndexWhere destinationRecords predicate := by
-    unfold Routing.UniqueIndexWhere
+      Sorting.Semantics.UniqueIndexWhere destinationRecords predicate := by
+    unfold Sorting.Semantics.UniqueIndexWhere
     refine ⟨target, ?_, ?_⟩
     · refine (complementedRecordHeader_eq_activeDestinationHeader_iff
         (destinationRecords target) targetBits).mpr ?_
@@ -768,10 +768,10 @@ theorem routingRecordSequence_unique_order_header
     exact paddingRoutingKey_ne_activeRoutingKey
       (paddingTails padding) targetBits metadataEquality
   unfold Routing.routingRecordSequence
-  change Routing.UniqueIndexWhere
+  change Sorting.Semantics.UniqueIndexWhere
     (Fin.append (Fin.append sourceRecords destinationRecords)
       paddingRecords) predicate
-  exact (Routing.UniqueIndexWhere.append_right noSource
+  exact (Sorting.Semantics.UniqueIndexWhere.append_right noSource
     uniqueDestination).append_left noPadding
 
 /-- Exact-capacity casting and flattening retain the unique canonical
@@ -798,7 +798,7 @@ theorem routingInputBits_unique_order_header
       paddingKeys
       (fun padding => Fin.append (paddingRoutingKey (paddingTails padding))
         (paddingValues padding)) recordCount
-    Routing.UniqueIndexWhere (flatRecords input)
+    Sorting.Semantics.UniqueIndexWhere (flatRecords input)
       (fun record => complementedRecordHeader record =
         CanonicalRouting.activeDestinationHeader
           (lexBitVectorAt (Fin.castLE destinationFits target))) := by
@@ -856,7 +856,7 @@ theorem matchedCanonicalRoutingBits_fixed_header
     (orderWidth + 1) valueWidth input
   let targetHeader := CanonicalRouting.activeDestinationHeader
     (lexBitVectorAt (Fin.castLE destinationFits target))
-  have uniqueInitialHeader : Routing.UniqueIndexWhere
+  have uniqueInitialHeader : Sorting.Semantics.UniqueIndexWhere
       (fun record => complementedRecordHeader (flatRecords input record))
       (fun header => header = targetHeader) := by
     exact routingInputBits_unique_order_header destinationFits sourceKeys
@@ -866,7 +866,8 @@ theorem matchedCanonicalRoutingBits_fixed_header
       (fun record => recordHeader (flatRecords output record))
       (fun record => complementedRecordHeader (flatRecords input record)) := by
     exact matchedCanonicalHeadersPermute input
-  have uniqueOutputHeader := Routing.UniqueIndexWhere.of_sequencePermutes
+  have uniqueOutputHeader :=
+    Sorting.Semantics.UniqueIndexWhere.of_sequencePermutes
     headersPermute uniqueInitialHeader
   obtain ⟨outputIndex, outputMatches, outputOnly⟩ := uniqueOutputHeader
   have outputIncreasing : Semantics.SequenceIncreasing
@@ -1005,13 +1006,14 @@ theorem matchedCanonicalRoutingBits_fixed_value
     exact bitonicSortBits_recordsPermute
       (Routing.keyAndTagFitsRecord keyWidth
         ((orderWidth + 1) + valueWidth)) depth true input
-  have uniqueInitialHeader : Routing.UniqueIndexWhere
+  have uniqueInitialHeader : Sorting.Semantics.UniqueIndexWhere
       (fun record => complementedRecordHeader (flatRecords input record))
       (fun header => header = targetHeader) := by
     exact routingInputBits_unique_order_header destinationFits sourceKeys
       sourceMetadata sourceValues destinationKeys destinationValues paddingKeys
       paddingTails paddingValues recordCount target
-  have uniqueSortedHeader := Routing.UniqueIndexWhere.of_sequencePermutes
+  have uniqueSortedHeader :=
+    Sorting.Semantics.UniqueIndexWhere.of_sequencePermutes
     (Semantics.SequencePermutes.map complementedRecordHeader
       initiallySortedPermutes)
     uniqueInitialHeader
@@ -1020,7 +1022,7 @@ theorem matchedCanonicalRoutingBits_fixed_value
   have uniqueSourceRaw := Routing.routingInputBits_unique_source sourceKeys
     sourcePayloads destinationKeys destinationPayloads paddingKeys
     paddingPayloads sourceKeysInjective recordCount (sourceFor target)
-  have uniqueSource : Routing.UniqueIndexWhere (flatRecords input)
+  have uniqueSource : Sorting.Semantics.UniqueIndexWhere (flatRecords input)
       (Routing.recordHasKeyTag (destinationKeys target) false) := by
     simpa only [matchingKey target] using uniqueSourceRaw
   have uniqueDestination := Routing.routingInputBits_unique_destination

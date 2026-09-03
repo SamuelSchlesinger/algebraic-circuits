@@ -815,7 +815,7 @@ theorem matchedCanonicalRoutingBits_fullDest_fixed_header
     destinationPayloads
     (fun padding => paddingRoutingKey (paddingTails padding))
     paddingPayloads destinationKeyInjective paddingAvoids recordCount target
-  have uniqueInitialHeader : Routing.UniqueIndexWhere
+  have uniqueInitialHeader : Sorting.Semantics.UniqueIndexWhere
       (fun record => complementedRecordHeader (flatRecords input record))
       (fun header => header = targetHeader) := by
     obtain ⟨index, indexMatches, indexOnly⟩ := uniqueInitialRecord
@@ -830,7 +830,8 @@ theorem matchedCanonicalRoutingBits_fullDest_fixed_header
       (fun record => recordHeader (flatRecords output record))
       (fun record => complementedRecordHeader (flatRecords input record)) := by
     exact canonicalMatchedHeadersPermuteCore input
-  have uniqueOutputHeader := Routing.UniqueIndexWhere.of_sequencePermutes
+  have uniqueOutputHeader :=
+    Sorting.Semantics.UniqueIndexWhere.of_sequencePermutes
     headersPermute uniqueInitialHeader
   obtain ⟨outputIndex, outputMatches, outputOnly⟩ := uniqueOutputHeader
   have outputIncreasing : Semantics.SequenceIncreasing

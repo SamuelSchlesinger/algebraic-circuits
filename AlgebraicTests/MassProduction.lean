@@ -212,6 +212,18 @@ example
   exact Sorting.bitonicSortCircuit_recordsPermute
     (by omega) 2 true input
 
+/-- Generic uniqueness transport is exposed by sorting semantics rather than
+the routing implementation that first needed it. -/
+example
+    {alpha : Type*}
+    {output input : Fin 4 -> alpha}
+    {predicate : alpha -> Prop}
+    (permuted : Sorting.Semantics.SequencePermutes output input)
+    (uniqueInput :
+      Sorting.Semantics.UniqueIndexWhere input predicate) :
+    Sorting.Semantics.UniqueIndexWhere output predicate :=
+  uniqueInput.of_sequencePermutes permuted
+
 /-- The four-record instance exposes the proved polynomial cost ledger. -/
 example :
     (Sorting.bitonicSortCircuit (by omega : 1 <= 2) 2 true).cost

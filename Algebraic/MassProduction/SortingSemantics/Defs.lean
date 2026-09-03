@@ -48,6 +48,85 @@ def SequencePermutes {n : ℕ}
     (output input : Fin n → α) : Prop :=
   (List.ofFn output).Perm (List.ofFn input)
 
+/-- Exactly one position of a finite sequence satisfies a predicate. -/
+def UniqueIndexWhere
+    (sequence : Fin n -> α)
+    (predicate : α -> Prop) : Prop :=
+  ∃ index, predicate (sequence index) ∧
+    ∀ other, predicate (sequence other) -> other = index
+
+/-- The positions of a finite sequence satisfying a predicate.  Classical
+decidability is confined to the value of this definition. -/
+noncomputable def matchingIndices
+    (sequence : Fin n -> α)
+    (predicate : α -> Prop) : Finset (Fin n) := by
+  classical
+  exact Finset.univ.filter fun index => predicate (sequence index)
+
+/-- Boolean reflection of a predicate, with the chosen decision procedure
+kept out of theorem signatures. -/
+noncomputable def predicateBit
+    (predicate : α -> Prop) (value : α) : Bool := by
+  classical
+  exact decide (predicate value)
+
+/-- Unique satisfaction is equivalent to the matching-position set having
+cardinality one. -/
+theorem UniqueIndexWhere.iff_matchingIndices_card_eq_one
+    (sequence : Fin n -> α)
+    (predicate : α -> Prop) :
+    UniqueIndexWhere sequence predicate ↔
+      (matchingIndices sequence predicate).card = 1 := by
+  classical
+  unfold matchingIndices
+  constructor
+  · rintro ⟨index, indexMatches, unique⟩
+    apply Finset.card_eq_one.mpr
+    refine ⟨index, ?_⟩
+    ext other
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and,
+      Finset.mem_singleton]
+    constructor
+    · exact unique other
+    · intro equal
+      subst other
+      exact indexMatches
+  · intro cardOne
+    obtain ⟨index, filteredEquality⟩ := Finset.card_eq_one.mp cardOne
+    have indexMember : predicate (sequence index) := by
+      have : index ∈ Finset.univ.filter fun position =>
+          predicate (sequence position) := by
+        rw [filteredEquality]
+        exact Finset.mem_singleton_self index
+      simpa using this
+    refine ⟨index, indexMember, ?_⟩
+    intro other otherMatches
+    have otherMember : other ∈ Finset.univ.filter fun position =>
+        predicate (sequence position) := by
+      simp [otherMatches]
+    rw [filteredEquality] at otherMember
+    simpa using otherMember
+
+/-- Counting true predicate bits agrees with counting matching positions. -/
+theorem countP_predicateBit_eq_matchingIndices_card
+    (sequence : Fin n -> α)
+    (predicate : α -> Prop) :
+    (List.ofFn sequence).countP (predicateBit predicate) =
+      (matchingIndices sequence predicate).card := by
+  classical
+  unfold predicateBit matchingIndices
+  induction n with
+  | zero => simp
+  | succ prior inductionHypothesis =>
+      rw [List.ofFn_succ, List.countP_cons]
+      rw [Fin.card_filter_univ_succ']
+      by_cases headMatches : predicate (sequence 0)
+      · simp [headMatches,
+          inductionHypothesis (fun index => sequence index.succ),
+          Nat.add_comm]
+      · simp [headMatches,
+          inductionHypothesis (fun index => sequence index.succ)]
+
 namespace SequenceRangeContained
 
 /-- Range containment is transitive. -/
@@ -104,12 +183,113 @@ theorem rangeContained {n : ℕ} {output input : Fin n -> α}
     (List.mem_ofFn' input (output outputIndex)).mp inputMember
   exact ⟨inputIndex, equality.symm⟩
 
+/-- A permutation preserves the number of positions satisfying a predicate. -/
+theorem matchingIndices_card_eq {n : ℕ} {output input : Fin n -> α}
+    (permuted : SequencePermutes output input)
+    (predicate : α -> Prop) :
+    (matchingIndices output predicate).card =
+      (matchingIndices input predicate).card := by
+  have counts := permuted.countP_eq (predicateBit predicate)
+  rw [countP_predicateBit_eq_matchingIndices_card,
+    countP_predicateBit_eq_matchingIndices_card] at counts
+  exact counts
+
 end SequencePermutes
+
+namespace UniqueIndexWhere
+
+/-- A sequence permutation preserves unique satisfaction of a predicate. -/
+theorem of_sequencePermutes
+    {output input : Fin n -> α}
+    {predicate : α -> Prop}
+    (permuted : SequencePermutes output input)
+    (uniqueInput : UniqueIndexWhere input predicate) :
+    UniqueIndexWhere output predicate := by
+  rw [iff_matchingIndices_card_eq_one] at uniqueInput ⊢
+  exact (permuted.matchingIndices_card_eq predicate).trans uniqueInput
+
+/-- Reindexing a finite sequence along an equality of lengths preserves its
+unique matching position. -/
+theorem cast
+    {sequence : Fin leftCount -> α}
+    {predicate : α -> Prop}
+    (unique : UniqueIndexWhere sequence predicate)
+    (countEquality : leftCount = rightCount) :
+    UniqueIndexWhere
+      (fun index : Fin rightCount =>
+        sequence (Fin.cast countEquality.symm index)) predicate := by
+  obtain ⟨index, indexMatches, indexOnly⟩ := unique
+  refine ⟨Fin.cast countEquality index, ?_, ?_⟩
+  · simpa using indexMatches
+  · intro other otherMatches
+    have castEquality := indexOnly (Fin.cast countEquality.symm other)
+      (by simpa using otherMatches)
+    apply Fin.ext
+    have valueEquality := congrArg Fin.val castEquality
+    simpa using valueEquality
+
+end UniqueIndexWhere
 
 /-- Concatenation of two finite sequences. -/
 def appendSequence {n m : ℕ}
     (first : Fin n → α) (second : Fin m → α) : Fin (n + m) → α :=
   Fin.append first second
+
+namespace UniqueIndexWhere
+
+/-- A unique match in the left sequence remains unique after appending a
+right sequence with no matches. -/
+theorem append_left
+    {left : Fin leftCount -> α}
+    {right : Fin rightCount -> α}
+    {predicate : α -> Prop}
+    (uniqueLeft : UniqueIndexWhere left predicate)
+    (noneRight : ∀ index, ¬predicate (right index)) :
+    UniqueIndexWhere (Fin.append left right) predicate := by
+  obtain ⟨leftIndex, leftMatches, leftOnly⟩ := uniqueLeft
+  refine ⟨Fin.castAdd rightCount leftIndex, ?_, ?_⟩
+  · simpa using leftMatches
+  · intro other otherMatches
+    refine Fin.addCases (motive := fun other =>
+      predicate (Fin.append left right other) ->
+        other = Fin.castAdd rightCount leftIndex)
+      (fun leftOther => by
+        intro hmatch
+        have equalLeft := leftOnly leftOther (by simpa using hmatch)
+        subst leftOther
+        rfl)
+      (fun rightOther => by
+        intro hmatch
+        exact False.elim (noneRight rightOther (by simpa using hmatch)))
+      other otherMatches
+
+/-- A unique match in the right sequence remains unique after prepending a
+left sequence with no matches. -/
+theorem append_right
+    {left : Fin leftCount -> α}
+    {right : Fin rightCount -> α}
+    {predicate : α -> Prop}
+    (noneLeft : ∀ index, ¬predicate (left index))
+    (uniqueRight : UniqueIndexWhere right predicate) :
+    UniqueIndexWhere (Fin.append left right) predicate := by
+  obtain ⟨rightIndex, rightMatches, rightOnly⟩ := uniqueRight
+  refine ⟨Fin.natAdd leftCount rightIndex, ?_, ?_⟩
+  · simpa using rightMatches
+  · intro other otherMatches
+    refine Fin.addCases (motive := fun other =>
+      predicate (Fin.append left right other) ->
+        other = Fin.natAdd leftCount rightIndex)
+      (fun leftOther => by
+        intro hmatch
+        exact False.elim (noneLeft leftOther (by simpa using hmatch)))
+      (fun rightOther => by
+        intro hmatch
+        have equalRight := rightOnly rightOther (by simpa using hmatch)
+        subst rightOther
+        rfl)
+      other otherMatches
+
+end UniqueIndexWhere
 
 namespace SequencePermutes
 

@@ -190,7 +190,8 @@ theorem canonicalFullScatterBits_routes_incidence
     (fun _ => incidencePaddingKey groupBitWidth dimension width)
     paddingPayload destinationKeyInjective paddingAvoids recordCount
     destination
-  have uniqueInitialAtInput : Routing.UniqueIndexWhere (flatRecords input)
+  have uniqueInitialAtInput :
+      Sorting.Semantics.UniqueIndexWhere (flatRecords input)
       (Routing.recordHasKeyTag
         (activeRoutingKey (lexBitVectorAt destination)) true) := by
     simpa [input, fullScatterRoutingInputBits,
@@ -201,7 +202,7 @@ theorem canonicalFullScatterBits_routes_incidence
         (incidenceKeyWidth groupBitWidth dimension width) payloadWidth)
       routingDepth true input
   have uniqueInitiallySorted :=
-    Routing.UniqueIndexWhere.of_flatRecordsPermute initiallySortedPermutes
+    Sorting.FlatRecordsPermute.uniqueIndexWhere initiallySortedPermutes
       uniqueInitialAtInput
   obtain ⟨uniqueIndex, uniqueIndexMatches, uniqueIndexOnly⟩ :=
     uniqueInitiallySorted

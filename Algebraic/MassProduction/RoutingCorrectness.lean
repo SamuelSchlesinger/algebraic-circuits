@@ -20,82 +20,55 @@ open Sorting.Semantics
 
 /-! ## Transporting unique records through a sorting permutation -/
 
-/-- Exactly one position of a finite sequence satisfies a predicate. -/
-def UniqueIndexWhere
+/-- Routing-namespace compatibility alias for the generic finite-sequence
+uniqueness predicate. -/
+abbrev UniqueIndexWhere
     (sequence : Fin n -> α)
     (predicate : α -> Prop) : Prop :=
-  ∃ index, predicate (sequence index) ∧
-    ∀ other, predicate (sequence other) -> other = index
+  Sorting.Semantics.UniqueIndexWhere sequence predicate
 
-/-- Matching positions, with classical decidability confined to this
-definition rather than exported through theorem signatures. -/
+/-- Routing-namespace compatibility definition for generic matching
+positions. -/
 noncomputable def matchingIndices
     (sequence : Fin n -> α)
     (predicate : α -> Prop) : Finset (Fin n) := by
   classical
   exact Finset.univ.filter fun index => predicate (sequence index)
 
-/-- Boolean reflection of an arbitrary predicate, again keeping the chosen
-decision procedure local. -/
+/-- Routing-namespace compatibility definition for generic predicate
+reflection. -/
 noncomputable def predicateBit
     (predicate : α -> Prop) (value : α) : Bool := by
   classical
   exact decide (predicate value)
 
+/-- Routing-namespace compatibility theorem for unique matching positions. -/
 theorem uniqueIndexWhere_iff_filter_card_eq_one
     (sequence : Fin n -> α)
     (predicate : α -> Prop) :
     UniqueIndexWhere sequence predicate ↔
       (matchingIndices sequence predicate).card = 1 := by
-  classical
-  unfold matchingIndices
-  constructor
-  · rintro ⟨index, indexMatches, unique⟩
-    apply Finset.card_eq_one.mpr
-    refine ⟨index, ?_⟩
-    ext other
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and,
-      Finset.mem_singleton]
-    constructor
-    · exact unique other
-    · intro equal
-      subst other
-      exact indexMatches
-  · intro cardOne
-    obtain ⟨index, filteredEquality⟩ := Finset.card_eq_one.mp cardOne
-    have indexMember : predicate (sequence index) := by
-      have : index ∈ Finset.univ.filter fun position =>
-          predicate (sequence position) := by
-        rw [filteredEquality]
-        exact Finset.mem_singleton_self index
-      simpa using this
-    refine ⟨index, indexMember, ?_⟩
-    intro other otherMatches
-    have otherMember : other ∈ Finset.univ.filter fun position =>
-        predicate (sequence position) := by
-      simp [otherMatches]
-    rw [filteredEquality] at otherMember
-    simpa using otherMember
+  simpa [UniqueIndexWhere, Sorting.Semantics.UniqueIndexWhere,
+    matchingIndices, Sorting.Semantics.matchingIndices] using
+      (Sorting.Semantics.UniqueIndexWhere.iff_matchingIndices_card_eq_one
+        sequence predicate)
 
+/-- Routing-namespace compatibility theorem for predicate counting. -/
 theorem countP_ofFn_eq_filter_card
     (sequence : Fin n -> α)
     (predicate : α -> Prop) :
     (List.ofFn sequence).countP
-        (predicateBit predicate) =
+      (predicateBit predicate) =
       (matchingIndices sequence predicate).card := by
-  classical
-  unfold predicateBit matchingIndices
-  induction n with
-  | zero => simp
-  | succ prior inductionHypothesis =>
-      rw [List.ofFn_succ, List.countP_cons]
-      rw [Fin.card_filter_univ_succ']
-      by_cases headMatches : predicate (sequence 0)
-      · simp [headMatches,
-          inductionHypothesis (fun index => sequence index.succ),
-          Nat.add_comm]
-      · simp [headMatches,
-          inductionHypothesis (fun index => sequence index.succ)]
+  have predicateBitsEqual :
+      predicateBit predicate = Sorting.Semantics.predicateBit predicate := by
+    funext value
+    by_cases holds : predicate value <;>
+      simp [predicateBit, Sorting.Semantics.predicateBit, holds]
+  rw [predicateBitsEqual]
+  simpa [matchingIndices, Sorting.Semantics.matchingIndices] using
+    (Sorting.Semantics.countP_predicateBit_eq_matchingIndices_card
+      sequence predicate)
 
 /-- A complete-record permutation preserves the property that exactly one
 record position satisfies any fixed predicate. -/
@@ -105,14 +78,9 @@ theorem UniqueIndexWhere.of_sequencePermutes
     (permuted : SequencePermutes output input)
     (uniqueInput : UniqueIndexWhere input predicate) :
     UniqueIndexWhere output predicate := by
-  classical
-  rw [uniqueIndexWhere_iff_filter_card_eq_one] at uniqueInput ⊢
-  unfold SequencePermutes at permuted
-  have counts := permuted.countP_eq
-    (predicateBit predicate)
-  rw [countP_ofFn_eq_filter_card,
-    countP_ofFn_eq_filter_card] at counts
-  exact counts.trans uniqueInput
+  simpa [UniqueIndexWhere, Sorting.Semantics.UniqueIndexWhere] using
+    (Sorting.Semantics.UniqueIndexWhere.of_sequencePermutes
+      permuted uniqueInput)
 
 /-- Packed sorting therefore transports unique complete-record predicates. -/
 theorem UniqueIndexWhere.of_flatRecordsPermute
@@ -121,8 +89,8 @@ theorem UniqueIndexWhere.of_flatRecordsPermute
     (permuted : FlatRecordsPermute output input)
     (uniqueInput : UniqueIndexWhere (flatRecords input) predicate) :
     UniqueIndexWhere (flatRecords output) predicate := by
-  unfold FlatRecordsPermute at permuted
-  exact uniqueInput.of_sequencePermutes permuted
+  simpa [UniqueIndexWhere, Sorting.Semantics.UniqueIndexWhere] using
+    (Sorting.FlatRecordsPermute.uniqueIndexWhere permuted uniqueInput)
 
 /-- Routing-namespace compatibility theorem for the generic sequence result. -/
 theorem SequencePermutes.rangeContained
@@ -522,9 +490,10 @@ theorem sortedPredecessorCopyCircuit_routes_unique_key
     bitonicSortBits_recordsPermute
       (keyAndTagFitsRecord keyWidth payloadWidth) depth true input
   have uniqueSourceSorted :=
-    UniqueIndexWhere.of_flatRecordsPermute recordsPermute uniqueSource
+    Sorting.FlatRecordsPermute.uniqueIndexWhere recordsPermute uniqueSource
   have uniqueDestinationSorted :=
-    UniqueIndexWhere.of_flatRecordsPermute recordsPermute uniqueDestination
+    Sorting.FlatRecordsPermute.uniqueIndexWhere recordsPermute
+      uniqueDestination
   obtain ⟨sourceInput, sourceInputMatches, sourceInputOnly⟩ := uniqueSource
   obtain ⟨sourceSorted, sourceSortedMatches, sourceSortedOnly⟩ :=
     uniqueSourceSorted
