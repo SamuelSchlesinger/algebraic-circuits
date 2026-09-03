@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality, restriction compatibility, and semantic depth invariance validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Finite-family switching union bound validated 2026-09-03; gate extraction open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Finite-family union bound and literal-gate normal forms validated 2026-09-03; gate extraction open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -373,3 +373,12 @@ exact finite union bound over the single-formula theorem. It is not advertised
 as the stronger multi-switching lemma, since it does not construct one common
 decision tree for all formulas. The next obligation is to extract the bottom
 normal-form gates of an alternating AC0 circuit into such a finite family.
+
+The literal-input gate conversion passed the full gates on 2026-09-03. A
+finite family of signed literals is represented by one term or clause when
+repeated coordinates agree. If opposite signs occur, the conjunction is
+proved constantly false and the disjunction constantly true. Both conversions
+are semantically exact for arbitrary fan-in and have width at most that
+fan-in. This closes the duplicate/opposite-literal edge case needed before
+extracting bottom gates from the shared circuit DAG; it does not enumerate
+truth tables or search for a smaller normal form.
