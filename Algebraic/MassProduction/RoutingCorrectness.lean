@@ -57,8 +57,8 @@ theorem countP_ofFn_eq_filter_card
   Sorting.Semantics.countP_predicateBit_eq_matchingIndices_card
     sequence predicate
 
-/-- A complete-record permutation preserves the property that exactly one
-record position satisfies any fixed predicate. -/
+/-- Routing-namespace compatibility theorem for transporting a unique match
+through a finite-sequence permutation. -/
 theorem UniqueIndexWhere.of_sequencePermutes
     {output input : Fin n -> α}
     {predicate : α -> Prop}
@@ -69,7 +69,8 @@ theorem UniqueIndexWhere.of_sequencePermutes
     (Sorting.Semantics.UniqueIndexWhere.of_sequencePermutes
       permuted uniqueInput)
 
-/-- Packed sorting therefore transports unique complete-record predicates. -/
+/-- Routing-namespace compatibility theorem for transporting a unique record
+predicate through packed sorting. -/
 theorem UniqueIndexWhere.of_flatRecordsPermute
     {output input : Fin (networkBits depth packedWidth) -> Bool}
     {predicate : (Fin packedWidth -> Bool) -> Prop}

@@ -94,7 +94,7 @@ resource bound, plus the fully explicit overhead. -/
       suffixWidth schedulerDepth groupBitWidth orderWidth scatterDepth
       gatherDepth
 
-theorem sum_resource_cost_le
+private theorem sum_resource_cost_le
     (gateCounts : Fin (resourceBitCount dimension width) -> Nat)
     (resourceCircuits : forall member,
       Circuit DeMorgan.signature (groups * suffixWidth)

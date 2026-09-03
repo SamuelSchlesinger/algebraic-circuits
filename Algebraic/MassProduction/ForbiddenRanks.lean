@@ -465,7 +465,6 @@ theorem freshDirectionFromDifferencesCircuit_sound_of_nonzero_capacity
     (capacity : (nonzeroVectorIndices input).card <
       Nat.card (ℙ (BinaryExtension width)
         (Fin dimension -> BinaryExtension width))) :
-    let _ := Fintype.ofFinite (BinaryExtension width)
     ∃ direction : ℙ (BinaryExtension width)
         (Fin dimension -> BinaryExtension width),
       (freshDirectionFromDifferencesCircuit
@@ -550,7 +549,6 @@ theorem freshDirectionFromDifferencesCircuit_sound
     (capacity : networkRecords depth <
       Nat.card (ℙ (BinaryExtension width)
         (Fin dimension -> BinaryExtension width))) :
-    let _ := Fintype.ofFinite (BinaryExtension width)
     ∃ direction : ℙ (BinaryExtension width)
         (Fin dimension -> BinaryExtension width),
       (freshDirectionFromDifferencesCircuit

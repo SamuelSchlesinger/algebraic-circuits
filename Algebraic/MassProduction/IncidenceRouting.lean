@@ -113,8 +113,9 @@ theorem scheduledIncidenceSlot_injective
     have notRight := (Finset.disjoint_left.mp disjoint) leftMember
     exact False.elim (notRight (samePoint ▸ rightMember))
 
-/-- Canonical finite enumeration of all resource slots.  It uses the
-existing `Finite` structure without installing a `Fintype` instance. -/
+/-- A fixed finite enumeration of all resource slots.  The particular order
+is irrelevant here; it reuses the existing `Finite` structure without
+installing a `Fintype` instance. -/
 noncomputable def resourceSlotEquiv
     (groups dimension width : Nat) :
     ResourceSlot groups dimension width ≃
