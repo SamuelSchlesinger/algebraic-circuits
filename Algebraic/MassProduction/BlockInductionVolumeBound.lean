@@ -14,8 +14,6 @@ namespace BlockInduction
 
 open CodeParameters
 open GroupedScheduler
-open LineEnumeration
-open Sorting
 
 /-! ## Strict exponent margin for the complete overhead -/
 

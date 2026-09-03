@@ -14,9 +14,6 @@ namespace MassProduction
 namespace BlockInduction
 
 open CodeParameters
-open GroupedScheduler
-open LineEnumeration
-open Sorting
 
 /-! ## Padding arbitrary widths to equal blocks -/
 

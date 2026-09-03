@@ -14,8 +14,6 @@ namespace BlockInduction
 
 open CodeParameters
 open GroupedScheduler
-open LineEnumeration
-open Sorting
 
 /-! ## Recursive resource bank -/
 

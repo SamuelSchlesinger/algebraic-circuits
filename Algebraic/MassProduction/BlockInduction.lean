@@ -16,11 +16,6 @@ namespace Algebraic
 namespace MassProduction
 namespace BlockInduction
 
-open CodeParameters
-open GroupedScheduler
-open LineEnumeration
-open Sorting
-
 /-! ## Iterating the equal-block step -/
 
 /-- Level `k` of the manuscript induction: all rational rates strictly below

@@ -13,9 +13,6 @@ namespace MassProduction
 namespace BlockInduction
 
 open CodeParameters
-open GroupedScheduler
-open LineEnumeration
-open Sorting
 
 /-! ## Absorbing the polynomial ledger -/
 

@@ -14,8 +14,6 @@ namespace BlockInduction
 
 open CodeParameters
 open GroupedScheduler
-open LineEnumeration
-open Sorting
 
 /-- The recovery-code dimension used at every non-base induction step. -/
 def stepDimension (denominator : Nat) : Nat :=
