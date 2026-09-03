@@ -8,6 +8,7 @@ import Algebraic.LowerBound.AC0.Layer
 import Algebraic.LowerBound.AC0.LayerFormula
 import Algebraic.LowerBound.AC0.CanonicalDecisionTree
 import Algebraic.LowerBound.AC0.RandomRestriction
+import Algebraic.LowerBound.AC0.RestrictionAveraging
 import Algebraic.LowerBound.AC0.Switching.Encoding
 import Algebraic.LowerBound.AC0.Switching.CombinedAdvice
 import Algebraic.LowerBound.AC0.Switching.CanonicalEncoding

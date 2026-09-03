@@ -79,7 +79,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
-| Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
+| Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Charged-size one-step semantic layer advancement proved with failure at most `S(5pt)^(t+1)`; iteration open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
@@ -97,6 +97,17 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The live-variable averaging submilestone passed the full gates on 2026-09-03.
+Each coordinate is proved live with probability exactly `p`, and finite
+linearity gives
+`E[liveCount (rho.refine sigma)] = p * liveCount rho` exactly. Splitting this
+first moment across an arbitrary bad event of probability at most `delta`
+proves that, whenever `delta*m + k < p*m`, some good refinement of a state
+with `m` live variables retains at least `k`. This is an exact finite
+averaging argument, not a sampler, concentration heuristic, optimizer, or
+finite circuit search. The audited public theorems use no axioms beyond
+Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The family milestone passed `lake build Algebraic AlgebraicTests --wfail`,
 `lake test`, `lake lint`, and `git diff --check` on 2026-09-03. Its public

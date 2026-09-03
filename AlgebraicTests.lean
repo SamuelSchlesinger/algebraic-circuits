@@ -14,6 +14,7 @@ import AlgebraicTests.AC0LiteralGate
 import AlgebraicTests.AC0BottomGate
 import AlgebraicTests.AC0BottomFamily
 import AlgebraicTests.AC0RandomRestriction
+import AlgebraicTests.AC0RestrictionAveraging
 import AlgebraicTests.AC0SwitchingEncoding
 import AlgebraicTests.AC0CombinedAdvice
 import AlgebraicTests.AC0CanonicalEncoding
