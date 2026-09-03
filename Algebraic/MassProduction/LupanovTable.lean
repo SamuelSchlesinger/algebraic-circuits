@@ -1,5 +1,5 @@
 import Algebraic.MassProduction.CodeParameters
-import Algebraic.MassProduction.ShannonSynthesis
+import Algebraic.MassProduction.ShannonCircuit
 import Mathlib.Data.Fintype.EquivFin
 
 /-!

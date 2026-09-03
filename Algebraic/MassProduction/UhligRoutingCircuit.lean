@@ -1,6 +1,6 @@
 import Algebraic.Basis.DeMorgan.Arithmetic
 import Algebraic.MassProduction.InputSplit
-import Algebraic.MassProduction.ShannonSynthesis
+import Algebraic.MassProduction.ShannonCircuit
 import Algebraic.MassProduction.Uhlig
 
 /-!
