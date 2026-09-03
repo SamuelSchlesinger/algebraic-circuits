@@ -29,6 +29,24 @@ example
     (rho.refine sigma).apply input = rho.apply (sigma.apply input) :=
   PartialAssignment.apply_refine rho sigma input
 
+example
+    (rho extension : PartialAssignment 4)
+    (newFixes : extension.fixedVariables ⊆ rho.liveVariables) :
+    (rho.refine extension).clear extension.fixedVariables = rho :=
+  PartialAssignment.clear_refine_fixedVariables rho extension newFixes
+
+example
+    (rho tail : PartialAssignment 4)
+    (selected : Fin 4)
+    (pathValue satisfyingValue : Bool)
+    (live : rho selected = none) :
+    (PartialAssignment.fix selected pathValue).refine
+        (rho.refine
+          ((PartialAssignment.fix selected satisfyingValue).refine tail)) =
+      (rho.refine (PartialAssignment.fix selected pathValue)).refine tail :=
+  PartialAssignment.fix_refine_refine_fix rho tail selected
+    pathValue satisfyingValue live
+
 def firstBit : ScalarFunction Bool 3 :=
   fun input => input 0
 

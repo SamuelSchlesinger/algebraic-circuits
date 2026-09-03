@@ -121,6 +121,30 @@ def refine
     | some value => some value
     | none => sigma index
 
+/-- Clear a designated finite set of coordinates, leaving every other value
+unchanged. This is the inverse operation used by refinement encodings once
+their newly fixed support has been reconstructed. -/
+def clear
+    (rho : PartialAssignment n)
+    (coordinates : Finset (Fin n)) : PartialAssignment n :=
+  fun index => if index ∈ coordinates then none else rho index
+
+@[simp] theorem clear_of_mem
+    (rho : PartialAssignment n)
+    (coordinates : Finset (Fin n))
+    {index : Fin n}
+    (present : index ∈ coordinates) :
+    rho.clear coordinates index = none := by
+  simp [clear, present]
+
+@[simp] theorem clear_of_not_mem
+    (rho : PartialAssignment n)
+    (coordinates : Finset (Fin n))
+    {index : Fin n}
+    (absent : index ∉ coordinates) :
+    rho.clear coordinates index = rho index := by
+  simp [clear, absent]
+
 @[simp] theorem empty_refine (rho : PartialAssignment n) :
     empty.refine rho = rho := by
   apply ext
@@ -152,6 +176,25 @@ theorem refine_assoc
   cases first : rho index <;>
     cases second : sigma index <;>
       simp [refine, first, second]
+
+/-- Replacing the freshly assigned head coordinate by a path value commutes
+with retaining the rest of a refinement. The selected coordinate must be live
+in the original restriction. -/
+theorem fix_refine_refine_fix
+    (rho tail : PartialAssignment n)
+    (selected : Fin n)
+    (pathValue satisfyingValue : Bool)
+    (live : rho selected = none) :
+    (fix selected pathValue).refine
+        (rho.refine ((fix selected satisfyingValue).refine tail)) =
+      (rho.refine (fix selected pathValue)).refine tail := by
+  apply ext
+  intro index
+  by_cases equal : index = selected
+  · subst index
+    simp [refine, fix, live]
+  · cases fixed : rho index <;>
+      simp [refine, fix, equal, fixed]
 
 /-- View a partial assignment as a semantic input substitution on the same
 named variables. -/
@@ -359,6 +402,25 @@ theorem fixedCount_refine_eq_add
       (disjoint_liveVariables_fixedVariables rho)) liveByRho fixedByRho
   rw [fixedCount, fixedVariables_refine,
     Finset.card_union_of_disjoint disjoint, fixedCount, fixedCount]
+
+/-- Clearing exactly the support added by a refinement recovers the original
+restriction, provided the refinement fixed only previously live variables. -/
+theorem clear_refine_fixedVariables
+    (rho extension : PartialAssignment n)
+    (newFixes : extension.fixedVariables ⊆ rho.liveVariables) :
+    (rho.refine extension).clear extension.fixedVariables = rho := by
+  apply ext
+  intro index
+  by_cases fixed : extension index = none
+  · have absent : index ∉ extension.fixedVariables := by
+      simpa using fixed
+    cases source : rho index <;>
+      simp [clear, absent, refine, fixed, source]
+  · have present : index ∈ extension.fixedVariables :=
+      (mem_fixedVariables extension index).2 fixed
+    have live : rho index = none :=
+      (mem_liveVariables rho index).1 (newFixes present)
+    simp [clear, present, live]
 
 /-- Under a refinement that fixes only live variables, the decrease in live
 count is exactly the second assignment's fixed count. -/

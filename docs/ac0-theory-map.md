@@ -69,7 +69,7 @@ coordinates, then
 | --- | --- | --- |
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
-| Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantic layer validated 2026-09-03; circuit simplification open |
+| Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Weighted-injection engine and bounded canonical advice extraction validated 2026-09-03; reconstruction decoder and final bound open |
@@ -108,6 +108,13 @@ sets and counts, conversion to `InputSubstitution`, restriction of scalar and
 multi-output targets, and the proof that restricted semantics depend only on
 live coordinates. Its public theorem audit uses no axioms beyond Lean's
 standard `propext`, `Classical.choice`, and `Quot.sound`.
+
+The decoder-algebra extension to partial assignments passed the same gates on
+2026-09-03. Clearing exactly the coordinates added by a live-only refinement
+is proved to recover the original restriction. A second pointwise identity
+proves that replacing the head satisfying assignment by its original path bit
+commutes with retaining the tail refinement. These are general restriction
+identities; they do not assume or search over any circuit family.
 
 The literal-normal-form submilestone passed the same gates on 2026-09-03.
 Terms and clauses contain at most one signed occurrence of each variable by
