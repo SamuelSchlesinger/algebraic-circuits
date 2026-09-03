@@ -6,6 +6,7 @@ import AlgebraicTests.AC0DecisionTree
 import AlgebraicTests.AC0Duality
 import AlgebraicTests.AC0TreeNormalForm
 import AlgebraicTests.AC0Layer
+import AlgebraicTests.AC0LayerFormula
 import AlgebraicTests.AC0CanonicalDecisionTree
 import AlgebraicTests.AC0NormalForm
 import AlgebraicTests.AC0LiteralGate

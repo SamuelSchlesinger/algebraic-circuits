@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Semantic shallow-layer invariant, exact charged-gate count, and shallow-function normal forms validated 2026-09-03; layer advancement open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Exact bounded normal forms now compose through the next arbitrary-fan-in layer; probabilistic advancement open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -116,6 +116,19 @@ sets and counts, conversion to `InputSubstitution`, restriction of scalar and
 multi-output targets, and the proof that restricted semantics depend only on
 live coordinates. Its public theorem audit uses no axioms beyond Lean's
 standard `propext`, `Classical.choice`, and `Quot.sound`.
+
+The next-layer formula-composition submilestone passed the full gates on
+2026-09-03. Finite indexed DNF families are flattened by disjunction and CNF
+families by conjunction, preserving a common width bound and agreeing exactly
+with the zero- or arbitrary-fan-in AC0 interpretation. From a
+`ShallowUpTo rho i t` witness, Lean chooses exact width-`t` forms for every
+argument of a connective gate at logical depth at most `i + 1`, then proves
+that their aggregate computes the actual restricted internal gate function.
+Thus an OR gate receives an exact width-`t` DNF and an AND gate an exact
+width-`t` CNF, independent of the gate's fan-in. This is the deterministic
+composition premise for the next switching step; the charged-gate union bound
+remains open. The audited public theorems use no axioms beyond Lean's standard
+`propext`, `Classical.choice`, and `Quot.sound`.
 
 The semantic-layer invariant submilestone passed the full gates on 2026-09-03.
 `Program.ShallowUpTo rho i t` states that every wire through source logical

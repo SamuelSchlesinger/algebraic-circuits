@@ -5,6 +5,7 @@ import Algebraic.LowerBound.AC0.DecisionTree
 import Algebraic.LowerBound.AC0.Duality
 import Algebraic.LowerBound.AC0.TreeNormalForm
 import Algebraic.LowerBound.AC0.Layer
+import Algebraic.LowerBound.AC0.LayerFormula
 import Algebraic.LowerBound.AC0.CanonicalDecisionTree
 import Algebraic.LowerBound.AC0.RandomRestriction
 import Algebraic.LowerBound.AC0.Switching.Encoding
