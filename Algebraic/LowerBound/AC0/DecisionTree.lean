@@ -488,6 +488,24 @@ def DepthAtLeast
   forall tree : DecisionTree n,
     tree.Computes function -> bound ≤ tree.depth
 
+/-- Proof-level decidability of the semantic upper-depth predicate. This is a
+classical instance for forming exact finite events; it does not define or run
+an optimal decision-tree search. -/
+noncomputable instance depthAtMostDecidable
+    (function : ScalarFunction Bool n)
+    (bound : Nat) : Decidable (DepthAtMost function bound) := by
+  classical
+  exact Classical.propDecidable _
+
+/-- Proof-level decidability of the semantic lower-depth predicate. This is a
+classical instance for forming exact finite events; it does not define or run
+an optimal decision-tree search. -/
+noncomputable instance depthAtLeastDecidable
+    (function : ScalarFunction Bool n)
+    (bound : Nat) : Decidable (DepthAtLeast function bound) := by
+  classical
+  exact Classical.propDecidable _
+
 /-- Every `n`-variable Boolean function has a decision tree of depth at most
 `n`. This is a structural Shannon expansion, not an optimal-tree search. -/
 theorem depthAtMost_inputCount

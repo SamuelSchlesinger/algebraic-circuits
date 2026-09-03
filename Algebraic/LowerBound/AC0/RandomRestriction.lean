@@ -215,6 +215,24 @@ theorem probability_congr
   · intro rho present
     rfl
 
+/-- Inclusion of finite events implies monotonicity of their exact
+probabilities. -/
+theorem probability_mono
+    (n : Nat)
+    (p : NNReal)
+    (atMostOne : p ≤ 1)
+    {left right : PartialAssignment n -> Prop}
+    [DecidablePred left]
+    [DecidablePred right]
+    (included : forall rho, left rho -> right rho) :
+    probability n p atMostOne left ≤
+      probability n p atMostOne right := by
+  unfold probability
+  apply Finset.sum_le_sum_of_subset
+  intro rho present
+  rw [Finset.mem_filter] at present ⊢
+  exact ⟨present.1, included rho present.2⟩
+
 /-- A singleton event has the point mass specified by the product formula. -/
 theorem probability_singleton
     (n : Nat)

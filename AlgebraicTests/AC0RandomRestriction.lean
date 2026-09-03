@@ -41,4 +41,15 @@ example
     RandomRestriction.probability 2 p atMostOne (fun _ => True) = 1 := by
   simp
 
+example
+    (p : NNReal)
+    (atMostOne : p ≤ 1)
+    (left right : PartialAssignment 2 -> Prop)
+    [DecidablePred left]
+    [DecidablePred right]
+    (included : forall rho, left rho -> right rho) :
+    RandomRestriction.probability 2 p atMostOne left ≤
+      RandomRestriction.probability 2 p atMostOne right :=
+  RandomRestriction.probability_mono 2 p atMostOne included
+
 end AlgebraicTests.AC0RandomRestriction

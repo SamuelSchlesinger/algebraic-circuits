@@ -80,7 +80,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Exact scaled injection bound, all-width `(9pt)^s` corollary, and combined-advice count validated 2026-09-03; trace integration for `(5pt)^s` open |
+| Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` decision-tree theorem validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -340,3 +340,17 @@ for every width bound `t`, threshold `s`, and `0 <= p <= 1`. This completes the
 finite switching-lemma milestone. The next dependency is a formula-level
 simplification theorem connecting bounded canonical decision-tree depth to the
 usual restricted DNF/CNF decision-tree statement used in depth reduction.
+
+The semantic DNF switching theorem passed the full gates on 2026-09-03. Event
+monotonicity transfers the canonical estimate to the representation-independent
+predicate saying that every tree computing the restricted DNF has depth at
+least `s`. Thus the public endpoint now matches the usual decision-tree form:
+`Pr[DT(F restricted by rho) >= s] <= (5pt)^s`.
+
+An equivalent checked corollary makes the integer convention explicit:
+`Pr[not (DT(F restricted by rho) <= d)] <= (5pt)^(d+1)`.
+
+Semantic depth-event decidability is classical and noncomputable; it exists
+only to form the exact finite probability. No optimizer, circuit enumeration,
+or finite lower-bound search is implemented. The complementary CNF statement
+and its explicit De Morgan bridge are the next switching-layer obligation.
