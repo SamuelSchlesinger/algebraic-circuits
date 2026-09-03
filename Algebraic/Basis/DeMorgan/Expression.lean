@@ -1,5 +1,7 @@
 import Algebraic.Basis.DeMorgan
 import Algebraic.Parallel
+import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Algebra.Ring.BooleanRing
 
 /-!
 # De Morgan expressions compiled to circuits
@@ -13,6 +15,8 @@ free under `DeMorgan.standardCost`.
 
 namespace Algebraic
 namespace DeMorgan
+
+open scoped BigOperators
 
 /-- Tree-shaped expressions over the De Morgan basis. -/
 inductive Expression (n : Nat)
@@ -47,6 +51,62 @@ def eval (input : Fin n -> Bool) : Expression n -> Bool
   | .not child => !(child.eval input)
   | .and left right => left.eval input && right.eval input
   | .or left right => left.eval input || right.eval input
+
+/-- Rename the input coordinates of an expression. -/
+def mapInputs
+    (inputMap : Fin sourceInputs -> Fin targetInputs) :
+    Expression sourceInputs -> Expression targetInputs
+  | .input index => .input (inputMap index)
+  | .constant value => .constant value
+  | .not child => .not (mapInputs inputMap child)
+  | .and left right =>
+      .and (mapInputs inputMap left) (mapInputs inputMap right)
+  | .or left right =>
+      .or (mapInputs inputMap left) (mapInputs inputMap right)
+
+@[simp] theorem mapInputs_eval
+    (inputMap : Fin sourceInputs -> Fin targetInputs)
+    (expression : Expression sourceInputs)
+    (input : Fin targetInputs -> Bool) :
+    (expression.mapInputs inputMap).eval input =
+      expression.eval (input ∘ inputMap) := by
+  induction expression with
+  | input index => rfl
+  | constant value => rfl
+  | not child inductionHypothesis =>
+      simp [mapInputs, eval, inductionHypothesis]
+  | and left right leftIH rightIH =>
+      simp [mapInputs, eval, leftIH, rightIH]
+  | or left right leftIH rightIH =>
+      simp [mapInputs, eval, leftIH, rightIH]
+
+@[simp] theorem mapInputs_gateCount
+    (inputMap : Fin sourceInputs -> Fin targetInputs)
+    (expression : Expression sourceInputs) :
+    (expression.mapInputs inputMap).gateCount = expression.gateCount := by
+  induction expression with
+  | input index => rfl
+  | constant value => rfl
+  | not child inductionHypothesis =>
+      simp [mapInputs, gateCount, inductionHypothesis]
+  | and left right leftIH rightIH =>
+      simp [mapInputs, gateCount, leftIH, rightIH]
+  | or left right leftIH rightIH =>
+      simp [mapInputs, gateCount, leftIH, rightIH]
+
+@[simp] theorem mapInputs_standardCost
+    (inputMap : Fin sourceInputs -> Fin targetInputs)
+    (expression : Expression sourceInputs) :
+    (expression.mapInputs inputMap).standardCost = expression.standardCost := by
+  induction expression with
+  | input index => rfl
+  | constant value => rfl
+  | not child inductionHypothesis =>
+      simp [mapInputs, standardCost, inductionHypothesis]
+  | and left right leftIH rightIH =>
+      simp [mapInputs, standardCost, leftIH, rightIH]
+  | or left right leftIH rightIH =>
+      simp [mapInputs, standardCost, leftIH, rightIH]
 
 /-- One free constant gate. -/
 private def constantCircuit (value : Bool) (n : Nat) :
@@ -197,6 +257,38 @@ def circuit : (expression : Expression n) ->
       simp [circuit, standardCost, leftIH, rightIH]
   | or left right leftIH rightIH =>
       simp [circuit, standardCost, leftIH, rightIH]
+
+/-- De Morgan implementation of Boolean XOR. -/
+def xor (left right : Expression n) : Expression n :=
+  .and (.or left right) (.not (.and left right))
+
+@[simp] theorem xor_eval
+    (left right : Expression n)
+    (input : Fin n -> Bool) :
+    (xor left right).eval input = left.eval input + right.eval input := by
+  rw [Bool.add_eq_xor]
+  cases leftValue : left.eval input <;>
+    cases rightValue : right.eval input <;>
+      simp [xor, eval, leftValue, rightValue]
+
+/-- XOR a finite expression family, with false for the empty family. -/
+def finXor :
+    (count : Nat) -> (Fin count -> Expression n) -> Expression n
+  | 0, _ => .constant false
+  | count + 1, terms =>
+      xor (finXor count (fun index => terms index.castSucc))
+        (terms (Fin.last count))
+
+@[simp] theorem finXor_eval
+    (count : Nat)
+    (terms : Fin count -> Expression n)
+    (input : Fin n -> Bool) :
+    (finXor count terms).eval input =
+      Finset.univ.sum fun index => (terms index).eval input := by
+  induction count with
+  | zero => rfl
+  | succ count inductionHypothesis =>
+      rw [finXor, xor_eval, inductionHypothesis, Fin.sum_univ_castSucc]
 
 /-- Conjunction of a finite expression family, with `true` as the empty
 conjunction. -/

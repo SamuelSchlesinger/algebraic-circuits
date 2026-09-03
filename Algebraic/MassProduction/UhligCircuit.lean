@@ -637,112 +637,64 @@ theorem resourceBankCircuit_eval
   simp [resourceBankCircuit, routedResourceCircuit,
     resourceRouterArrayCircuit]
 
-/-! ## Explicit XOR decoder -/
+/-! ## Generic expression compatibility names -/
 
-/-- Reindex the inputs of a De Morgan expression. -/
-def reindexExpression
-    (inputMap : Fin sourceInputs -> Fin targetInputs) :
-    DeMorgan.Expression sourceInputs -> DeMorgan.Expression targetInputs
-  | .input index => .input (inputMap index)
-  | .constant value => .constant value
-  | .not child => .not (reindexExpression inputMap child)
-  | .and left right =>
-      .and (reindexExpression inputMap left)
-        (reindexExpression inputMap right)
-  | .or left right =>
-      .or (reindexExpression inputMap left)
-        (reindexExpression inputMap right)
+/-- Compatibility name for generic De Morgan expression input mapping. -/
+abbrev reindexExpression
+    (inputMap : Fin sourceInputs -> Fin targetInputs)
+    (expression : DeMorgan.Expression sourceInputs) :
+    DeMorgan.Expression targetInputs :=
+  expression.mapInputs inputMap
 
-@[simp] theorem reindexExpression_eval
+theorem reindexExpression_eval
     (inputMap : Fin sourceInputs -> Fin targetInputs)
     (expression : DeMorgan.Expression sourceInputs)
     (input : Fin targetInputs -> Bool) :
     (reindexExpression inputMap expression).eval input =
-      expression.eval (input ∘ inputMap) := by
-  induction expression with
-  | input index => rfl
-  | constant value => rfl
-  | not child inductionHypothesis =>
-      simp [reindexExpression, DeMorgan.Expression.eval,
-        inductionHypothesis]
-  | and left right leftIH rightIH =>
-      simp [reindexExpression, DeMorgan.Expression.eval, leftIH, rightIH]
-  | or left right leftIH rightIH =>
-      simp [reindexExpression, DeMorgan.Expression.eval, leftIH, rightIH]
+      expression.eval (input ∘ inputMap) :=
+  DeMorgan.Expression.mapInputs_eval inputMap expression input
 
-@[simp] theorem reindexExpression_gateCount
+theorem reindexExpression_gateCount
     (inputMap : Fin sourceInputs -> Fin targetInputs)
     (expression : DeMorgan.Expression sourceInputs) :
     (reindexExpression inputMap expression).gateCount =
-      expression.gateCount := by
-  induction expression with
-  | input index => rfl
-  | constant value => rfl
-  | not child inductionHypothesis =>
-      simp [reindexExpression, DeMorgan.Expression.gateCount,
-        inductionHypothesis]
-  | and left right leftIH rightIH =>
-      simp [reindexExpression, DeMorgan.Expression.gateCount,
-        leftIH, rightIH]
-  | or left right leftIH rightIH =>
-      simp [reindexExpression, DeMorgan.Expression.gateCount,
-        leftIH, rightIH]
+      expression.gateCount :=
+  DeMorgan.Expression.mapInputs_gateCount inputMap expression
 
-@[simp] theorem reindexExpression_standardCost
+theorem reindexExpression_standardCost
     (inputMap : Fin sourceInputs -> Fin targetInputs)
     (expression : DeMorgan.Expression sourceInputs) :
     (reindexExpression inputMap expression).standardCost =
-      expression.standardCost := by
-  induction expression with
-  | input index => rfl
-  | constant value => rfl
-  | not child inductionHypothesis =>
-      simp [reindexExpression, DeMorgan.Expression.standardCost,
-        inductionHypothesis]
-  | and left right leftIH rightIH =>
-      simp [reindexExpression, DeMorgan.Expression.standardCost,
-        leftIH, rightIH]
-  | or left right leftIH rightIH =>
-      simp [reindexExpression, DeMorgan.Expression.standardCost,
-        leftIH, rightIH]
+      expression.standardCost :=
+  DeMorgan.Expression.mapInputs_standardCost inputMap expression
 
-/-- De Morgan implementation of Boolean XOR. -/
-def xorExpression
+/-- Compatibility name for the generic De Morgan XOR expression. -/
+abbrev xorExpression
     (left right : DeMorgan.Expression inputs) :
     DeMorgan.Expression inputs :=
-  .and (.or left right) (.not (.and left right))
+  DeMorgan.Expression.xor left right
 
-@[simp] theorem xorExpression_eval
+theorem xorExpression_eval
     (left right : DeMorgan.Expression inputs)
     (input : Fin inputs -> Bool) :
     (xorExpression left right).eval input =
-      left.eval input + right.eval input := by
-  rw [Bool.add_eq_xor]
-  cases leftValue : left.eval input <;>
-    cases rightValue : right.eval input <;>
-      simp [xorExpression, DeMorgan.Expression.eval,
-        leftValue, rightValue]
+      left.eval input + right.eval input :=
+  DeMorgan.Expression.xor_eval left right input
 
-/-- XOR a finite expression family, with false for the empty family. -/
-def finXor :
-    (count : Nat) -> (Fin count -> DeMorgan.Expression inputs) ->
-      DeMorgan.Expression inputs
-  | 0, _ => .constant false
-  | count + 1, terms =>
-      xorExpression (finXor count (fun index => terms index.castSucc))
-        (terms (Fin.last count))
+/-- Compatibility name for the generic finite XOR expression fold. -/
+abbrev finXor
+    (count : Nat)
+    (terms : Fin count -> DeMorgan.Expression inputs) :
+    DeMorgan.Expression inputs :=
+  DeMorgan.Expression.finXor count terms
 
-@[simp] theorem finXor_eval
+theorem finXor_eval
     (count : Nat)
     (terms : Fin count -> DeMorgan.Expression inputs)
     (input : Fin inputs -> Bool) :
     (finXor count terms).eval input =
-      Finset.univ.sum fun index => (terms index).eval input := by
-  induction count with
-  | zero => rfl
-  | succ count inductionHypothesis =>
-      rw [finXor, xorExpression_eval, inductionHypothesis,
-        Fin.sum_univ_castSucc]
+      Finset.univ.sum fun index => (terms index).eval input :=
+  DeMorgan.Expression.finXor_eval count terms input
 
 /-- Number of original input wires in one batched Uhlig layer. -/
 @[reducible] def layerInputCount
@@ -789,8 +741,8 @@ def stateSourceIndicatorExpression
     (side : Fin 2)
     (source : Fin (prefixLast prefixWidth + 1)) :
     DeMorgan.Expression (layerStateCount prefixWidth suffixWidth pairs) :=
-  reindexExpression (stateLocalInputMap pair)
-    (sourceIndicatorExpression (suffixWidth := suffixWidth) side source)
+  (sourceIndicatorExpression (suffixWidth := suffixWidth) side source).mapInputs
+    (stateLocalInputMap pair)
 
 theorem stateSourceIndicatorExpression_eval_eq_true_iff
     (pair : Fin pairs)
@@ -799,7 +751,7 @@ theorem stateSourceIndicatorExpression_eval_eq_true_iff
     (state : Fin (layerStateCount prefixWidth suffixWidth pairs) -> Bool) :
     (stateSourceIndicatorExpression pair side source).eval state = true <->
       requestSource (originalInputFromState state) pair side = source := by
-  rw [stateSourceIndicatorExpression, reindexExpression_eval,
+  rw [stateSourceIndicatorExpression, DeMorgan.Expression.mapInputs_eval,
     sourceIndicatorExpression_eval_eq_true_iff]
   have composition : state ∘ stateLocalInputMap pair =
       originalInputFromState state ∘ pairInputMap pair := by
@@ -833,7 +785,7 @@ def fixedDecodedExpression
     (side : Fin 2)
     (first second : Fin (prefixLast prefixWidth + 1)) :
     DeMorgan.Expression (layerStateCount prefixWidth suffixWidth pairs) :=
-  finXor (prefixLast prefixWidth + 2) fun resource =>
+  DeMorgan.Expression.finXor (prefixLast prefixWidth + 2) fun resource =>
     fixedResourceTermExpression pair side first second resource
 
 theorem fixedDecodedExpression_eval
@@ -850,7 +802,7 @@ theorem fixedDecodedExpression_eval
   let resources : Finset (Fin (prefixLast prefixWidth + 2)) :=
     Fin.cases (uhligRecoveryPair first second).1
       (fun _ => (uhligRecoveryPair first second).2) side
-  rw [fixedDecodedExpression, finXor_eval]
+  rw [fixedDecodedExpression, DeMorgan.Expression.finXor_eval]
   simp only [fixedResourceTermExpression]
   simp_rw [apply_ite (DeMorgan.Expression.eval state)]
   simp only [DeMorgan.Expression.eval, resourceValueExpression]
@@ -1168,7 +1120,7 @@ noncomputable def sharedFixedDecodedCircuit
       exact fixedResourceVectorCircuit_eval pair side first second state
         resource
     _ = (fixedDecodedExpression pair side first second).eval state := by
-      rw [fixedDecodedExpression, finXor_eval]
+      rw [fixedDecodedExpression, DeMorgan.Expression.finXor_eval]
     _ = _ := fixedDecodedExpression_eval pair side first second state
 
 @[simp] theorem sharedFixedDecodedCircuit_cost
@@ -1718,7 +1670,8 @@ theorem stateSourceIndicatorExpression_standardCost_le
     (source : Fin (prefixLast prefixWidth + 1)) :
     (stateSourceIndicatorExpression (suffixWidth := suffixWidth)
       pair side source).standardCost <= 2 * prefixWidth := by
-  rw [stateSourceIndicatorExpression, reindexExpression_standardCost]
+  rw [stateSourceIndicatorExpression,
+    DeMorgan.Expression.mapInputs_standardCost]
   exact sourceIndicatorExpression_standardCost_le
     (suffixWidth := suffixWidth) side source
 

@@ -119,4 +119,18 @@ example :
       DeMorgan.standardCost = 0 := by
   simp
 
+/-! Generic expression input mapping and XOR folds remain available outside
+the mass-production development that first needed them. -/
+
+example :
+    (DeMorgan.Expression.mapInputs
+      (fun _ : Fin 1 => (1 : Fin 2))
+      (.not (.input 0))).eval trueFalse = true := by
+  rfl
+
+example :
+    (DeMorgan.Expression.finXor 2
+      (fun index => .input index)).eval trueFalse = true := by
+  native_decide
+
 end AlgebraicTests.Circuit
