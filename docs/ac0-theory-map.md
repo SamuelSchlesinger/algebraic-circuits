@@ -292,3 +292,15 @@ equations are definitional interfaces for the forthcoming trace packer: the
 final block receives no closing marker, while every prepended continuing block
 receives exactly one at its last query. This is structural assembly, not a new
 switching estimate; the trace-to-advice construction remains open.
+
+The canonical block-extraction submilestone passed the full gates on
+2026-09-03. Canonical paths are now partitioned into maximal source-term
+blocks, and flattening those blocks is proved to recover the elementary advice
+after forgetting its boundary bit. Every block is nonempty, its source
+positions are strictly increasing, its length is at most the formula width,
+and all block lengths sum exactly to the path length. Most importantly, Lean
+proves the semantic condition used by the combined count: every nonfinal block
+has a nonzero relative difference string. If all its bits were zero, the
+selected term would remain first surviving after its last live variable was
+fixed, contradicting the start of a later nonempty block. Packaging these raw
+blocks into the indexed `CombinedAdvice` type remains open.
