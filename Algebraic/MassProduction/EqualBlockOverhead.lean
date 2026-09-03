@@ -15,9 +15,6 @@ namespace MassProduction
 namespace EqualBlock
 
 open CodeParameters
-open GroupedScheduler
-open LineEnumeration
-open Sorting
 
 /-- Fixed coefficient multiplying the polynomial-times-subunit-exponential
 upper bound for every non-resource gate. -/

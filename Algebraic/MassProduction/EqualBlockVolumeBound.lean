@@ -15,9 +15,6 @@ namespace MassProduction
 namespace EqualBlock
 
 open CodeParameters
-open GroupedScheduler
-open LineEnumeration
-open Sorting
 
 /-- Denominator used for the common strict subunit exponent in the two-block
 overhead bound. -/

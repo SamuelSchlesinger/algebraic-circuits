@@ -1,6 +1,6 @@
 import Algebraic.MassProduction.EqualBlockFiniteStep
-import Algebraic.MassProduction.Growth
 import Algebraic.MassProduction.InputSplit
+import Algebraic.MassProduction.Padding
 
 /-!
 # Exact parameters for the equal-block induction
@@ -15,9 +15,6 @@ namespace MassProduction
 namespace EqualBlock
 
 open CodeParameters
-open GroupedScheduler
-open LineEnumeration
-open Sorting
 
 /-! ## Padding arbitrary lengths to the next even length -/
 
@@ -49,29 +46,11 @@ theorem shannonScale_nextEvenWidth_le
     (inputPositive : 0 < inputWidth) :
     2 ^ nextEvenWidth inputWidth / nextEvenWidth inputWidth <=
       8 * (2 ^ inputWidth / inputWidth) := by
-  have fits := inputWidth_le_nextEvenWidth inputWidth
-  have upper := nextEvenWidth_le_add_two inputWidth
-  have powerBound : 2 ^ nextEvenWidth inputWidth <= 4 * 2 ^ inputWidth := by
-    calc
-      2 ^ nextEvenWidth inputWidth <= 2 ^ (inputWidth + 2) :=
-        Nat.pow_le_pow_right (by omega) upper
-      _ = 4 * 2 ^ inputWidth := by
-        rw [Nat.pow_add]
-        norm_num
-        ring
-  have inputFitsPower : inputWidth <= 2 ^ inputWidth := by
-    exact (by omega : inputWidth <= 2 * inputWidth).trans
-      (Nat.mul_le_pow (by decide : 2 ≠ 1) inputWidth)
-  calc
-    2 ^ nextEvenWidth inputWidth / nextEvenWidth inputWidth <=
-        2 ^ nextEvenWidth inputWidth / inputWidth :=
-      Nat.div_le_div_left fits inputPositive
-    _ <= (4 * 2 ^ inputWidth) / inputWidth :=
-      Nat.div_le_div_right powerBound
-    _ <= 2 * 4 * (2 ^ inputWidth / inputWidth) :=
-      Growth.mul_div_le_two_mul_mul_div 4 (2 ^ inputWidth) inputWidth
-        inputPositive inputFitsPower
-    _ = 8 * (2 ^ inputWidth / inputWidth) := by ring
+  simpa only [show 2 * 2 ^ 2 = 8 by norm_num] using
+    _root_.Algebraic.MassProduction.shannonScale_le_of_le_add inputWidth
+      (nextEvenWidth inputWidth) 2 inputPositive
+      (inputWidth_le_nextEvenWidth inputWidth)
+      (nextEvenWidth_le_add_two inputWidth)
 
 /-- The complete two-block base case `P₁`: every fixed rational rate below
 one half has eventual mass production for arbitrary positive input lengths. -/

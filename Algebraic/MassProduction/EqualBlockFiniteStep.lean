@@ -16,8 +16,6 @@ namespace EqualBlock
 
 open CodeParameters
 open GroupedScheduler
-open LineEnumeration
-open Sorting
 
 /-- Constant left after adding the recursive resource bank and the eventually
 negligible overhead. -/
