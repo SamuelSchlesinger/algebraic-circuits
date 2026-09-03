@@ -1,5 +1,5 @@
 import Algebraic.MassProduction.PackedPipeline
-import Algebraic.MassProduction.RoutingWiring
+import Algebraic.MassProduction.ScheduledRoutingWiring
 
 /-!
 # Mass-production routing assembly
@@ -28,68 +28,6 @@ open PackedPipeline
 open ResourceEvaluation
 open SchedulerIteration
 open Sorting
-
-/-- Scheduler-output wire containing one affine-point bit of a flattened
-scheduled incidence. -/
-noncomputable def scheduledIncidencePointBitIndex
-    (capacity : totalRequests <= groups * requestsPerGroup)
-    (incidence : Fin (totalRequests * nonzeroScalarCount width))
-    (pointBit : Fin (dimension * width)) :
-    Fin (groups *
-      (requestsPerGroup * lineBitWidth dimension width)) :=
-  let requestAndScalar := incidenceAt incidence
-  let groupAndRequest := requestGroupSlot capacity requestAndScalar.1
-  finProdFinEquiv
-    (groupAndRequest.1,
-      finProdFinEquiv
-        (groupAndRequest.2,
-          finProdFinEquiv (requestAndScalar.2, pointBit)))
-
-/-- Decoding and re-encoding a scheduled point is exactly the corresponding
-scheduler-output block. -/
-theorem scheduledIncidencePointBit
-    (widthPositive : 0 < width)
-    (capacity : totalRequests <= groups * requestsPerGroup)
-    (scheduleOutput : Fin (groups *
-      (requestsPerGroup * lineBitWidth dimension width)) -> Bool)
-    (incidence : Fin (totalRequests * nonzeroScalarCount width))
-    (pointBit : Fin (dimension * width)) :
-    binaryExtensionVectorBits widthPositive
-        (scheduledIncidenceSlotAt widthPositive capacity scheduleOutput
-          incidence).2 pointBit =
-      scheduleOutput
-        (scheduledIncidencePointBitIndex capacity incidence pointBit) := by
-  unfold scheduledIncidenceSlotAt scheduledIncidenceSlot
-  unfold requestScheduledLinePoint scheduledLinePoint
-  rw [binaryExtensionVectorBits_vectorCoordinate]
-  rfl
-
-/-- Scheduled matching keys are a constant active marker and group prefix
-followed by scheduler-output point wires. -/
-theorem scheduledIncidenceKeyBits_eq_wiring
-    (widthPositive : 0 < width)
-    (groupBitWidth : Nat)
-    (capacity : totalRequests <= groups * requestsPerGroup)
-    (scheduleOutput : Fin (groups *
-      (requestsPerGroup * lineBitWidth dimension width)) -> Bool)
-    (incidence : Fin (totalRequests * nonzeroScalarCount width)) :
-    scheduledIncidenceKeyBits widthPositive groupBitWidth capacity
-        scheduleOutput incidence =
-      activeRoutingKey (Fin.append
-        (finiteIndexBits groupBitWidth
-          (scheduledIncidenceSlotAt widthPositive capacity scheduleOutput
-            incidence).1)
-        (fun pointBit => scheduleOutput
-          (scheduledIncidencePointBitIndex capacity incidence pointBit))) := by
-  unfold scheduledIncidenceKeyBits
-  apply congrArg activeRoutingKey
-  unfold resourceSlotKeyBits
-  funext baseBit
-  refine Fin.addCases (fun groupBit => ?_) (fun pointBit => ?_) baseBit
-  · rw [Fin.append_left, Fin.append_left]
-  · rw [Fin.append_right, Fin.append_right]
-    exact scheduledIncidencePointBit widthPositive capacity scheduleOutput
-      incidence pointBit
 
 /-! ## Scatter-record assembly -/
 
