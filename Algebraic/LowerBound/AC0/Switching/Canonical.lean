@@ -193,6 +193,115 @@ theorem probability_canonicalDepthAtLeast_scaled_le
   rw [Switching.card_advice] at encoded
   simpa only [Nat.cast_pow] using encoded
 
+/-- Under the standard small-`p` hypothesis, the probability of either fixed
+Boolean value is at least `4/9`. -/
+theorem four_ninths_le_fixedWeight
+    (p : NNReal)
+    (small : p ≤ 1 / 9) :
+    (4 / 9 : NNReal) ≤ fixedWeight p := by
+  rw [fixedWeight]
+  apply (le_div_iff₀ (by norm_num : (0 : NNReal) < 2)).2
+  apply le_tsub_of_add_le_left
+  calc
+    p + (4 / 9 : NNReal) * 2 ≤
+        (1 / 9 : NNReal) + (4 / 9 : NNReal) * 2 := by
+      simpa [add_comm] using
+        add_le_add_right small ((4 / 9 : NNReal) * 2)
+    _ = 1 := by norm_num
+
+private theorem le_of_mul_le_mul_left_finite
+    {factor left right : ENNReal}
+    (factorNonzero : factor ≠ 0)
+    (factorFinite : factor ≠ ⊤)
+    (scaled : factor * left ≤ factor * right) :
+    left ≤ right := by
+  by_contra notLe
+  have strict := ENNReal.mul_lt_mul_left factorNonzero factorFinite
+    (lt_of_not_ge notLe)
+  rw [mul_comm right factor, mul_comm left factor] at strict
+  exact (not_lt_of_ge scaled) strict
+
+private theorem four_ninths_pow_mul_nine_pow
+    (p : NNReal)
+    (widthBound pathLength : Nat) :
+    ((4 / 9 : NNReal) : ENNReal) ^ pathLength *
+        ((9 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal)) ^
+          pathLength =
+      ((4 * widthBound : Nat) : ENNReal) ^ pathLength *
+        (p : ENNReal) ^ pathLength := by
+  have numeric : (((4 / 9 : NNReal) : ENNReal) * 9) = 4 := by
+    norm_cast
+    norm_num
+  calc
+    ((4 / 9 : NNReal) : ENNReal) ^ pathLength *
+          ((9 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal)) ^
+            pathLength =
+        (((4 / 9 : NNReal) : ENNReal) *
+          ((9 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal))) ^
+            pathLength := by
+      exact (mul_pow _ _ pathLength).symm
+    _ = ((4 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal)) ^
+          pathLength := by
+      congr 1
+      calc
+        ((4 / 9 : NNReal) : ENNReal) *
+              (9 * (p : ENNReal) * (widthBound : ENNReal)) =
+            (((4 / 9 : NNReal) : ENNReal) * 9) *
+              (p : ENNReal) * (widthBound : ENNReal) := by
+          ring
+        _ = 4 * (p : ENNReal) * (widthBound : ENNReal) := by rw [numeric]
+    _ = ((4 * widthBound : Nat) : ENNReal) ^ pathLength *
+          (p : ENNReal) ^ pathLength := by
+      push_cast
+      rw [mul_pow]
+      ring
+
+/-- Standard `9pt` corollary of the canonical switching injection. This is
+the weighted Razborov--Beame/Thapen constant obtained from one bounded
+position and two advice bits per query. -/
+theorem probability_canonicalDepthAtLeast_le_nine
+    [NeZero widthBound]
+    (formula : DNF n)
+    (bounded : formula.WidthAtMost widthBound)
+    (pathLength : Nat)
+    (p : NNReal)
+    (atMostOne : p ≤ 1)
+    (small : p ≤ 1 / 9) :
+    probability n p atMostOne
+        (fun rho => formula.CanonicalDepthAtLeast rho pathLength) ≤
+      ((9 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal)) ^
+        pathLength := by
+  let factor : ENNReal := ((4 / 9 : NNReal) : ENNReal) ^ pathLength
+  let target : ENNReal :=
+    ((9 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal)) ^ pathLength
+  have fixedLower : ((4 / 9 : NNReal) : ENNReal) ≤
+      (fixedWeight p : ENNReal) :=
+    ENNReal.coe_le_coe.mpr (four_ninths_le_fixedWeight p small)
+  have factorLower : factor ≤ (fixedWeight p : ENNReal) ^ pathLength :=
+    pow_le_pow_left' fixedLower pathLength
+  have scaled := probability_canonicalDepthAtLeast_scaled_le
+    formula bounded pathLength p atMostOne
+  have upgraded :
+      factor * probability n p atMostOne
+          (fun rho => formula.CanonicalDepthAtLeast rho pathLength) ≤
+        ((4 * widthBound : Nat) : ENNReal) ^ pathLength *
+          (p : ENNReal) ^ pathLength :=
+    (mul_le_mul_of_nonneg_right factorLower bot_le).trans scaled
+  have factored :
+      factor * target =
+        ((4 * widthBound : Nat) : ENNReal) ^ pathLength *
+          (p : ENNReal) ^ pathLength := by
+    exact four_ninths_pow_mul_nine_pow p widthBound pathLength
+  apply le_of_mul_le_mul_left_finite
+      (factor := factor)
+  · dsimp [factor]
+    apply pow_ne_zero
+    norm_cast
+    norm_num
+  · dsimp [factor]
+    exact ENNReal.pow_ne_top ENNReal.coe_ne_top
+  · exact upgraded.trans_eq factored.symm
+
 end RandomRestriction
 end AC0
 end Algebraic

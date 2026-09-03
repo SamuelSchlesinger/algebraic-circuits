@@ -72,7 +72,7 @@ coordinates, then
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Event-wide canonical injection and exact scaled probability bound validated 2026-09-03; standard `9pt` corollary and target `5pt` bound open |
+| Switching | Explicit finite switching lemma | Exact scaled injection bound and positive-width `(9pt)^s` corollary validated 2026-09-03; zero-width edge and target `(5pt)^s` bound open |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -227,3 +227,15 @@ for every positive width bound `t` and `0 <= p <= 1`. This is already a finite,
 kernel-checked switching estimate. Converting it under `p <= 1/9` to the
 standard intermediate `(9pt)^s` statement, handling zero-width edge cases,
 and then sharpening to the source target `(5pt)^s` remain open.
+
+The positive-width analytic corollary passed the same gates on 2026-09-03.
+Under `p <= 1/9`, the fixed-coordinate mass satisfies
+`(1-p)/2 >= 4/9`. Monotonicity raises this inequality to the `s`th power,
+and the finite nonzero factor `(4/9)^s` is cancelled explicitly from the
+scaled encoding bound. The resulting checked statement is
+`Pr[canonical depth >= s] <= (9pt)^s`.
+
+This is the constant delivered by the present one-position/two-bit advice
+alphabet and is recorded as an intermediate bound, not as the final
+Hastad-style `5pt` switching lemma. The zero-width case and constant-sharpening
+argument remain separate obligations.
