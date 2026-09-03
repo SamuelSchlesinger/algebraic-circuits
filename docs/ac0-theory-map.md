@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality, restriction compatibility, and semantic depth invariance validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Exact depth-one gate extraction validated 2026-09-03; simultaneous circuit simplification open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Simultaneous bounded-bottom-gate switching validated 2026-09-03; gate replacement open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -394,3 +394,16 @@ CNF, each pointwise equal to the actual internal gate function. Only the one
 gate is represented as a formula; the surrounding circuit remains a shared
 DAG. The next obligation is to gather the relevant bottom gates into the
 finite switching family and formalize their simultaneous replacement.
+
+The padded bottom-family submilestone passed the full gates on 2026-09-03.
+All `g` program indices are retained: an eligible logical-depth-one gate of
+fan-in at most `t` receives an exact width-`t` representation, while every
+other index receives the appropriate constant DNF or CNF. This avoids subtype
+enumeration and preserves the standard size factor. Combining the padded
+family with the switching union bound proves, for both connectives,
+`Pr[some eligible bottom gate has restricted DT depth >= s]
+  <= g * (5pt)^s`,
+as well as the explicit failure-of-depth-`d` form. The event is stated for the
+actual restricted internal gate functions, not merely their extracted syntax.
+The next obligation is to turn simultaneous shallow decision trees into an
+explicit depth-reduced program while controlling size and logical depth.

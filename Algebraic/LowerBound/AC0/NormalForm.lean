@@ -535,6 +535,16 @@ theorem widthAtMost_restrict
   exact (Term.width_restrict_le term residual rho restricted).trans
     (bounded term termPresent)
 
+/-- A DNF width bound remains valid after increasing the allowance. -/
+theorem WidthAtMost.mono
+    {formula : DNF n}
+    {smaller larger : Nat}
+    (bounded : formula.WidthAtMost smaller)
+    (le : smaller ≤ larger) :
+    formula.WidthAtMost larger := by
+  intro term present
+  exact (bounded term present).trans le
+
 end DNF
 
 /-- An ordered conjunction of clauses. Ordering is retained so dual arguments
@@ -622,6 +632,16 @@ theorem widthAtMost_restrict
     List.mem_filterMap.1 residualPresent
   exact (Clause.width_restrict_le clause residual rho restricted).trans
     (bounded clause clausePresent)
+
+/-- A CNF width bound remains valid after increasing the allowance. -/
+theorem WidthAtMost.mono
+    {formula : CNF n}
+    {smaller larger : Nat}
+    (bounded : formula.WidthAtMost smaller)
+    (le : smaller ≤ larger) :
+    formula.WidthAtMost larger := by
+  intro clause present
+  exact (bounded clause present).trans le
 
 end CNF
 
