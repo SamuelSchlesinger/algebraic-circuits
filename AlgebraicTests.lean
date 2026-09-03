@@ -6,6 +6,7 @@ import AlgebraicTests.AC0DecisionTree
 import AlgebraicTests.AC0CanonicalDecisionTree
 import AlgebraicTests.AC0NormalForm
 import AlgebraicTests.AC0RandomRestriction
+import AlgebraicTests.AC0SwitchingEncoding
 import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds

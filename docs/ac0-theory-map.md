@@ -40,6 +40,15 @@ not an optimal-tree computation. The formal switching event is the depth of
 this concrete tree; semantic correctness then relates it to ordinary
 existential decision-tree depth.
 
+The injective probability calculation follows the weighted presentation in
+Neil Thapen's
+[*Notes on switching lemmas*](https://arxiv.org/abs/2202.05651), Section 1,
+which adapts the Razborov--Beame encoding proof to independently sampled
+restrictions. The trusted Lean statement is kept division-free: if an
+injection extends every bad restriction by exactly `s` formerly live
+coordinates, then
+`((1 - p) / 2)^s * Pr[bad] <= |advice| * p^s`.
+
 ## Existing-library convention audit
 
 - `Circuit sigma n g m` is a shared, topologically ordered DAG with `g`
@@ -63,7 +72,7 @@ existential decision-tree depth.
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantic layer validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Not started |
+| Switching | Explicit finite switching lemma | Exact weighted-injection engine validated 2026-09-03; canonical path encoding and final bound open |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -138,3 +147,13 @@ is proved, and every restriction's point mass is proved equal to
 unit upper-bound lemmas are derived from that PMF. The audited normalization
 chain uses no axioms beyond Lean's standard `propext`, `Classical.choice`, and
 `Quot.sound`.
+
+The weighted switching-encoding submilestone passed the same gates on
+2026-09-03. Refinement by an assignment supported on live variables has an
+exact cross-multiplied point-mass identity. A general finite injective-
+encoding theorem sums that identity without division, and its specialization
+gives the displayed `s`-coordinate probability inequality. This is proof
+infrastructure, not yet the switching lemma: the canonical path advice,
+decoder, injectivity proof, and advice-cardinality estimate remain open. The
+audited headline theorems use no axioms beyond Lean's standard `propext`,
+`Classical.choice`, and `Quot.sound`.

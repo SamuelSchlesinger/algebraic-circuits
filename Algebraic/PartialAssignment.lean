@@ -294,6 +294,19 @@ theorem liveVariables_refine
   | none => simp [refine, fixed]
   | some value => simp [refine, fixed]
 
+/-- The variables fixed by a sequential refinement are exactly those fixed by
+either constituent assignment. -/
+theorem fixedVariables_refine
+    (rho sigma : PartialAssignment n) :
+    (rho.refine sigma).fixedVariables =
+      rho.fixedVariables ∪ sigma.fixedVariables := by
+  apply Finset.ext
+  intro index
+  simp only [mem_fixedVariables, Finset.mem_union]
+  cases fixed : rho index with
+  | none => simp [refine, fixed]
+  | some value => simp [refine, fixed]
+
 /-- Sequential refinement cannot increase the number of live variables. -/
 theorem liveCount_refine_le_left
     (rho sigma : PartialAssignment n) :
@@ -322,6 +335,32 @@ theorem liveCount_refine_fix_lt_of_live
   rw [liveCount, liveVariables_refine_fix]
   exact Finset.card_erase_lt_of_mem
     ((mem_liveVariables rho selected).2 live)
+
+/-- If the second assignment fixes only variables left live by the first,
+their fixed-variable counts add under refinement. -/
+theorem fixedCount_refine_eq_add
+    (rho sigma : PartialAssignment n)
+    (newFixes : sigma.fixedVariables ⊆ rho.liveVariables) :
+    (rho.refine sigma).fixedCount = rho.fixedCount + sigma.fixedCount := by
+  have disjoint : Disjoint rho.fixedVariables sigma.fixedVariables := by
+    rw [Finset.disjoint_left]
+    intro index fixedByRho fixedBySigma
+    have liveByRho := newFixes fixedBySigma
+    exact (Finset.disjoint_left.mp
+      (disjoint_liveVariables_fixedVariables rho)) liveByRho fixedByRho
+  rw [fixedCount, fixedVariables_refine,
+    Finset.card_union_of_disjoint disjoint, fixedCount, fixedCount]
+
+/-- Under a refinement that fixes only live variables, the decrease in live
+count is exactly the second assignment's fixed count. -/
+theorem liveCount_refine_add_fixedCount_eq
+    (rho sigma : PartialAssignment n)
+    (newFixes : sigma.fixedVariables ⊆ rho.liveVariables) :
+    (rho.refine sigma).liveCount + sigma.fixedCount = rho.liveCount := by
+  have refinedPartition := liveCount_add_fixedCount (rho.refine sigma)
+  have sourcePartition := liveCount_add_fixedCount rho
+  rw [fixedCount_refine_eq_add rho sigma newFixes] at refinedPartition
+  omega
 
 /-- Inputs that agree on every live variable become equal after applying the
 partial assignment. -/
