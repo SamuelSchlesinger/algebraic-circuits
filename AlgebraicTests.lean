@@ -7,6 +7,7 @@ import AlgebraicTests.AC0Duality
 import AlgebraicTests.AC0CanonicalDecisionTree
 import AlgebraicTests.AC0NormalForm
 import AlgebraicTests.AC0LiteralGate
+import AlgebraicTests.AC0BottomGate
 import AlgebraicTests.AC0RandomRestriction
 import AlgebraicTests.AC0SwitchingEncoding
 import AlgebraicTests.AC0CombinedAdvice

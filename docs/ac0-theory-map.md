@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality, restriction compatibility, and semantic depth invariance validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Finite-family union bound and literal-gate normal forms validated 2026-09-03; gate extraction open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Exact depth-one gate extraction validated 2026-09-03; simultaneous circuit simplification open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -382,3 +382,15 @@ are semantically exact for arbitrary fan-in and have width at most that
 fan-in. This closes the duplicate/opposite-literal edge case needed before
 extracting bottom gates from the shared circuit DAG; it does not enumerate
 truth tables or search for a smaller normal form.
+
+The shared-DAG bottom-gate extraction passed the full gates on 2026-09-03.
+Source logical depths are now available for every internal gate and wire. Lean
+proves that a depth-zero internal gate must be NOT, and the checked
+input-negation condition then proves that every depth-zero wire computes an
+explicit signed original-input literal. Every connective argument of a
+logical-depth-one gate is therefore a literal. A depth-one AND gate is
+extracted as a width-at-most-fan-in DNF and a depth-one OR gate as the dual
+CNF, each pointwise equal to the actual internal gate function. Only the one
+gate is represented as a formula; the surrounding circuit remains a shared
+DAG. The next obligation is to gather the relevant bottom gates into the
+finite switching family and formalize their simultaneous replacement.

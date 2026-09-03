@@ -1,5 +1,6 @@
 import Algebraic.LowerBound.AC0.NormalForm
 import Algebraic.LowerBound.AC0.LiteralGate
+import Algebraic.LowerBound.AC0.BottomGate
 import Algebraic.LowerBound.AC0.DecisionTree
 import Algebraic.LowerBound.AC0.Duality
 import Algebraic.LowerBound.AC0.CanonicalDecisionTree
