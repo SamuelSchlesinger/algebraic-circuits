@@ -72,7 +72,7 @@ coordinates, then
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Exact scaled injection bound and positive-width `(9pt)^s` corollary validated 2026-09-03; zero-width edge and target `(5pt)^s` bound open |
+| Switching | Explicit finite switching lemma | Exact scaled injection bound and all-width `(9pt)^s` corollary validated 2026-09-03; target `(5pt)^s` bound open |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -237,5 +237,13 @@ scaled encoding bound. The resulting checked statement is
 
 This is the constant delivered by the present one-position/two-bit advice
 alphabet and is recorded as an intermediate bound, not as the final
-Hastad-style `5pt` switching lemma. The zero-width case and constant-sharpening
-argument remain separate obligations.
+Hastad-style `5pt` switching lemma. The constant-sharpening argument remains a
+separate obligation.
+
+The zero-width edge case passed the same gates on 2026-09-03. A typed trace
+for a width-zero DNF is proved to have no query steps: any nonempty canonical
+block would exhibit a surviving term with positive live-support length,
+contradicting its zero width. Therefore every positive canonical-depth event
+has probability zero; threshold zero is discharged by the general unit upper
+bound. The public `(9pt)^s` theorem now covers every natural width `t`. Only
+the sharper source-target constant remains open at this switching stage.

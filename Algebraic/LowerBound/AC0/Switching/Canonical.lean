@@ -155,6 +155,53 @@ theorem canonicalEncoding_injectiveOn_deep
 
 end Switching
 
+namespace DNF
+
+/-- Under a width-zero hypothesis, every typed canonical trace has an empty
+query transcript. -/
+theorem CanonicalTrace.steps_eq_nil_of_widthAtMost_zero
+    {formula : DNF n}
+    {rho : PartialAssignment n}
+    {steps : List (DecisionTree.PathStep n)}
+    (trace : formula.CanonicalTrace rho steps)
+    (bounded : formula.WidthAtMost 0) :
+    steps = [] := by
+  cases trace with
+  | nil => rfl
+  | start found support_eq nonempty block =>
+      rename_i term indices
+      have termBound : term.width ≤ 0 :=
+        bounded term (firstSurvivingIn_mem rho formula.terms found)
+      have lengthLe : (liveSupport term rho).length ≤ term.width := by
+        calc
+          (liveSupport term rho).length ≤ term.orderedSupport.length :=
+            List.length_filter_le _ _
+          _ = term.width := term.length_orderedSupport
+      have livePositive : 0 < (liveSupport term rho).length := by
+        rw [support_eq]
+        exact List.length_pos_iff.mpr nonempty
+      omega
+
+/-- A width-zero DNF cannot have positive canonical decision-tree depth under
+any restriction. -/
+theorem not_canonicalDepthAtLeast_of_widthAtMost_zero
+    (formula : DNF n)
+    (bounded : formula.WidthAtMost 0)
+    (rho : PartialAssignment n)
+    (pathLength : Nat)
+    (positive : 0 < pathLength) :
+    ¬formula.CanonicalDepthAtLeast rho pathLength := by
+  intro deep
+  obtain ⟨path⟩ := formula.exists_canonicalPath rho pathLength deep
+  obtain ⟨trace⟩ := formula.canonicalTrace_of_path rho path.follows
+  have stepsNil := trace.steps_eq_nil_of_widthAtMost_zero bounded
+  have lengthZero := path.length_steps
+  rw [stepsNil] at lengthZero
+  simp at lengthZero
+  omega
+
+end DNF
+
 namespace RandomRestriction
 
 open scoped ENNReal
@@ -259,7 +306,7 @@ private theorem four_ninths_pow_mul_nine_pow
 /-- Standard `9pt` corollary of the canonical switching injection. This is
 the weighted Razborov--Beame/Thapen constant obtained from one bounded
 position and two advice bits per query. -/
-theorem probability_canonicalDepthAtLeast_le_nine
+theorem probability_canonicalDepthAtLeast_le_nine_of_pos
     [NeZero widthBound]
     (formula : DNF n)
     (bounded : formula.WidthAtMost widthBound)
@@ -301,6 +348,57 @@ theorem probability_canonicalDepthAtLeast_le_nine
   · dsimp [factor]
     exact ENNReal.pow_ne_top ENNReal.coe_ne_top
   · exact upgraded.trans_eq factored.symm
+
+/-- For a width-zero DNF and positive threshold, the canonical-depth event has
+probability zero. -/
+theorem probability_canonicalDepthAtLeast_eq_zero_of_widthAtMost_zero
+    (formula : DNF n)
+    (bounded : formula.WidthAtMost 0)
+    (pathLength : Nat)
+    (positive : 0 < pathLength)
+    (p : NNReal)
+    (atMostOne : p ≤ 1) :
+    probability n p atMostOne
+        (fun rho => formula.CanonicalDepthAtLeast rho pathLength) = 0 := by
+  calc
+    probability n p atMostOne
+          (fun rho => formula.CanonicalDepthAtLeast rho pathLength) =
+        probability n p atMostOne (fun _ => False) := by
+      apply probability_congr
+      intro rho
+      constructor
+      · exact fun deep =>
+          (formula.not_canonicalDepthAtLeast_of_widthAtMost_zero
+            bounded rho pathLength positive deep).elim
+      · exact False.elim
+    _ = 0 := probability_false n p atMostOne
+
+/-- Canonical `9pt` switching bound, including width-zero DNFs. -/
+theorem probability_canonicalDepthAtLeast_le_nine
+    (formula : DNF n)
+    (bounded : formula.WidthAtMost widthBound)
+    (pathLength : Nat)
+    (p : NNReal)
+    (atMostOne : p ≤ 1)
+    (small : p ≤ 1 / 9) :
+    probability n p atMostOne
+        (fun rho => formula.CanonicalDepthAtLeast rho pathLength) ≤
+      ((9 : ENNReal) * (p : ENNReal) * (widthBound : ENNReal)) ^
+        pathLength := by
+  cases widthBound with
+  | zero =>
+      cases pathLength with
+      | zero =>
+          simpa using probability_le_one n p atMostOne
+            (fun rho => formula.CanonicalDepthAtLeast rho 0)
+      | succ length =>
+          rw [probability_canonicalDepthAtLeast_eq_zero_of_widthAtMost_zero
+            formula bounded (Nat.succ length) (Nat.succ_pos length)
+            p atMostOne]
+          exact bot_le
+  | succ width =>
+      exact probability_canonicalDepthAtLeast_le_nine_of_pos
+        formula bounded pathLength p atMostOne small
 
 end RandomRestriction
 end AC0

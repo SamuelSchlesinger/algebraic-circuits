@@ -45,7 +45,6 @@ example
 
 example
     {widthBound : Nat}
-    [NeZero widthBound]
     (formula : DNF n)
     (bounded : formula.WidthAtMost widthBound)
     (pathLength : Nat)
@@ -58,5 +57,17 @@ example
         pathLength :=
   probability_canonicalDepthAtLeast_le_nine
     formula bounded pathLength p atMostOne small
+
+example
+    (formula : DNF n)
+    (bounded : formula.WidthAtMost 0)
+    (pathLength : Nat)
+    (positive : 0 < pathLength)
+    (p : NNReal)
+    (atMostOne : p ≤ 1) :
+    probability n p atMostOne
+        (fun rho => formula.CanonicalDepthAtLeast rho pathLength) = 0 :=
+  probability_canonicalDepthAtLeast_eq_zero_of_widthAtMost_zero
+    formula bounded pathLength positive p atMostOne
 
 end AlgebraicTests.AC0CanonicalSwitching
