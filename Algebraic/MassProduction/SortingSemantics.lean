@@ -19,7 +19,7 @@ theorem orderedBitonicSort_sorted [LinearOrder α]
     (input : Fin (networkRecords depth) -> α) :
     SequenceSorted ascending
       (orderedBitonicSort depth ascending input) :=
-  orderedBitonicSort_sorted_internal depth ascending input
+  Internal.orderedBitonicSort_sorted depth ascending input
 
 /-- The keyed network sorts records by their projected keys. -/
 theorem keyedBitonicSort_sorted [LinearOrder κ]
@@ -27,14 +27,14 @@ theorem keyedBitonicSort_sorted [LinearOrder κ]
     (input : Fin (networkRecords depth) -> α) :
     SequenceSorted ascending
       (fun output => key (keyedBitonicSort key depth ascending input output)) :=
-  keyedBitonicSort_sorted_internal key depth ascending input
+  Internal.keyedBitonicSort_sorted key depth ascending input
 
 /-- The keyed network preserves complete records up to permutation. -/
 theorem keyedBitonicSort_permutes [LinearOrder κ]
     (key : α -> κ) (depth : Nat) (ascending : Bool)
     (input : Fin (networkRecords depth) -> α) :
     SequencePermutes (keyedBitonicSort key depth ascending input) input :=
-  keyedBitonicSort_permutes_internal key depth ascending input
+  Internal.keyedBitonicSort_permutes key depth ascending input
 
 end Semantics
 end Sorting

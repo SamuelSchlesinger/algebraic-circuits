@@ -1803,14 +1803,12 @@ theorem massProducesAt_step
     have scaled : (level + 1) * blockCutoff <=
         (level + 1) * blockWidth := pastCutoff.trans capacity
     exact Nat.le_of_mul_le_mul_left scaled (by omega)
-  have exponentMonotone : numerator * inputWidth / denominator <=
-      numerator * paddedWidth / denominator :=
-    Nat.div_le_div_right (Nat.mul_le_mul_left numerator fits)
   have paddedCopiesBound : copies <=
       2 ^ (numerator * stepInputWidth level blockWidth / denominator) := by
-    unfold rationalCopyBudget at copiesBound
-    exact copiesBound.trans <| Nat.pow_le_pow_right (by omega) <| by
-      simpa only [paddedWidth, nextEqualBlockWidth] using exponentMonotone
+    have widened := copiesBound.trans
+      (rationalCopyBudget_mono_inputs
+        (numerator := numerator) (denominator := denominator) fits)
+    simpa [rationalCopyBudget, paddedWidth, nextEqualBlockWidth] using widened
   let paddedFunction := InputSplit.paddedFunction fits function
   have paddedMass := equalBound blockWidth blockPastCutoff paddedFunction
     copies copiesPositive paddedCopiesBound
@@ -1934,14 +1932,11 @@ theorem massProducesAtAllLengths_of_eventual
   have paddedPastCutoff : cutoff <= paddedWidth := by
     dsimp [paddedWidth]
     omega
-  have exponentMonotone : numerator * inputWidth / denominator <=
-      numerator * paddedWidth / denominator :=
-    Nat.div_le_div_right (Nat.mul_le_mul_left numerator fits)
   have paddedCopiesBound : copies <=
       rationalCopyBudget numerator denominator paddedWidth := by
-    unfold rationalCopyBudget at copiesBound ⊢
     exact copiesBound.trans
-      (Nat.pow_le_pow_right (by omega) exponentMonotone)
+      (rationalCopyBudget_mono_inputs
+        (numerator := numerator) (denominator := denominator) fits)
   let paddedFunction := InputSplit.paddedFunction fits function
   have paddedMass := eventualBound paddedWidth paddedPositive
     paddedPastCutoff paddedFunction copies copiesPositive paddedCopiesBound

@@ -11,6 +11,7 @@ namespace Algebraic
 namespace MassProduction
 namespace Sorting
 namespace Semantics
+namespace Internal
 
 private def threshold [LinearOrder α] (pivot value : α) : Bool :=
   decide (pivot ≤ value)
@@ -33,7 +34,7 @@ private theorem threshold_mono [LinearOrder α] (pivot : α) :
       max (threshold pivot first) (threshold pivot second) := by
   simp only [threshold, Bool.max_eq_or, Bool.decide_or, le_max_iff]
 
-private theorem SequenceBitonic.threshold_internal [LinearOrder α] {n : ℕ}
+private theorem SequenceBitonic.threshold [LinearOrder α] {n : ℕ}
     {sequence : Fin n → α} (hsequence : SequenceBitonic sequence)
     (pivot : α) :
     SequenceBitonic (fun i => threshold pivot (sequence i)) := by
@@ -45,14 +46,14 @@ private theorem SequenceBitonic.threshold_internal [LinearOrder α] {n : ℕ}
   · rw [← threshold_min, ← threshold_max]
     exact threshold_mono pivot h.2
 
-@[simp] theorem finAppend_addNat_self_internal {n : ℕ}
+@[simp] theorem finAppend_addNat_self {n : ℕ}
     (first second : Fin n → α) (i : Fin n) :
     Fin.append first second (i.addNat n) = second i := by
   rw [show i.addNat n = Fin.natAdd n i by
     apply Fin.ext
     exact Nat.add_comm _ _, Fin.append_right]
 
-theorem appendSequence_left_value_internal {n m : ℕ}
+theorem appendSequence_left_value {n m : ℕ}
     (first : Fin n → α) (second : Fin m → α)
     (index : Fin (n + m)) (hleft : index.val < n) :
     appendSequence first second index = first ⟨index.val, hleft⟩ := by
@@ -65,7 +66,7 @@ theorem appendSequence_left_value_internal {n m : ℕ}
       congrArg (appendSequence first second) heq
     _ = first ⟨index.val, hleft⟩ := Fin.append_left _ _ _
 
-theorem appendSequence_right_value_internal {n m : ℕ}
+theorem appendSequence_right_value {n m : ℕ}
     (first : Fin n → α) (second : Fin m → α)
     (index : Fin (n + m)) (hright : ¬index.val < n) :
     appendSequence first second index =
@@ -138,7 +139,7 @@ private theorem embedEight_strictMono {n : ℕ} (i j k l : Fin n)
     simp only [Fin.mk_lt_mk]
     omega
 
-private theorem SequenceBitonic.comp_strictMono_internal
+private theorem SequenceBitonic.comp_strictMono
     [LinearOrder α] {n m : ℕ} {sequence : Fin n → α}
     (hsequence : SequenceBitonic sequence) {embed : Fin m → Fin n}
     (hembed : StrictMono embed) :
@@ -146,14 +147,14 @@ private theorem SequenceBitonic.comp_strictMono_internal
   intro i j k l hij hjk hkl
   exact hsequence _ _ _ _ (hembed hij) (hembed hjk) (hembed hkl)
 
-private theorem localEight_bitonic_internal [LinearOrder α] {n : ℕ}
+private theorem localEight_bitonic [LinearOrder α] {n : ℕ}
     (first second : Fin n → α)
     (hsequence : SequenceBitonic (appendSequence first second))
     (i j k l : Fin n) (hij : i < j) (hjk : j < k) (hkl : k < l) :
     SequenceBitonic
       ![first i, first j, first k, first l,
         second i, second j, second k, second l] := by
-  have hselected := hsequence.comp_strictMono_internal
+  have hselected := SequenceBitonic.comp_strictMono hsequence
     (embedEight_strictMono i j k l hij hjk hkl)
   have hequal :
       (fun index => appendSequence first second (embedEight i j k l index)) =
@@ -165,7 +166,7 @@ private theorem localEight_bitonic_internal [LinearOrder α] {n : ℕ}
   rw [hequal] at hselected
   exact hselected
 
-theorem pointwiseMin_bitonic_internal [LinearOrder α] {n : ℕ}
+theorem pointwiseMin_bitonic [LinearOrder α] {n : ℕ}
     (first second : Fin n → α)
     (hsequence : SequenceBitonic (appendSequence first second)) :
     SequenceBitonic (pointwiseMin first second) := by
@@ -174,20 +175,20 @@ theorem pointwiseMin_bitonic_internal [LinearOrder α] {n : ℕ}
     ![first i, first j, first k, first l,
       second i, second j, second k, second l]
   have hlocal : SequenceBitonic localSequence :=
-    localEight_bitonic_internal first second hsequence
+    localEight_bitonic first second hsequence
       i j k l hij hjk hkl
   have hhalf (pivot : α) :
-      boolHalfMinInternal (fun index => threshold pivot (localSequence index)) =
+      boolHalfMin (fun index => threshold pivot (localSequence index)) =
         fun index => threshold pivot
           (pointwiseMin first second (selectFour i j k l index)) := by
     funext index
     fin_cases index <;>
-      simp [boolHalfMinInternal, localSequence, pointwiseMin, selectFour]
+      simp [boolHalfMin, localSequence, pointwiseMin, selectFour]
   constructor
   · let pivot := min (pointwiseMin first second i)
       (pointwiseMin first second k)
-    have hbool := (bool_bitonic_halves_internal _
-      (hlocal.threshold_internal pivot)).1
+    have hbool := (boolBitonicHalves _
+      (SequenceBitonic.threshold hlocal pivot)).1
     have hineq := hbool (0 : Fin 4) 1 2 3
       (by omega) (by omega) (by omega)
     by_contra hnot
@@ -206,8 +207,8 @@ theorem pointwiseMin_bitonic_internal [LinearOrder α] {n : ℕ}
     exact Bool.noConfusion ((Bool.le_iff_imp.mp hfirst) rfl)
   · let pivot := min (pointwiseMin first second j)
       (pointwiseMin first second l)
-    have hbool := (bool_bitonic_halves_internal _
-      (hlocal.threshold_internal pivot)).1
+    have hbool := (boolBitonicHalves _
+      (SequenceBitonic.threshold hlocal pivot)).1
     have hineq := hbool (0 : Fin 4) 1 2 3
       (by omega) (by omega) (by omega)
     by_contra hnot
@@ -225,7 +226,7 @@ theorem pointwiseMin_bitonic_internal [LinearOrder α] {n : ℕ}
     rw [hpivot, hright] at hsecond
     exact Bool.noConfusion ((Bool.le_iff_imp.mp hsecond) rfl)
 
-theorem pointwiseMax_bitonic_internal [LinearOrder α] {n : ℕ}
+theorem pointwiseMax_bitonic [LinearOrder α] {n : ℕ}
     (first second : Fin n → α)
     (hsequence : SequenceBitonic (appendSequence first second)) :
     SequenceBitonic (pointwiseMax first second) := by
@@ -234,20 +235,20 @@ theorem pointwiseMax_bitonic_internal [LinearOrder α] {n : ℕ}
     ![first i, first j, first k, first l,
       second i, second j, second k, second l]
   have hlocal : SequenceBitonic localSequence :=
-    localEight_bitonic_internal first second hsequence
+    localEight_bitonic first second hsequence
       i j k l hij hjk hkl
   have hhalf (pivot : α) :
-      boolHalfMaxInternal (fun index => threshold pivot (localSequence index)) =
+      boolHalfMax (fun index => threshold pivot (localSequence index)) =
         fun index => threshold pivot
           (pointwiseMax first second (selectFour i j k l index)) := by
     funext index
     fin_cases index <;>
-      simp [boolHalfMaxInternal, localSequence, pointwiseMax, selectFour]
+      simp [boolHalfMax, localSequence, pointwiseMax, selectFour]
   constructor
   · let pivot := min (pointwiseMax first second i)
       (pointwiseMax first second k)
-    have hbool := (bool_bitonic_halves_internal _
-      (hlocal.threshold_internal pivot)).2
+    have hbool := (boolBitonicHalves _
+      (SequenceBitonic.threshold hlocal pivot)).2
     have hineq := hbool (0 : Fin 4) 1 2 3
       (by omega) (by omega) (by omega)
     by_contra hnot
@@ -266,8 +267,8 @@ theorem pointwiseMax_bitonic_internal [LinearOrder α] {n : ℕ}
     exact Bool.noConfusion ((Bool.le_iff_imp.mp hfirst) rfl)
   · let pivot := min (pointwiseMax first second j)
       (pointwiseMax first second l)
-    have hbool := (bool_bitonic_halves_internal _
-      (hlocal.threshold_internal pivot)).2
+    have hbool := (boolBitonicHalves _
+      (SequenceBitonic.threshold hlocal pivot)).2
     have hineq := hbool (0 : Fin 4) 1 2 3
       (by omega) (by omega) (by omega)
     by_contra hnot
@@ -285,7 +286,7 @@ theorem pointwiseMax_bitonic_internal [LinearOrder α] {n : ℕ}
     rw [hpivot, hright] at hsecond
     exact Bool.noConfusion ((Bool.le_iff_imp.mp hsecond) rfl)
 
-theorem pointwiseMin_allLE_pointwiseMax_internal
+theorem pointwiseMin_allLE_pointwiseMax
     [LinearOrder α] {n : ℕ} (first second : Fin n → α)
     (hsequence : SequenceBitonic (appendSequence first second)) :
     SequenceAllLE (pointwiseMin first second)
@@ -305,7 +306,7 @@ theorem pointwiseMin_allLE_pointwiseMax_internal
         (by change n + j.val < n + i.val; omega)
     simpa [appendSequence, pointwiseMin, pointwiseMax] using h.2
 
-theorem increasing_append_decreasing_bitonic_internal
+theorem increasing_append_decreasing_bitonic
     [LinearOrder α] {n m : ℕ}
     (first : Fin n → α) (second : Fin m → α)
     (hfirst : SequenceIncreasing first)
@@ -316,19 +317,19 @@ theorem increasing_append_decreasing_bitonic_internal
   · have hi : i.val < n := by omega
     have hj : j.val < n := by omega
     by_cases hl : l.val < n
-    · rw [appendSequence_left_value_internal first second i hi,
-          appendSequence_left_value_internal first second j hj,
-          appendSequence_left_value_internal first second k hk,
-          appendSequence_left_value_internal first second l hl]
+    · rw [appendSequence_left_value first second i hi,
+          appendSequence_left_value first second j hj,
+          appendSequence_left_value first second k hk,
+          appendSequence_left_value first second l hl]
       have hfi := hfirst (⟨i.val, hi⟩ : Fin n) ⟨j.val, hj⟩ hij
       have hfj := hfirst (⟨j.val, hj⟩ : Fin n) ⟨k.val, hk⟩ hjk
       constructor
       · exact (min_le_left _ _).trans (hfi.trans (le_max_left _ _))
       · exact (min_le_left _ _).trans (hfj.trans (le_max_right _ _))
-    · rw [appendSequence_left_value_internal first second i hi,
-          appendSequence_left_value_internal first second j hj,
-          appendSequence_left_value_internal first second k hk,
-          appendSequence_right_value_internal first second l hl]
+    · rw [appendSequence_left_value first second i hi,
+          appendSequence_left_value first second j hj,
+          appendSequence_left_value first second k hk,
+          appendSequence_right_value first second l hl]
       have hfi := hfirst (⟨i.val, hi⟩ : Fin n) ⟨j.val, hj⟩ hij
       have hfj := hfirst (⟨j.val, hj⟩ : Fin n) ⟨k.val, hk⟩ hjk
       constructor
@@ -338,10 +339,10 @@ theorem increasing_append_decreasing_bitonic_internal
     · have hi : i.val < n := by omega
       have hkg : k.val - n < m := by omega
       have hlg : l.val - n < m := by omega
-      rw [appendSequence_left_value_internal first second i hi,
-          appendSequence_left_value_internal first second j hj,
-          appendSequence_right_value_internal first second k hk,
-          appendSequence_right_value_internal first second l (by omega)]
+      rw [appendSequence_left_value first second i hi,
+          appendSequence_left_value first second j hj,
+          appendSequence_right_value first second k hk,
+          appendSequence_right_value first second l (by omega)]
       have hfi := hfirst (⟨i.val, hi⟩ : Fin n) ⟨j.val, hj⟩ hij
       have hkl : (⟨k.val - n, hkg⟩ : Fin m) <
           ⟨l.val - n, hlg⟩ := by
@@ -365,39 +366,39 @@ theorem increasing_append_decreasing_bitonic_internal
       have hgj := hsecond _ _ hjk'
       have hgk := hsecond _ _ hkl'
       by_cases hi : i.val < n
-      · rw [appendSequence_left_value_internal first second i hi,
-            appendSequence_right_value_internal first second j hj,
-            appendSequence_right_value_internal first second k hk,
-            appendSequence_right_value_internal first second l (by omega)]
+      · rw [appendSequence_left_value first second i hi,
+            appendSequence_right_value first second j hj,
+            appendSequence_right_value first second k hk,
+            appendSequence_right_value first second l (by omega)]
         constructor
         · exact (min_le_right _ _).trans (hgj.trans (le_max_left _ _))
         · exact (min_le_right _ _).trans (hgk.trans (le_max_right _ _))
-      · rw [appendSequence_right_value_internal first second i hi,
-            appendSequence_right_value_internal first second j hj,
-            appendSequence_right_value_internal first second k hk,
-            appendSequence_right_value_internal first second l (by omega)]
+      · rw [appendSequence_right_value first second i hi,
+            appendSequence_right_value first second j hj,
+            appendSequence_right_value first second k hk,
+            appendSequence_right_value first second l (by omega)]
         constructor
         · exact (min_le_right _ _).trans (hgj.trans (le_max_left _ _))
         · exact (min_le_right _ _).trans (hgk.trans (le_max_right _ _))
 
-@[simp] theorem recordFirstHalf_joinRecordHalves_internal {depth : ℕ}
+@[simp] theorem recordFirstHalf_joinRecordHalves {depth : ℕ}
     (first second : Fin (networkRecords depth) → α) :
     recordFirstHalf (joinRecordHalves first second) = first := by
   funext index
   exact Fin.append_left _ _ _
 
-@[simp] theorem recordSecondHalf_joinRecordHalves_internal {depth : ℕ}
+@[simp] theorem recordSecondHalf_joinRecordHalves {depth : ℕ}
     (first second : Fin (networkRecords depth) → α) :
     recordSecondHalf (joinRecordHalves first second) = second := by
   funext index
   exact Fin.append_right _ _ _
 
-theorem joinRecordHalves_split_internal {depth : ℕ}
+theorem joinRecordHalves_split {depth : ℕ}
     (input : Fin (networkRecords (depth + 1)) → α) :
     joinRecordHalves (recordFirstHalf input) (recordSecondHalf input) = input := by
   exact Fin.append_castAdd_natAdd
 
-theorem increasing_append_internal [Preorder α] {n m : ℕ}
+theorem increasing_append [Preorder α] {n m : ℕ}
     (first : Fin n → α) (second : Fin m → α)
     (hfirst : SequenceIncreasing first)
     (hsecond : SequenceIncreasing second)
@@ -406,20 +407,20 @@ theorem increasing_append_internal [Preorder α] {n m : ℕ}
   intro i j hij
   by_cases hi : i.val < n
   · by_cases hj : j.val < n
-    · rw [appendSequence_left_value_internal first second i hi,
-          appendSequence_left_value_internal first second j hj]
+    · rw [appendSequence_left_value first second i hi,
+          appendSequence_left_value first second j hj]
       exact hfirst _ _ hij
-    · rw [appendSequence_left_value_internal first second i hi,
-          appendSequence_right_value_internal first second j hj]
+    · rw [appendSequence_left_value first second i hi,
+          appendSequence_right_value first second j hj]
       exact hcross _ _
   · have hj : ¬j.val < n := by omega
-    rw [appendSequence_right_value_internal first second i hi,
-        appendSequence_right_value_internal first second j hj]
+    rw [appendSequence_right_value first second i hi,
+        appendSequence_right_value first second j hj]
     apply hsecond
     change i.val - n < j.val - n
     omega
 
-theorem decreasing_append_internal [Preorder α] {n m : ℕ}
+theorem decreasing_append [Preorder α] {n m : ℕ}
     (first : Fin n → α) (second : Fin m → α)
     (hfirst : SequenceDecreasing first)
     (hsecond : SequenceDecreasing second)
@@ -428,30 +429,20 @@ theorem decreasing_append_internal [Preorder α] {n m : ℕ}
   intro i j hij
   by_cases hj : j.val < n
   · have hi : i.val < n := by omega
-    rw [appendSequence_left_value_internal first second i hi,
-        appendSequence_left_value_internal first second j hj]
+    rw [appendSequence_left_value first second i hi,
+        appendSequence_left_value first second j hj]
     exact hfirst _ _ hij
   · by_cases hi : i.val < n
-    · rw [appendSequence_left_value_internal first second i hi,
-          appendSequence_right_value_internal first second j hj]
+    · rw [appendSequence_left_value first second i hi,
+          appendSequence_right_value first second j hj]
       exact hcross _ _
-    · rw [appendSequence_right_value_internal first second i hi,
-          appendSequence_right_value_internal first second j hj]
+    · rw [appendSequence_right_value first second i hi,
+          appendSequence_right_value first second j hj]
       apply hsecond
       change i.val - n < j.val - n
       omega
 
-theorem SequenceRangeContained.trans_internal {n m k : ℕ}
-    {first : Fin n → α} {second : Fin m → α} {third : Fin k → α}
-    (hfirst : SequenceRangeContained first second)
-    (hsecond : SequenceRangeContained second third) :
-    SequenceRangeContained first third := by
-  intro i
-  obtain ⟨j, hj⟩ := hfirst i
-  obtain ⟨k, hk⟩ := hsecond j
-  exact ⟨k, hj.trans hk⟩
-
-theorem append_rangeContained_internal {n m n' m' : ℕ}
+theorem append_rangeContained {n m n' m' : ℕ}
     {first : Fin n → α} {second : Fin m → α}
     {firstInput : Fin n' → α} {secondInput : Fin m' → α}
     (hfirst : SequenceRangeContained first firstInput)
@@ -467,7 +458,7 @@ theorem append_rangeContained_internal {n m n' m' : ℕ}
     exact ⟨Fin.natAdd n' source, by
       simpa [appendSequence] using hsource⟩
 
-theorem append_rangeContained_same_internal {n m k : ℕ}
+theorem append_rangeContained_same {n m k : ℕ}
     {first : Fin n → α} {second : Fin m → α} {input : Fin k → α}
     (hfirst : SequenceRangeContained first input)
     (hsecond : SequenceRangeContained second input) :
@@ -477,7 +468,7 @@ theorem append_rangeContained_same_internal {n m k : ℕ}
   · simpa [appendSequence] using hfirst i
   · simpa [appendSequence] using hsecond i
 
-theorem pointwiseMin_rangeContained_internal [LinearOrder α] {n : ℕ}
+theorem pointwiseMin_rangeContained [LinearOrder α] {n : ℕ}
     (first second : Fin n → α) :
     SequenceRangeContained (pointwiseMin first second)
       (appendSequence first second) := by
@@ -489,7 +480,7 @@ theorem pointwiseMin_rangeContained_internal [LinearOrder α] {n : ℕ}
     exact ⟨Fin.natAdd n output, by
       simp [pointwiseMin, appendSequence, min_eq_right hle']⟩
 
-theorem pointwiseMax_rangeContained_internal [LinearOrder α] {n : ℕ}
+theorem pointwiseMax_rangeContained [LinearOrder α] {n : ℕ}
     (first second : Fin n → α) :
     SequenceRangeContained (pointwiseMax first second)
       (appendSequence first second) := by
@@ -501,29 +492,29 @@ theorem pointwiseMax_rangeContained_internal [LinearOrder α] {n : ℕ}
     exact ⟨Fin.castAdd n output, by
       simp [pointwiseMax, appendSequence, max_eq_left hle']⟩
 
-theorem orderedCompareLayer_rangeContained_internal [LinearOrder α]
+theorem orderedCompareLayer_rangeContained [LinearOrder α]
     (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords (depth + 1)) → α) :
     SequenceRangeContained (orderedCompareLayer depth ascending input) input := by
   let first := recordFirstHalf input
   let second := recordSecondHalf input
   have hsplit : appendSequence first second = input :=
-    joinRecordHalves_split_internal input
+    joinRecordHalves_split input
   cases ascending with
   | false =>
-      refine (append_rangeContained_same_internal
-        (pointwiseMax_rangeContained_internal first second)
-        (pointwiseMin_rangeContained_internal first second)).trans_internal ?_
+      refine (append_rangeContained_same
+        (pointwiseMax_rangeContained first second)
+        (pointwiseMin_rangeContained first second)).trans ?_
       intro index
       exact ⟨index, congrFun hsplit index⟩
   | true =>
-      refine (append_rangeContained_same_internal
-        (pointwiseMin_rangeContained_internal first second)
-        (pointwiseMax_rangeContained_internal first second)).trans_internal ?_
+      refine (append_rangeContained_same
+        (pointwiseMin_rangeContained first second)
+        (pointwiseMax_rangeContained first second)).trans ?_
       intro index
       exact ⟨index, congrFun hsplit index⟩
 
-theorem orderedBitonicMerge_rangeContained_internal [LinearOrder α]
+theorem orderedBitonicMerge_rangeContained [LinearOrder α]
     (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords depth) → α) :
     SequenceRangeContained (orderedBitonicMerge depth ascending input) input := by
@@ -535,22 +526,22 @@ theorem orderedBitonicMerge_rangeContained_internal [LinearOrder α]
       let compared := orderedCompareLayer depth ascending input
       let first := recordFirstHalf compared
       let second := recordSecondHalf compared
-      have hrecursive := append_rangeContained_internal
+      have hrecursive := append_rangeContained
         (ih ascending first) (ih ascending second)
       have hsplit : appendSequence first second = compared :=
-        joinRecordHalves_split_internal compared
+        joinRecordHalves_split compared
       have htoCompared : SequenceRangeContained
           (joinRecordHalves
             (orderedBitonicMerge depth ascending first)
             (orderedBitonicMerge depth ascending second)) compared := by
-        refine hrecursive.trans_internal ?_
+        refine hrecursive.trans ?_
         intro index
         exact ⟨index, congrFun hsplit index⟩
-      have htoInput := htoCompared.trans_internal
-        (orderedCompareLayer_rangeContained_internal depth ascending input)
+      have htoInput := htoCompared.trans
+        (orderedCompareLayer_rangeContained depth ascending input)
       simpa only [orderedBitonicMerge, compared, first, second] using htoInput
 
-theorem orderedBitonicMerge_allLE_internal [LinearOrder α] {depth : ℕ}
+theorem orderedBitonicMerge_allLE [LinearOrder α] {depth : ℕ}
     (ascending : Bool)
     (first second : Fin (networkRecords depth) → α)
     (hcross : SequenceAllLE first second) :
@@ -558,13 +549,13 @@ theorem orderedBitonicMerge_allLE_internal [LinearOrder α] {depth : ℕ}
       (orderedBitonicMerge depth ascending second) := by
   intro i j
   obtain ⟨sourceFirst, hfirst⟩ :=
-    orderedBitonicMerge_rangeContained_internal depth ascending first i
+    orderedBitonicMerge_rangeContained depth ascending first i
   obtain ⟨sourceSecond, hsecond⟩ :=
-    orderedBitonicMerge_rangeContained_internal depth ascending second j
+    orderedBitonicMerge_rangeContained depth ascending second j
   rw [hfirst, hsecond]
   exact hcross sourceFirst sourceSecond
 
-theorem orderedBitonicMerge_sorted_internal [LinearOrder α]
+theorem orderedBitonicMerge_sorted [LinearOrder α]
     (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords depth) → α)
     (hbitonic : SequenceBitonic input) :
@@ -580,46 +571,46 @@ theorem orderedBitonicMerge_sorted_internal [LinearOrder α]
       let first := recordFirstHalf input
       let second := recordSecondHalf input
       have hsplit : appendSequence first second = input :=
-        joinRecordHalves_split_internal input
+        joinRecordHalves_split input
       have hpairs : SequenceBitonic (appendSequence first second) := by
         rw [hsplit]
         exact hbitonic
-      have hmin := pointwiseMin_bitonic_internal first second hpairs
-      have hmax := pointwiseMax_bitonic_internal first second hpairs
-      have hcross := pointwiseMin_allLE_pointwiseMax_internal
+      have hmin := pointwiseMin_bitonic first second hpairs
+      have hmax := pointwiseMax_bitonic first second hpairs
+      have hcross := pointwiseMin_allLE_pointwiseMax
         first second hpairs
       cases ascending with
       | false =>
           have hfirst := ih false (pointwiseMax first second) hmax
           have hsecond := ih false (pointwiseMin first second) hmin
-          have hmergedCross := orderedBitonicMerge_allLE_internal false
+          have hmergedCross := orderedBitonicMerge_allLE false
             (pointwiseMin first second) (pointwiseMax first second) hcross
-          have hjoined := decreasing_append_internal
+          have hjoined := decreasing_append
             (orderedBitonicMerge depth false (pointwiseMax first second))
             (orderedBitonicMerge depth false (pointwiseMin first second))
             hfirst hsecond hmergedCross
           simpa only [SequenceSorted, Bool.false_eq_true, ↓reduceIte,
             orderedBitonicMerge, orderedCompareLayer,
-            recordFirstHalf_joinRecordHalves_internal,
-            recordSecondHalf_joinRecordHalves_internal,
+            recordFirstHalf_joinRecordHalves,
+            recordSecondHalf_joinRecordHalves,
             networkRecords_succ, first, second,
             appendSequence_eq_joinRecordHalves] using hjoined
       | true =>
           have hfirst := ih true (pointwiseMin first second) hmin
           have hsecond := ih true (pointwiseMax first second) hmax
-          have hmergedCross := orderedBitonicMerge_allLE_internal true
+          have hmergedCross := orderedBitonicMerge_allLE true
             (pointwiseMin first second) (pointwiseMax first second) hcross
-          have hjoined := increasing_append_internal
+          have hjoined := increasing_append
             (orderedBitonicMerge depth true (pointwiseMin first second))
             (orderedBitonicMerge depth true (pointwiseMax first second))
             hfirst hsecond hmergedCross
           simpa only [SequenceSorted, ↓reduceIte, orderedBitonicMerge,
-            orderedCompareLayer, recordFirstHalf_joinRecordHalves_internal,
-            recordSecondHalf_joinRecordHalves_internal,
+            orderedCompareLayer, recordFirstHalf_joinRecordHalves,
+            recordSecondHalf_joinRecordHalves,
             networkRecords_succ, first, second,
             appendSequence_eq_joinRecordHalves] using hjoined
 
-theorem orderedBitonicSort_sorted_internal [LinearOrder α]
+theorem orderedBitonicSort_sorted [LinearOrder α]
     (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords depth) → α) :
     SequenceSorted ascending (orderedBitonicSort depth ascending input) := by
@@ -640,17 +631,17 @@ theorem orderedBitonicSort_sorted_internal [LinearOrder α]
           (orderedBitonicSort depth false second) := by
         simpa only [SequenceSorted, Bool.false_eq_true, ↓reduceIte] using
           ih false second
-      have hprepared := increasing_append_decreasing_bitonic_internal
+      have hprepared := increasing_append_decreasing_bitonic
         (orderedBitonicSort depth true first)
         (orderedBitonicSort depth false second) hfirst hsecond
-      have hmerged := orderedBitonicMerge_sorted_internal (depth + 1)
+      have hmerged := orderedBitonicMerge_sorted (depth + 1)
         ascending
         (joinRecordHalves
           (orderedBitonicSort depth true first)
           (orderedBitonicSort depth false second)) hprepared
       simpa only [orderedBitonicSort, first, second] using hmerged
 
-private noncomputable def keyedSourceRight_internal [LinearOrder κ]
+private noncomputable def keyedSourceRight [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords (depth + 1)) → α)
     (pair : Fin (networkRecords depth)) : Prop :=
@@ -659,20 +650,20 @@ private noncomputable def keyedSourceRight_internal [LinearOrder κ]
       key (input (Fin.castAdd (networkRecords depth) pair))
   if ascending then shouldSwap else ¬shouldSwap
 
-private noncomputable instance instDecidableKeyedSourceRight_internal
+private noncomputable instance instDecidableKeyedSourceRight
     [LinearOrder κ] (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords (depth + 1)) → α)
     (pair : Fin (networkRecords depth)) :
-    Decidable (keyedSourceRight_internal key depth ascending input pair) :=
+    Decidable (keyedSourceRight key depth ascending input pair) :=
   Classical.propDecidable _
 
-private theorem keyedCompareSource_left_internal [LinearOrder κ]
+private theorem keyedCompareSource_left [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords (depth + 1)) → α)
     (pair : Fin (networkRecords depth)) :
     keyedCompareSource key depth ascending input
         (Fin.castAdd (networkRecords depth) pair) =
-      if keyedSourceRight_internal key depth ascending input pair then
+      if keyedSourceRight key depth ascending input pair then
         pair.addNat (networkRecords depth)
       else Fin.castAdd (networkRecords depth) pair := by
   unfold keyedCompareSource
@@ -681,46 +672,46 @@ private theorem keyedCompareSource_left_internal [LinearOrder κ]
       (Fin.castAdd (networkRecords depth) pair).val <
         networkRecords depth := pair.isLt
   rw [dif_pos hleft]
-  unfold keyedSourceRight_internal
+  unfold keyedSourceRight
   rw [Fin.natAdd_eq_addNat]
   congr 1
 
-private theorem keyedCompareSource_right_internal [LinearOrder κ]
+private theorem keyedCompareSource_right [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords (depth + 1)) → α)
     (pair : Fin (networkRecords depth)) :
     keyedCompareSource key depth ascending input
         (pair.addNat (networkRecords depth)) =
-      if keyedSourceRight_internal key depth ascending input pair then
+      if keyedSourceRight key depth ascending input pair then
         Fin.castAdd (networkRecords depth) pair
       else pair.addNat (networkRecords depth) := by
-  unfold keyedCompareSource keyedSourceRight_internal
+  unfold keyedCompareSource keyedSourceRight
   simp [networkRecords_succ]
 
-private theorem keyedCompareSource_involutive_internal [LinearOrder κ]
+private theorem keyedCompareSource_involutive [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords (depth + 1)) → α) :
     Function.Involutive (keyedCompareSource key depth ascending input) := by
   intro output
   refine Fin.addCases (fun pair => ?_) (fun pair => ?_) output
-  · rw [keyedCompareSource_left_internal]
+  · rw [keyedCompareSource_left]
     by_cases hsource :
-      keyedSourceRight_internal key depth ascending input pair
-    · rw [if_pos hsource, keyedCompareSource_right_internal, if_pos hsource]
-    · rw [if_neg hsource, keyedCompareSource_left_internal, if_neg hsource]
-  · rw [Fin.natAdd_eq_addNat, keyedCompareSource_right_internal]
+      keyedSourceRight key depth ascending input pair
+    · rw [if_pos hsource, keyedCompareSource_right, if_pos hsource]
+    · rw [if_neg hsource, keyedCompareSource_left, if_neg hsource]
+  · rw [Fin.natAdd_eq_addNat, keyedCompareSource_right]
     by_cases hsource :
-      keyedSourceRight_internal key depth ascending input pair
-    · rw [if_pos hsource, keyedCompareSource_left_internal, if_pos hsource]
-    · rw [if_neg hsource, keyedCompareSource_right_internal, if_neg hsource]
+      keyedSourceRight key depth ascending input pair
+    · rw [if_pos hsource, keyedCompareSource_left, if_pos hsource]
+    · rw [if_neg hsource, keyedCompareSource_right, if_neg hsource]
 
-theorem keyedCompareLayer_permutes_internal [LinearOrder κ]
+theorem keyedCompareLayer_permutes [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords (depth + 1)) → α) :
     SequencePermutes (keyedCompareLayer key depth ascending input) input := by
   let source := keyedCompareSource key depth ascending input
   have hinvolutive : Function.Involutive source :=
-    keyedCompareSource_involutive_internal key depth ascending input
+    keyedCompareSource_involutive key depth ascending input
   let permutation : Equiv.Perm (Fin (networkRecords (depth + 1))) :=
     { toFun := source
       invFun := source
@@ -732,37 +723,17 @@ theorem keyedCompareLayer_permutes_internal [LinearOrder κ]
   rw [hfunction]
   exact permutation.ofFn_comp_perm input
 
-theorem SequencePermutes.refl_internal {n : ℕ} (input : Fin n → α) :
-    SequencePermutes input input :=
-  List.Perm.refl _
-
-theorem SequencePermutes.trans_internal {n : ℕ}
-    {first second third : Fin n → α}
-    (hfirst : SequencePermutes first second)
-    (hsecond : SequencePermutes second third) :
-    SequencePermutes first third :=
-  hfirst.trans hsecond
-
-theorem SequencePermutes.append_internal {n m : ℕ}
-    {first firstInput : Fin n → α} {second secondInput : Fin m → α}
-    (hfirst : SequencePermutes first firstInput)
-    (hsecond : SequencePermutes second secondInput) :
-    SequencePermutes (appendSequence first second)
-      (appendSequence firstInput secondInput) := by
-  unfold SequencePermutes appendSequence at *
-  simpa only [List.ofFn_fin_append] using hfirst.append hsecond
-
-theorem keyedBitonicMerge_permutes_internal [LinearOrder κ]
+theorem keyedBitonicMerge_permutes [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords depth) → α) :
     SequencePermutes (keyedBitonicMerge key depth ascending input) input := by
   induction depth generalizing ascending with
-  | zero => exact SequencePermutes.refl_internal input
+  | zero => exact SequencePermutes.refl input
   | succ depth ih =>
       let compared := keyedCompareLayer key depth ascending input
       let first := recordFirstHalf compared
       let second := recordSecondHalf compared
-      have hrecursive := SequencePermutes.append_internal
+      have hrecursive := SequencePermutes.append
         (ih ascending first) (ih ascending second)
       have hsplit : joinRecordHalves first second = compared :=
         Fin.append_castAdd_natAdd
@@ -772,16 +743,16 @@ theorem keyedBitonicMerge_permutes_internal [LinearOrder κ]
             (keyedBitonicMerge key depth ascending second)) compared := by
         rw [← hsplit]
         exact hrecursive
-      have hresult := htoCompared.trans_internal
-        (keyedCompareLayer_permutes_internal key depth ascending input)
+      have hresult := htoCompared.trans
+        (keyedCompareLayer_permutes key depth ascending input)
       simpa only [keyedBitonicMerge, compared, first, second] using hresult
 
-theorem keyedBitonicSort_permutes_internal [LinearOrder κ]
+theorem keyedBitonicSort_permutes [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords depth) → α) :
     SequencePermutes (keyedBitonicSort key depth ascending input) input := by
   induction depth generalizing ascending with
-  | zero => exact SequencePermutes.refl_internal input
+  | zero => exact SequencePermutes.refl input
   | succ depth ih =>
       let first := recordFirstHalf input
       let second := recordSecondHalf input
@@ -789,18 +760,18 @@ theorem keyedBitonicSort_permutes_internal [LinearOrder κ]
         (keyedBitonicSort key depth true first)
         (keyedBitonicSort key depth false second)
       have hprepared : SequencePermutes prepared input := by
-        have hrecursive := SequencePermutes.append_internal
+        have hrecursive := SequencePermutes.append
           (ih true first) (ih false second)
         have hsplit : joinRecordHalves first second = input :=
           Fin.append_castAdd_natAdd
         rw [← hsplit]
         exact hrecursive
-      have hmerge := keyedBitonicMerge_permutes_internal key (depth + 1)
+      have hmerge := keyedBitonicMerge_permutes key (depth + 1)
         ascending prepared
-      have hresult := hmerge.trans_internal hprepared
+      have hresult := hmerge.trans hprepared
       simpa only [keyedBitonicSort, prepared, first, second] using hresult
 
-private theorem key_keyedCompareLayer_internal [LinearOrder κ]
+private theorem key_keyedCompareLayer [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords (depth + 1)) → α) :
     (fun output => key (keyedCompareLayer key depth ascending input output)) =
@@ -808,57 +779,57 @@ private theorem key_keyedCompareLayer_internal [LinearOrder κ]
   funext output
   refine Fin.addCases (fun pair => ?_) (fun pair => ?_) output
   · unfold keyedCompareLayer
-    rw [keyedCompareSource_left_internal]
+    rw [keyedCompareSource_left]
     cases ascending with
     | false =>
         by_cases hswap :
           key (input (pair.addNat (networkRecords depth))) <
             key (input (Fin.castAdd (networkRecords depth) pair))
-        · simp [keyedSourceRight_internal, hswap, orderedCompareLayer,
+        · simp [keyedSourceRight, hswap, orderedCompareLayer,
             joinRecordHalves, recordFirstHalf, recordSecondHalf,
             pointwiseMax, max_eq_left hswap.le]
         · have hle := le_of_not_gt hswap
-          simp [keyedSourceRight_internal, hswap, orderedCompareLayer,
+          simp [keyedSourceRight, hswap, orderedCompareLayer,
             joinRecordHalves, recordFirstHalf, recordSecondHalf,
             pointwiseMax, max_eq_right hle]
     | true =>
         by_cases hswap :
           key (input (pair.addNat (networkRecords depth))) <
             key (input (Fin.castAdd (networkRecords depth) pair))
-        · simp [keyedSourceRight_internal, hswap, orderedCompareLayer,
+        · simp [keyedSourceRight, hswap, orderedCompareLayer,
             joinRecordHalves, recordFirstHalf, recordSecondHalf,
             pointwiseMin, min_eq_right hswap.le]
         · have hle := le_of_not_gt hswap
-          simp [keyedSourceRight_internal, hswap, orderedCompareLayer,
+          simp [keyedSourceRight, hswap, orderedCompareLayer,
             joinRecordHalves, recordFirstHalf, recordSecondHalf,
             pointwiseMin, min_eq_left hle]
   · unfold keyedCompareLayer
-    rw [Fin.natAdd_eq_addNat, keyedCompareSource_right_internal]
+    rw [Fin.natAdd_eq_addNat, keyedCompareSource_right]
     cases ascending with
     | false =>
         by_cases hswap :
           key (input (pair.addNat (networkRecords depth))) <
             key (input (Fin.castAdd (networkRecords depth) pair))
-        · simp [keyedSourceRight_internal, hswap, orderedCompareLayer,
+        · simp [keyedSourceRight, hswap, orderedCompareLayer,
             joinRecordHalves, recordFirstHalf, recordSecondHalf,
             pointwiseMin, min_eq_right hswap.le]
         · have hle := le_of_not_gt hswap
-          simp [keyedSourceRight_internal, hswap, orderedCompareLayer,
+          simp [keyedSourceRight, hswap, orderedCompareLayer,
             joinRecordHalves, recordFirstHalf, recordSecondHalf,
             pointwiseMin, min_eq_left hle]
     | true =>
         by_cases hswap :
           key (input (pair.addNat (networkRecords depth))) <
             key (input (Fin.castAdd (networkRecords depth) pair))
-        · simp [keyedSourceRight_internal, hswap, orderedCompareLayer,
+        · simp [keyedSourceRight, hswap, orderedCompareLayer,
             joinRecordHalves, recordFirstHalf, recordSecondHalf,
             pointwiseMax, max_eq_left hswap.le]
         · have hle := le_of_not_gt hswap
-          simp [keyedSourceRight_internal, hswap, orderedCompareLayer,
+          simp [keyedSourceRight, hswap, orderedCompareLayer,
             joinRecordHalves, recordFirstHalf, recordSecondHalf,
             pointwiseMax, max_eq_right hle]
 
-private theorem key_joinRecordHalves_internal (key : α → κ) {depth : ℕ}
+private theorem key_joinRecordHalves (key : α → κ) {depth : ℕ}
     (first second : Fin (networkRecords depth) → α) :
     (fun output => key (joinRecordHalves first second output)) =
       joinRecordHalves (fun output => key (first output))
@@ -867,7 +838,7 @@ private theorem key_joinRecordHalves_internal (key : α → κ) {depth : ℕ}
   refine Fin.addCases (fun i => ?_) (fun i => ?_) output <;>
     simp [joinRecordHalves]
 
-private theorem key_keyedBitonicMerge_internal [LinearOrder κ]
+private theorem key_keyedBitonicMerge [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords depth) → α) :
     (fun output => key (keyedBitonicMerge key depth ascending input output)) =
@@ -879,7 +850,7 @@ private theorem key_keyedBitonicMerge_internal [LinearOrder κ]
       let orderedCompared :=
         orderedCompareLayer depth ascending (fun index => key (input index))
       have hcompared : (fun index => key (compared index)) = orderedCompared :=
-        key_keyedCompareLayer_internal key depth ascending input
+        key_keyedCompareLayer key depth ascending input
       have hfirst :
           (fun index => key (recordFirstHalf compared index)) =
             recordFirstHalf orderedCompared := by
@@ -900,10 +871,10 @@ private theorem key_keyedBitonicMerge_internal [LinearOrder κ]
             (keyedBitonicMerge key depth ascending (recordFirstHalf compared))
             (keyedBitonicMerge key depth ascending (recordSecondHalf compared))
             output) by rfl]
-      rw [key_joinRecordHalves_internal, hleft, hright]
+      rw [key_joinRecordHalves, hleft, hright]
       rfl
 
-theorem key_keyedBitonicSort_internal [LinearOrder κ]
+theorem key_keyedBitonicSort [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords depth) → α) :
     (fun output => key (keyedBitonicSort key depth ascending input output)) =
@@ -921,8 +892,8 @@ theorem key_keyedBitonicSort_internal [LinearOrder κ]
         (orderedBitonicSort depth false (fun index => key (second index)))
       have hprepared : (fun index => key (prepared index)) = orderedPrepared := by
         dsimp only [prepared, orderedPrepared]
-        rw [key_joinRecordHalves_internal, ih true first, ih false second]
-      have hmerge := key_keyedBitonicMerge_internal key (depth + 1)
+        rw [key_joinRecordHalves, ih true first, ih false second]
+      have hmerge := key_keyedBitonicMerge key (depth + 1)
         ascending prepared
       rw [hprepared] at hmerge
       have hfirstKey : (fun index => key (first index)) =
@@ -934,14 +905,15 @@ theorem key_keyedBitonicSort_internal [LinearOrder κ]
       simpa only [keyedBitonicSort, orderedBitonicSort, prepared,
         first, second] using hmerge
 
-theorem keyedBitonicSort_sorted_internal [LinearOrder κ]
+theorem keyedBitonicSort_sorted [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)
     (input : Fin (networkRecords depth) → α) :
     SequenceSorted ascending
       (fun output => key (keyedBitonicSort key depth ascending input output)) := by
-  rw [key_keyedBitonicSort_internal]
-  exact orderedBitonicSort_sorted_internal depth ascending _
+  rw [key_keyedBitonicSort]
+  exact orderedBitonicSort_sorted depth ascending _
 
+end Internal
 end Semantics
 end Sorting
 end MassProduction

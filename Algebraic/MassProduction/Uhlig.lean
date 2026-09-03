@@ -6,8 +6,8 @@ import Mathlib.Algebra.Ring.BooleanRing
 # Uhlig's two-copy recovery code
 
 This file formalizes the exact combinatorial core of the section "The
-two-copy construction as disjoint recovery" in the mass-production
-manuscript at `projects/complexity/sharing/main.tex`.
+two-copy construction as disjoint recovery" in the
+[Boolean mass-production manuscript](https://github.com/SamuelSchlesinger/boolean-mass-production).
 
 For a nonempty family `f_0, ..., f_last`, the resource family is
 

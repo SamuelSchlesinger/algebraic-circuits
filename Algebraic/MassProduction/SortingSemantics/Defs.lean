@@ -48,10 +48,68 @@ def SequencePermutes {n : ℕ}
     (output input : Fin n → α) : Prop :=
   (List.ofFn output).Perm (List.ofFn input)
 
+namespace SequenceRangeContained
+
+/-- Range containment is transitive. -/
+theorem trans {n m k : ℕ}
+    {first : Fin n → α} {second : Fin m → α} {third : Fin k → α}
+    (hfirst : SequenceRangeContained first second)
+    (hsecond : SequenceRangeContained second third) :
+    SequenceRangeContained first third := by
+  intro i
+  obtain ⟨j, hj⟩ := hfirst i
+  obtain ⟨k, hk⟩ := hsecond j
+  exact ⟨k, hj.trans hk⟩
+
+end SequenceRangeContained
+
+namespace SequencePermutes
+
+/-- Every finite sequence is a permutation of itself. -/
+theorem refl {n : ℕ} (input : Fin n → α) :
+    SequencePermutes input input :=
+  List.Perm.refl _
+
+/-- Sequence permutation is transitive. -/
+theorem trans {n : ℕ}
+    {first second third : Fin n → α}
+    (hfirst : SequencePermutes first second)
+    (hsecond : SequencePermutes second third) :
+    SequencePermutes first third :=
+  List.Perm.trans hfirst hsecond
+
+/-- Applying the same observation to two permuted finite sequences preserves
+their permutation relation. -/
+theorem map {n : ℕ} {output input : Fin n → α}
+    (observe : α → β)
+    (permuted : SequencePermutes output input) :
+    SequencePermutes
+      (fun index => observe (output index))
+      (fun index => observe (input index)) := by
+  unfold SequencePermutes at permuted ⊢
+  rw [List.ofFn_comp' output observe, List.ofFn_comp' input observe]
+  exact permuted.map observe
+
+end SequencePermutes
+
 /-- Concatenation of two finite sequences. -/
 def appendSequence {n m : ℕ}
     (first : Fin n → α) (second : Fin m → α) : Fin (n + m) → α :=
   Fin.append first second
+
+namespace SequencePermutes
+
+/-- Concatenating two pairs of permuted sequences preserves permutation. -/
+theorem append {n m : ℕ}
+    {first firstInput : Fin n → α} {second secondInput : Fin m → α}
+    (hfirst : SequencePermutes first firstInput)
+    (hsecond : SequencePermutes second secondInput) :
+    SequencePermutes (appendSequence first second)
+      (appendSequence firstInput secondInput) := by
+  unfold SequencePermutes appendSequence at *
+  simpa only [List.ofFn_fin_append] using hfirst.append hsecond
+
+end SequencePermutes
 
 /-- Pointwise minimum of equal-length sequences. -/
 def pointwiseMin [LinearOrder α] {n : ℕ}

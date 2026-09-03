@@ -5,10 +5,10 @@ import Algebraic.MassProduction.Scheduler
 # Scheduled recovery from the low-degree resource table
 
 This module joins the tensor-grid evaluation code to projective affine-line
-scheduling. It proves the semantic local-recovery gadget from
-`projects/complexity/sharing/main.tex`: every scheduled punctured line
-recovers its target symbol, and the greedy schedule can make all recovery
-sets in one group pairwise disjoint.
+scheduling. It proves the semantic local-recovery gadget from the
+[Boolean mass-production manuscript](https://github.com/SamuelSchlesinger/boolean-mass-production):
+every scheduled punctured line recovers its target symbol, and the greedy
+schedule can make all recovery sets in one group pairwise disjoint.
 -/
 
 namespace Algebraic

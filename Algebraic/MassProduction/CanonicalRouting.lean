@@ -423,20 +423,6 @@ theorem recordHeader_predecessorCopyBits
       recordHeader (flatRecords input record) := by
   simp [recordHeader]
 
-/-- Applying the same observation function to two permuted finite sequences
-preserves their permutation relation. -/
-theorem sequencePermutes_map
-    {output input : Fin n -> α}
-    (observe : α -> β)
-    (permuted : Semantics.SequencePermutes output input) :
-    Semantics.SequencePermutes
-      (fun index => observe (output index))
-      (fun index => observe (input index)) := by
-  unfold Semantics.SequencePermutes at permuted
-  unfold Semantics.SequencePermutes
-  rw [List.ofFn_comp' output observe, List.ofFn_comp' input observe]
-  exact permuted.map observe
-
 /-- A sequence permutation preserves the number of positions satisfying an
 arbitrary predicate. -/
 theorem matchingIndices_card_eq_of_sequencePermutes
@@ -719,7 +705,7 @@ theorem canonicalMatchedHeadersPermuteCore
   have first : Semantics.SequencePermutes
       (fun record => recordHeader (flatRecords canonical record))
       (fun record => recordHeader (flatRecords complemented record)) := by
-    have mapped := sequencePermutes_map recordHeader canonicalRecords
+    have mapped := Semantics.SequencePermutes.map recordHeader canonicalRecords
     simpa [Function.comp_def] using mapped
   have middle :
       (fun record => recordHeader (flatRecords complemented record)) =
@@ -735,11 +721,11 @@ theorem canonicalMatchedHeadersPermuteCore
         (flatRecords initiallySorted record))
       (fun record => complementedRecordHeader
         (flatRecords input record)) := by
-    have mapped := sequencePermutes_map complementedRecordHeader
+    have mapped := Semantics.SequencePermutes.map complementedRecordHeader
       initiallySortedRecords
     simpa [Function.comp_def] using mapped
   rw [middle] at first
-  exact first.trans_internal second
+  exact first.trans second
 
 theorem complementedRecordHeader_eq_activeDestinationHeader_iff
     (record : Fin (Routing.recordWidth (baseWidth + 1) payloadWidth) -> Bool)

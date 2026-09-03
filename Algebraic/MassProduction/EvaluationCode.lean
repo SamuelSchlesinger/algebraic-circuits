@@ -6,9 +6,10 @@ import Mathlib.LinearAlgebra.Lagrange
 # Tensor-product low-degree evaluation codes
 
 This is the algebraic evaluation code used by the local-recovery gadget in
-`projects/complexity/sharing/main.tex`. Arbitrary data on a finite Cartesian
-grid is interpolated by a multivariate polynomial and evaluated over the
-whole ambient affine space.
+the
+[Boolean mass-production manuscript](https://github.com/SamuelSchlesinger/boolean-mass-production).
+Arbitrary data on a finite Cartesian grid is interpolated by a multivariate
+polynomial and evaluated over the whole ambient affine space.
 
 The semantic node map below is a fixed noncomputable injection obtained from
 the finite cardinality equivalence. It proves the code theorem independently

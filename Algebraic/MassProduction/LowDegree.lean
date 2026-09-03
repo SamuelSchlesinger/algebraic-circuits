@@ -7,10 +7,11 @@ import Mathlib.FieldTheory.ChevalleyWarning
 # Low-degree affine-line recovery
 
 This file formalizes the polynomial identity used by the local-recovery
-gadget in `projects/complexity/sharing/main.tex`. A multivariate polynomial
-of total degree below `|K| - 1` is recoverable at the center of every affine
-line from its values at all nonzero line parameters. In characteristic two,
-the recovery operation is a sum.
+gadget in the
+[Boolean mass-production manuscript](https://github.com/SamuelSchlesinger/boolean-mass-production).
+A multivariate polynomial of total degree below `|K| - 1` is recoverable at
+the center of every affine line from its values at all nonzero line
+parameters. In characteristic two, the recovery operation is a sum.
 -/
 
 namespace Algebraic

@@ -420,7 +420,7 @@ theorem matchedCanonicalHeadersPermute
   have first : Semantics.SequencePermutes
       (fun record => recordHeader (flatRecords output record))
       (fun record => recordHeader (flatRecords complemented record)) := by
-    have mapped := CanonicalRouting.sequencePermutes_map recordHeader
+    have mapped := Semantics.SequencePermutes.map recordHeader
       outputRecords
     simpa [Function.comp_def] using mapped
   have middle :
@@ -438,11 +438,11 @@ theorem matchedCanonicalHeadersPermute
         (flatRecords initiallySorted record))
       (fun record => complementedRecordHeader
         (flatRecords input record)) := by
-    have mapped := CanonicalRouting.sequencePermutes_map
+    have mapped := Semantics.SequencePermutes.map
       complementedRecordHeader initiallySortedRecords
     simpa [Function.comp_def] using mapped
   rw [middle] at first
-  exact first.trans_internal second
+  exact first.trans second
 
 /-! ## Canonical rank of destination metadata -/
 
@@ -1012,7 +1012,7 @@ theorem matchedCanonicalRoutingBits_fixed_value
       sourceMetadata sourceValues destinationKeys destinationValues paddingKeys
       paddingTails paddingValues recordCount target
   have uniqueSortedHeader := Routing.UniqueIndexWhere.of_sequencePermutes
-    (CanonicalRouting.sequencePermutes_map complementedRecordHeader
+    (Semantics.SequencePermutes.map complementedRecordHeader
       initiallySortedPermutes)
     uniqueInitialHeader
   obtain ⟨headerIndex, headerIndexMatches, headerIndexOnly⟩ :=

@@ -4,11 +4,12 @@ import Mathlib.LinearAlgebra.Projectivization.Cardinality
 /-!
 # Affine-line recovery scheduling
 
-This file proves the combinatorial scheduler used in
-`projects/complexity/sharing/main.tex`. A recovery direction is projective,
-so each previously used point forbids at most one direction. Greedy counting
-therefore gives pairwise-disjoint punctured affine lines whenever the used
-point budget is smaller than projective direction space.
+This file proves the combinatorial scheduler used in the
+[Boolean mass-production manuscript](https://github.com/SamuelSchlesinger/boolean-mass-production).
+A recovery direction is projective, so each previously used point forbids at
+most one direction. Greedy counting therefore gives pairwise-disjoint
+punctured affine lines whenever the used point budget is smaller than
+projective direction space.
 
 This is an existence theorem. It does not yet claim the manuscript's circuit
 cost for computing the schedule; that requires a separate concrete routing

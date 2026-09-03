@@ -325,7 +325,7 @@ noncomputable def paddedTargetSpecification
     (dummyTarget : Fin dimension -> BinaryExtension width) :
     Fin (groups *
       (requestsPerGroup * pointBitWidth dimension width)) ->
-      RoutingAssembly.WiringBit
+      DeMorgan.Wiring
         (totalRequests * requestDataCount dimension width suffixWidth) :=
   fun output =>
     let groupAndRest := (finProdFinEquiv
@@ -350,7 +350,7 @@ noncomputable def paddedTargetCircuit
     (totalRequests groups requestsPerGroup dimension width suffixWidth : Nat)
     (widthPositive : 0 < width)
     (dummyTarget : Fin dimension -> BinaryExtension width) :=
-  RoutingAssembly.wiringCircuit
+  DeMorgan.Wiring.circuit
     (paddedTargetSpecification totalRequests groups requestsPerGroup
       dimension width suffixWidth widthPositive dummyTarget)
 
@@ -359,7 +359,7 @@ noncomputable def paddedTargetCircuit
     (dummyTarget : Fin dimension -> BinaryExtension width) :
     (paddedTargetCircuit totalRequests groups requestsPerGroup dimension width
       suffixWidth widthPositive dummyTarget).cost DeMorgan.standardCost = 0 := by
-  exact RoutingAssembly.wiringCircuit_cost _
+  exact DeMorgan.Wiring.circuit_cost _
 
 theorem paddedTargetCircuit_eval
     (widthPositive : 0 < width)
@@ -388,7 +388,7 @@ theorem paddedTargetCircuit_eval
     (finProdFinEquiv
       (m := requestsPerGroup)
       (n := pointBitWidth dimension width)).surjective rest
-  rw [paddedTargetCircuit, RoutingAssembly.wiringCircuit_eval]
+  rw [paddedTargetCircuit, DeMorgan.Wiring.circuit_eval]
   by_cases live :
       (finProdFinEquiv (group, request)).val < totalRequests
   · have live' :
@@ -438,7 +438,7 @@ selector. -/
 noncomputable def suffixSelectorSpecification
     (totalRequests dimension width suffixWidth : Nat) :
     Fin (suffixSelectorCount totalRequests suffixWidth width) ->
-      RoutingAssembly.WiringBit
+      DeMorgan.Wiring
         (totalRequests * requestDataCount dimension width suffixWidth) :=
   Fin.addCases
     (fun suffix =>
@@ -459,7 +459,7 @@ noncomputable def suffixSelectorSpecification
 /-- Wiring circuit that exposes processed suffixes and runtime selectors. -/
 noncomputable def suffixSelectorCircuit
     (totalRequests dimension width suffixWidth : Nat) :=
-  RoutingAssembly.wiringCircuit
+  DeMorgan.Wiring.circuit
     (suffixSelectorSpecification totalRequests dimension width suffixWidth)
 
 @[simp] theorem suffixSelectorCircuit_eval
@@ -471,15 +471,15 @@ noncomputable def suffixSelectorCircuit
         (processedSelectorArray input) := by
   funext output
   refine Fin.addCases (fun suffix => ?_) (fun selector => ?_) output
-  · rw [suffixSelectorCircuit, RoutingAssembly.wiringCircuit_eval]
+  · rw [suffixSelectorCircuit, DeMorgan.Wiring.circuit_eval]
     simp [suffixSelectorSpecification, processedSuffixArray]
-  · rw [suffixSelectorCircuit, RoutingAssembly.wiringCircuit_eval]
+  · rw [suffixSelectorCircuit, DeMorgan.Wiring.circuit_eval]
     simp [suffixSelectorSpecification, processedSelectorArray]
 
 @[simp] theorem suffixSelectorCircuit_cost :
     (suffixSelectorCircuit totalRequests dimension width suffixWidth).cost
         DeMorgan.standardCost = 0 := by
-  exact RoutingAssembly.wiringCircuit_cost _
+  exact DeMorgan.Wiring.circuit_cost _
 
 /-- Scheduler output followed by runtime suffixes and one-hot selectors. -/
 noncomputable def scheduleSuffixSelectorCircuit

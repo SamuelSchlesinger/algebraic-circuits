@@ -1168,16 +1168,12 @@ theorem massProducesAt_of_rateBelowHalf
       dsimp [blockWidth, halfCeil]
       exact (ceilDiv_le_iff_le_mul (by omega : 0 < 2)).mp le_rfl
     omega
-  have exponentMonotone :
-      numerator * inputWidth / denominator <=
-        numerator * paddedWidth / denominator :=
-    Nat.div_le_div_right (Nat.mul_le_mul_left numerator fits)
   have paddedCopiesBound : copies <=
       2 ^ (numerator * (blockWidth + blockWidth) / denominator) := by
-    unfold rationalCopyBudget at copiesBound
-    rw [← paddedWidthEq]
-    exact copiesBound.trans
-      (Nat.pow_le_pow_right (by omega) exponentMonotone)
+    have widened := copiesBound.trans
+      (rationalCopyBudget_mono_inputs
+        (numerator := numerator) (denominator := denominator) fits)
+    simpa [rationalCopyBudget, paddedWidthEq] using widened
   let paddedFunction := InputSplit.paddedFunction fits function
   have paddedMass := blockBound blockWidth blockLarge paddedFunction copies
     copiesPositive paddedCopiesBound

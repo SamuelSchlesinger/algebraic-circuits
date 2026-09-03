@@ -1,4 +1,5 @@
 import Algebraic.Basis.DeMorgan
+import Algebraic.Basis.DeMorgan.Wiring
 import Algebraic.Support
 
 /-!
@@ -95,5 +96,27 @@ example : falseCircuit.inputSupport = ∅ := by
 
 example : falseCircuit.FanInAtMost 0 := by
   decide
+
+/-! A wiring specification mixes existing inputs with free constants. -/
+
+def sampleWiring : Fin 3 → DeMorgan.Wiring 2 :=
+  ![.input 1, .constant true, .input 0]
+
+example :
+    (DeMorgan.Wiring.circuit sampleWiring).eval
+      DeMorgan.interpretation trueFalse 0 = false := by
+  rw [DeMorgan.Wiring.circuit_eval]
+  rfl
+
+example :
+    (DeMorgan.Wiring.circuit sampleWiring).eval
+      DeMorgan.interpretation trueFalse 1 = true := by
+  rw [DeMorgan.Wiring.circuit_eval]
+  rfl
+
+example :
+    (DeMorgan.Wiring.circuit sampleWiring).cost
+      DeMorgan.standardCost = 0 := by
+  simp
 
 end AlgebraicTests.Circuit

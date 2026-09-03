@@ -1,3 +1,4 @@
+import Algebraic.Basis.DeMorgan.Wiring
 import Algebraic.MassProduction.PackedPipeline
 
 /-!
@@ -28,112 +29,18 @@ open ResourceEvaluation
 open SchedulerIteration
 open Sorting
 
-/-! ## Generic zero-cost wiring circuits -/
-
-/-- One output bit of a pure wiring layer is either an original input wire or
-a hardwired Boolean constant. -/
-inductive WiringBit (inputs : Nat)
-  | input (index : Fin inputs)
-  | constant (value : Bool)
-
-namespace WiringBit
-
-/-- Interpret a wiring source against a concrete input assignment. -/
-def eval (input : Fin inputs -> Bool) : WiringBit inputs -> Bool
-  | .input index => input index
-  | .constant value => value
-
-@[simp] theorem eval_input
-    (input : Fin inputs -> Bool)
-    (index : Fin inputs) :
-    eval input (.input index) = input index := rfl
-
-@[simp] theorem eval_constant
-    (input : Fin inputs -> Bool)
-    (value : Bool) :
-    eval input (.constant value) = value := rfl
-
-/-- Compile a wiring source to its zero-cost De Morgan expression. -/
-def expression : WiringBit inputs -> DeMorgan.Expression inputs
-  | .input index => .input index
-  | .constant value => .constant value
-
-@[simp] theorem expression_eval
-    (source : WiringBit inputs)
-    (input : Fin inputs -> Bool) :
-    source.expression.eval input = source.eval input := by
-  cases source <;> rfl
-
-@[simp] theorem expression_standardCost
-    (source : WiringBit inputs) :
-    source.expression.standardCost = 0 := by
-  cases source <;> rfl
-
-theorem eval_finAppend
-    (left : Fin leftCount -> WiringBit inputs)
-    (right : Fin rightCount -> WiringBit inputs)
-    (input : Fin inputs -> Bool)
-    (index : Fin (leftCount + rightCount)) :
-    (Fin.append left right index).eval input =
-      Fin.append (fun leftIndex => (left leftIndex).eval input)
-        (fun rightIndex => (right rightIndex).eval input) index := by
-  refine Fin.addCases (fun leftIndex => ?_) (fun rightIndex => ?_) index
-  · rw [Fin.append_left, Fin.append_left]
-  · rw [Fin.append_right, Fin.append_right]
-
-theorem eval_finAppend_apply
-    (left : Fin leftCount -> Fin width -> WiringBit inputs)
-    (right : Fin rightCount -> Fin width -> WiringBit inputs)
-    (input : Fin inputs -> Bool)
-    (index : Fin (leftCount + rightCount))
-    (bit : Fin width) :
-    (Fin.append left right index bit).eval input =
-      Fin.append
-        (fun leftIndex bit => (left leftIndex bit).eval input)
-        (fun rightIndex bit => (right rightIndex bit).eval input)
-        index bit := by
-  refine Fin.addCases (fun leftIndex => ?_) (fun rightIndex => ?_) index
-  · rw [Fin.append_left, Fin.append_left]
-  · rw [Fin.append_right, Fin.append_right]
-
-end WiringBit
-
-/-- Compile an arbitrary vector of input selections and constants. -/
-def wiringCircuit
-    (specification : Fin outputs -> WiringBit inputs) :
-    Circuit DeMorgan.signature inputs
-      (∑ output, (specification output).expression.gateCount) outputs :=
-  Circuit.parallelFin outputs
-    (fun output => (specification output).expression.gateCount)
-    (fun output => (specification output).expression.circuit)
-
-@[simp] theorem wiringCircuit_eval
-    (specification : Fin outputs -> WiringBit inputs)
-    (input : Fin inputs -> Bool) :
-    (wiringCircuit specification).eval DeMorgan.interpretation input =
-      fun output => (specification output).eval input := by
-  funext output
-  rw [wiringCircuit, Circuit.eval_parallelFin,
-    DeMorgan.Expression.circuit_eval, WiringBit.expression_eval]
-
-@[simp] theorem wiringCircuit_cost
-    (specification : Fin outputs -> WiringBit inputs) :
-    (wiringCircuit specification).cost DeMorgan.standardCost = 0 := by
-  rw [wiringCircuit, Circuit.cost_parallelFin]
-  simp [DeMorgan.Expression.circuit_cost]
-
 /-- Record packing lifted from Booleans to wiring-bit descriptions. -/
 def wiringPackRecord
-    (key : Fin keyWidth -> WiringBit inputs)
-    (tag : WiringBit inputs)
-    (payload : Fin payloadWidth -> WiringBit inputs) :
-    Fin (Routing.recordWidth keyWidth payloadWidth) -> WiringBit inputs :=
+    (key : Fin keyWidth -> DeMorgan.Wiring inputs)
+    (tag : DeMorgan.Wiring inputs)
+    (payload : Fin payloadWidth -> DeMorgan.Wiring inputs) :
+    Fin (Routing.recordWidth keyWidth payloadWidth) -> DeMorgan.Wiring inputs :=
   Fin.append (Fin.append key (fun _ : Fin 1 => tag)) payload
 
 theorem wiringPackRecord_eval
-    (key : Fin keyWidth -> WiringBit inputs)
-    (tag : WiringBit inputs)
-    (payload : Fin payloadWidth -> WiringBit inputs)
+    (key : Fin keyWidth -> DeMorgan.Wiring inputs)
+    (tag : DeMorgan.Wiring inputs)
+    (payload : Fin payloadWidth -> DeMorgan.Wiring inputs)
     (input : Fin inputs -> Bool) :
     (fun bit => (wiringPackRecord key tag payload bit).eval input) =
       Routing.packRecord
@@ -157,9 +64,9 @@ theorem wiringPackRecord_eval
   · rw [Fin.append_right, Fin.append_right]
 
 theorem wiringPackRecord_eval_apply
-    (key : Fin keyWidth -> WiringBit inputs)
-    (tag : WiringBit inputs)
-    (payload : Fin payloadWidth -> WiringBit inputs)
+    (key : Fin keyWidth -> DeMorgan.Wiring inputs)
+    (tag : DeMorgan.Wiring inputs)
+    (payload : Fin payloadWidth -> DeMorgan.Wiring inputs)
     (input : Fin inputs -> Bool)
     (bit : Fin (Routing.recordWidth keyWidth payloadWidth)) :
     (wiringPackRecord key tag payload bit).eval input =
@@ -171,17 +78,17 @@ theorem wiringPackRecord_eval_apply
 
 /-- Routing records whose fields are all wiring-bit descriptions. -/
 def wiringRoutingRecordSequence
-    (sourceKeys : Fin sourceCount -> Fin keyWidth -> WiringBit inputs)
-    (sourcePayloads : Fin sourceCount -> Fin payloadWidth -> WiringBit inputs)
+    (sourceKeys : Fin sourceCount -> Fin keyWidth -> DeMorgan.Wiring inputs)
+    (sourcePayloads : Fin sourceCount -> Fin payloadWidth -> DeMorgan.Wiring inputs)
     (destinationKeys : Fin destinationCount ->
-      Fin keyWidth -> WiringBit inputs)
+      Fin keyWidth -> DeMorgan.Wiring inputs)
     (destinationPayloads : Fin destinationCount ->
-      Fin payloadWidth -> WiringBit inputs)
-    (paddingKeys : Fin paddingCount -> Fin keyWidth -> WiringBit inputs)
+      Fin payloadWidth -> DeMorgan.Wiring inputs)
+    (paddingKeys : Fin paddingCount -> Fin keyWidth -> DeMorgan.Wiring inputs)
     (paddingPayloads : Fin paddingCount ->
-      Fin payloadWidth -> WiringBit inputs) :
+      Fin payloadWidth -> DeMorgan.Wiring inputs) :
     Fin (sourceCount + destinationCount + paddingCount) ->
-      Fin (Routing.recordWidth keyWidth payloadWidth) -> WiringBit inputs :=
+      Fin (Routing.recordWidth keyWidth payloadWidth) -> DeMorgan.Wiring inputs :=
   Fin.append
     (Fin.append
       (fun source => wiringPackRecord (sourceKeys source) (.constant false)
@@ -192,15 +99,15 @@ def wiringRoutingRecordSequence
       (paddingPayloads padding))
 
 theorem wiringRoutingRecordSequence_eval
-    (sourceKeys : Fin sourceCount -> Fin keyWidth -> WiringBit inputs)
-    (sourcePayloads : Fin sourceCount -> Fin payloadWidth -> WiringBit inputs)
+    (sourceKeys : Fin sourceCount -> Fin keyWidth -> DeMorgan.Wiring inputs)
+    (sourcePayloads : Fin sourceCount -> Fin payloadWidth -> DeMorgan.Wiring inputs)
     (destinationKeys : Fin destinationCount ->
-      Fin keyWidth -> WiringBit inputs)
+      Fin keyWidth -> DeMorgan.Wiring inputs)
     (destinationPayloads : Fin destinationCount ->
-      Fin payloadWidth -> WiringBit inputs)
-    (paddingKeys : Fin paddingCount -> Fin keyWidth -> WiringBit inputs)
+      Fin payloadWidth -> DeMorgan.Wiring inputs)
+    (paddingKeys : Fin paddingCount -> Fin keyWidth -> DeMorgan.Wiring inputs)
     (paddingPayloads : Fin paddingCount ->
-      Fin payloadWidth -> WiringBit inputs)
+      Fin payloadWidth -> DeMorgan.Wiring inputs)
     (input : Fin inputs -> Bool) :
     (fun record bit => (wiringRoutingRecordSequence sourceKeys sourcePayloads
       destinationKeys destinationPayloads paddingKeys paddingPayloads
@@ -216,7 +123,7 @@ theorem wiringRoutingRecordSequence_eval
         (fun padding bit => (paddingPayloads padding bit).eval input) := by
   funext record bit
   unfold wiringRoutingRecordSequence Routing.routingRecordSequence
-  rw [WiringBit.eval_finAppend_apply]
+  rw [DeMorgan.Wiring.eval_finAppend_apply]
   refine Fin.addCases (motive := fun record =>
       Fin.append
           (fun leftIndex bit =>
@@ -244,7 +151,7 @@ theorem wiringRoutingRecordSequence_eval
           record bit)
     (fun sourceOrDestination => ?_) (fun padding => ?_) record
   · rw [Fin.append_left, Fin.append_left,
-      WiringBit.eval_finAppend_apply]
+      DeMorgan.Wiring.eval_finAppend_apply]
     refine Fin.addCases (fun source => ?_) (fun destination => ?_)
       sourceOrDestination
     · rw [Fin.append_left, Fin.append_left]
@@ -257,19 +164,19 @@ theorem wiringRoutingRecordSequence_eval
 /-- Exact-capacity routing records whose fields are all wiring-bit
 descriptions, flattened in the sorter's row-major format. -/
 def wiringRoutingInputBits
-    (sourceKeys : Fin sourceCount -> Fin keyWidth -> WiringBit inputs)
-    (sourcePayloads : Fin sourceCount -> Fin payloadWidth -> WiringBit inputs)
+    (sourceKeys : Fin sourceCount -> Fin keyWidth -> DeMorgan.Wiring inputs)
+    (sourcePayloads : Fin sourceCount -> Fin payloadWidth -> DeMorgan.Wiring inputs)
     (destinationKeys : Fin destinationCount ->
-      Fin keyWidth -> WiringBit inputs)
+      Fin keyWidth -> DeMorgan.Wiring inputs)
     (destinationPayloads : Fin destinationCount ->
-      Fin payloadWidth -> WiringBit inputs)
-    (paddingKeys : Fin paddingCount -> Fin keyWidth -> WiringBit inputs)
+      Fin payloadWidth -> DeMorgan.Wiring inputs)
+    (paddingKeys : Fin paddingCount -> Fin keyWidth -> DeMorgan.Wiring inputs)
     (paddingPayloads : Fin paddingCount ->
-      Fin payloadWidth -> WiringBit inputs)
+      Fin payloadWidth -> DeMorgan.Wiring inputs)
     (recordCount : sourceCount + destinationCount + paddingCount =
       networkRecords depth) :
     Fin (networkBits depth (Routing.recordWidth keyWidth payloadWidth)) ->
-      WiringBit inputs :=
+      DeMorgan.Wiring inputs :=
   fun flat =>
     let recordAndBit :=
       (finProdFinEquiv
@@ -282,15 +189,15 @@ def wiringRoutingInputBits
 /-- Evaluating a wiring-level routing layout gives the corresponding
 Boolean routing layout exactly. -/
 theorem wiringRoutingInputBits_eval
-    (sourceKeys : Fin sourceCount -> Fin keyWidth -> WiringBit inputs)
-    (sourcePayloads : Fin sourceCount -> Fin payloadWidth -> WiringBit inputs)
+    (sourceKeys : Fin sourceCount -> Fin keyWidth -> DeMorgan.Wiring inputs)
+    (sourcePayloads : Fin sourceCount -> Fin payloadWidth -> DeMorgan.Wiring inputs)
     (destinationKeys : Fin destinationCount ->
-      Fin keyWidth -> WiringBit inputs)
+      Fin keyWidth -> DeMorgan.Wiring inputs)
     (destinationPayloads : Fin destinationCount ->
-      Fin payloadWidth -> WiringBit inputs)
-    (paddingKeys : Fin paddingCount -> Fin keyWidth -> WiringBit inputs)
+      Fin payloadWidth -> DeMorgan.Wiring inputs)
+    (paddingKeys : Fin paddingCount -> Fin keyWidth -> DeMorgan.Wiring inputs)
     (paddingPayloads : Fin paddingCount ->
-      Fin payloadWidth -> WiringBit inputs)
+      Fin payloadWidth -> DeMorgan.Wiring inputs)
     (recordCount : sourceCount + destinationCount + paddingCount =
       networkRecords depth)
     (input : Fin inputs -> Bool) :
@@ -449,7 +356,7 @@ noncomputable def scatterSourceKeyWiring
     (capacity : totalRequests <= groups * requestsPerGroup)
     (incidence : Fin (totalRequests * nonzeroScalarCount width)) :
     Fin (incidenceKeyWidth groupBitWidth dimension width) ->
-      WiringBit (scatterAssemblyInputCount groups requestsPerGroup dimension
+      DeMorgan.Wiring (scatterAssemblyInputCount groups requestsPerGroup dimension
         width totalRequests suffixWidth) :=
   let requestAndScalar := incidenceAt incidence
   let group := (requestGroupSlot capacity requestAndScalar.1).1
@@ -486,7 +393,7 @@ theorem scatterSourceKeyWiring_eval
 noncomputable def scatterSourcePayloadWiring
     (incidence : Fin (totalRequests * nonzeroScalarCount width)) :
     Fin suffixWidth ->
-      WiringBit (scatterAssemblyInputCount groups requestsPerGroup dimension
+      DeMorgan.Wiring (scatterAssemblyInputCount groups requestsPerGroup dimension
         width totalRequests suffixWidth) :=
   fun bit => .input (scatterSuffixInputIndex
     (groups := groups) (requestsPerGroup := requestsPerGroup)
@@ -516,7 +423,7 @@ noncomputable def scatterAssemblySpecification
     Fin (networkBits routingDepth
       (Routing.recordWidth
         (incidenceKeyWidth groupBitWidth dimension width) suffixWidth)) ->
-      WiringBit (scatterAssemblyInputCount groups requestsPerGroup dimension
+      DeMorgan.Wiring (scatterAssemblyInputCount groups requestsPerGroup dimension
         width totalRequests suffixWidth) :=
   wiringRoutingInputBits
     (scatterSourceKeyWiring (suffixWidth := suffixWidth)
@@ -542,7 +449,7 @@ noncomputable def scatterAssemblyCircuit
       totalRequests * nonzeroScalarCount width +
           2 ^ (groupBitWidth + dimension * width) + paddingCount =
         networkRecords routingDepth) :=
-  wiringCircuit (scatterAssemblySpecification
+  DeMorgan.Wiring.circuit (scatterAssemblySpecification
     (suffixWidth := suffixWidth) groupBitWidth capacity recordCount)
 
 @[simp] theorem scatterAssemblyCircuit_cost
@@ -554,7 +461,7 @@ noncomputable def scatterAssemblyCircuit
         networkRecords routingDepth) :
     (scatterAssemblyCircuit (suffixWidth := suffixWidth) groupBitWidth
       capacity recordCount).cost DeMorgan.standardCost = 0 := by
-  exact wiringCircuit_cost _
+  exact DeMorgan.Wiring.circuit_cost _
 
 theorem scatterAssemblyCircuit_eval
     (widthPositive : 0 < width)
@@ -572,7 +479,7 @@ theorem scatterAssemblyCircuit_eval
         (scatterScheduleInput input) (scatterSuffixInput input)
         (fun _destination _bit => false)
         (fun _padding _bit => false) recordCount := by
-  rw [scatterAssemblyCircuit, wiringCircuit_eval,
+  rw [scatterAssemblyCircuit, DeMorgan.Wiring.circuit_eval,
     scatterAssemblySpecification, wiringRoutingInputBits_eval]
   unfold fullScatterRoutingInputBits
   congr 1
@@ -684,7 +591,7 @@ noncomputable def gatherSourceKeyWiring
     (groupBitWidth dimension width : Nat)
     (source : Fin (2 ^ (groupBitWidth + dimension * width))) :
     Fin (incidenceKeyWidth groupBitWidth dimension width) ->
-      WiringBit inputs :=
+      DeMorgan.Wiring inputs :=
   fun bit => .constant
     (fullResourceDestinationKeyBits groupBitWidth dimension width source bit)
 
@@ -696,7 +603,7 @@ noncomputable def gatherSourcePayloadWiring
     (groupBitWidth orderWidth : Nat)
     (source : Fin (2 ^ (groupBitWidth + dimension * width))) :
     Fin ((orderWidth + 1) + width) ->
-      WiringBit (gatherAssemblyInputCount groups requestsPerGroup dimension
+      DeMorgan.Wiring (gatherAssemblyInputCount groups requestsPerGroup dimension
         width) :=
   Fin.append
     (fun _metadataBit => .constant false)
@@ -735,7 +642,7 @@ noncomputable def gatherDestinationKeyWiring
     (capacity : totalRequests <= groups * requestsPerGroup)
     (incidence : Fin (totalRequests * nonzeroScalarCount width)) :
     Fin (incidenceKeyWidth groupBitWidth dimension width) ->
-      WiringBit (gatherAssemblyInputCount groups requestsPerGroup dimension
+      DeMorgan.Wiring (gatherAssemblyInputCount groups requestsPerGroup dimension
         width) :=
   let requestAndScalar := incidenceAt incidence
   let group := (requestGroupSlot capacity requestAndScalar.1).1
@@ -772,7 +679,7 @@ noncomputable def gatherDestinationPayloadWiring
     (incidenceFits :
       totalRequests * nonzeroScalarCount width <= 2 ^ orderWidth)
     (incidence : Fin (totalRequests * nonzeroScalarCount width)) :
-    Fin ((orderWidth + 1) + width) -> WiringBit inputs :=
+    Fin ((orderWidth + 1) + width) -> DeMorgan.Wiring inputs :=
   Fin.append
     (fun metadataBit => .constant
       (destinationOrderMetadata incidenceFits incidence metadataBit))
@@ -781,7 +688,7 @@ noncomputable def gatherDestinationPayloadWiring
 /-- Gather padding uses a reserved metadata marker and a zero value. -/
 noncomputable def gatherPaddingPayloadWiring
     (orderWidth width : Nat) :
-    Fin ((orderWidth + 1) + width) -> WiringBit inputs :=
+    Fin ((orderWidth + 1) + width) -> DeMorgan.Wiring inputs :=
   Fin.append
     (fun metadataBit => .constant
       (paddingRoutingKey (fun _ : Fin orderWidth => false) metadataBit))
@@ -828,7 +735,7 @@ noncomputable def gatherAssemblySpecification
       (Routing.recordWidth
         (incidenceKeyWidth groupBitWidth dimension width)
         ((orderWidth + 1) + width))) ->
-      WiringBit (gatherAssemblyInputCount groups requestsPerGroup dimension
+      DeMorgan.Wiring (gatherAssemblyInputCount groups requestsPerGroup dimension
         width) :=
   wiringRoutingInputBits
     (gatherSourceKeyWiring groupBitWidth dimension width)
@@ -852,7 +759,7 @@ noncomputable def gatherAssemblyCircuit
       2 ^ (groupBitWidth + dimension * width) +
           totalRequests * nonzeroScalarCount width + paddingCount =
         networkRecords routingDepth) :=
-  wiringCircuit (gatherAssemblySpecification groupsPositive
+  DeMorgan.Wiring.circuit (gatherAssemblySpecification groupsPositive
     groupBitWidth orderWidth incidenceFits capacity recordCount)
 
 @[simp] theorem gatherAssemblyCircuit_cost
@@ -868,7 +775,7 @@ noncomputable def gatherAssemblyCircuit
     (gatherAssemblyCircuit groupsPositive groupBitWidth
       orderWidth incidenceFits capacity recordCount).cost
         DeMorgan.standardCost = 0 := by
-  exact wiringCircuit_cost _
+  exact DeMorgan.Wiring.circuit_cost _
 
 theorem gatherAssemblyCircuit_eval
     (groupsPositive : 0 < groups)
@@ -901,7 +808,7 @@ theorem gatherAssemblyCircuit_eval
           (paddingRoutingKey (fun _ : Fin orderWidth => false))
           (fun _bit : Fin width => false))
         recordCount := by
-  rw [gatherAssemblyCircuit, wiringCircuit_eval,
+  rw [gatherAssemblyCircuit, DeMorgan.Wiring.circuit_eval,
     gatherAssemblySpecification, wiringRoutingInputBits_eval]
   congr 1
   · funext source
@@ -1571,7 +1478,7 @@ noncomputable def fixedGroupedTargetAssemblyCircuit
     (widthPositive : 0 < width)
     (targets : Fin groups -> Fin requestsPerGroup ->
       Fin dimension -> BinaryExtension width) :=
-  wiringCircuit (inputs := totalRequests * suffixWidth) fun output =>
+  DeMorgan.Wiring.circuit (inputs := totalRequests * suffixWidth) fun output =>
     .constant (groupedTargetArrayBits widthPositive targets output)
 
 @[simp] theorem fixedGroupedTargetAssemblyCircuit_cost
@@ -1581,7 +1488,7 @@ noncomputable def fixedGroupedTargetAssemblyCircuit
       Fin dimension -> BinaryExtension width) :
     (fixedGroupedTargetAssemblyCircuit (totalRequests := totalRequests)
       suffixWidth widthPositive targets).cost DeMorgan.standardCost = 0 := by
-  exact wiringCircuit_cost _
+  exact DeMorgan.Wiring.circuit_cost _
 
 theorem fixedGroupedTargetAssemblyCircuit_eval
     (suffixWidth : Nat)
@@ -1592,7 +1499,7 @@ theorem fixedGroupedTargetAssemblyCircuit_eval
     (fixedGroupedTargetAssemblyCircuit (totalRequests := totalRequests)
       suffixWidth widthPositive targets).eval DeMorgan.interpretation input =
       groupedTargetArrayBits widthPositive targets := by
-  rw [fixedGroupedTargetAssemblyCircuit, wiringCircuit_eval]
+  rw [fixedGroupedTargetAssemblyCircuit, DeMorgan.Wiring.circuit_eval]
   rfl
 
 /-- Run the grouped greedy scheduler on hardwired packed target points while
