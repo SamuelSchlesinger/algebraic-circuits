@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Separate-bound switching, live-variable extraction, and finite-layer semantic iteration proved; closed-form parameters open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Variable-probability, variable-tree-bound semantic iteration proved with explicit survivor schedules; closed-form parameters open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Exact restriction resilience and the parameterized iterated-switching contradiction are proved; closed-form parameters open |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -97,6 +97,19 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The variable-parameter depth-reduction submilestone passed the full gates on
+2026-09-03. Lean now iterates explicit schedules `p_i`, `t_i`, and `a_i` under
+the per-round bounds `delta_i <= p_i` and
+`delta_i*a_i+a_(i+1) < p_i*a_i`, where
+`delta_i = S(5*p_i*t_i)^(t_(i+1)+1)`. The tree-bound schedule is required to
+be monotone, allowing the first transition `1 -> t` and later transitions
+`t -> t`. Finite induction returns one cumulative restriction with the final
+semantic invariant and survivor guarantee. This is the structural schedule
+theorem needed for the standard `d-1`-round parity argument; no asymptotic
+choice or computational witness search is hidden in it. The audited public
+theorems use no axioms beyond Lean's standard `propext`, `Classical.choice`,
+and `Quot.sound`.
 
 The two-parameter live-variable extraction submilestone passed the full gates
 on 2026-09-03. For source bound `s`, target bound `t >= s`, current live count

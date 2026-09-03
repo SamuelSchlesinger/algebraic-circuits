@@ -26,6 +26,7 @@ import Algebraic.LowerBound.AC0.LayerSwitchingBounds
 import Algebraic.LowerBound.AC0.LayerExistence
 import Algebraic.LowerBound.AC0.LayerExistenceBounds
 import Algebraic.LowerBound.AC0.LayerIteration
+import Algebraic.LowerBound.AC0.LayerIterationBounds
 import Algebraic.LowerBound.AC0.Parity
 import Algebraic.LowerBound.AC0.ParityCircuit
 import Algebraic.LowerBound.FanIn
