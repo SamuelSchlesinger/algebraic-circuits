@@ -216,6 +216,16 @@ def fixedCount (rho : PartialAssignment n) : Nat :=
     (empty : PartialAssignment n).liveCount = n := by
   simp [liveCount]
 
+@[simp] theorem fixedVariables_empty :
+    (empty : PartialAssignment n).fixedVariables = {} := by
+  apply Finset.ext
+  intro index
+  simp
+
+@[simp] theorem fixedCount_empty :
+    (empty : PartialAssignment n).fixedCount = 0 := by
+  simp [fixedCount]
+
 @[simp] theorem liveVariables_total (input : Fin n -> Bool) :
     (total input).liveVariables = {} := by
   apply Finset.ext
@@ -225,6 +235,16 @@ def fixedCount (rho : PartialAssignment n) : Nat :=
 @[simp] theorem liveCount_total (input : Fin n -> Bool) :
     (total input).liveCount = 0 := by
   simp [liveCount]
+
+@[simp] theorem fixedVariables_total (input : Fin n -> Bool) :
+    (total input).fixedVariables = Finset.univ := by
+  apply Finset.ext
+  intro index
+  simp
+
+@[simp] theorem fixedCount_total (input : Fin n -> Bool) :
+    (total input).fixedCount = n := by
+  simp [fixedCount]
 
 /-- Every variable is either live or fixed, but not both. -/
 theorem liveVariables_union_fixedVariables

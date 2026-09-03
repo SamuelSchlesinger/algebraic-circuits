@@ -54,7 +54,7 @@ theorem.
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantic layer validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Literal, formula, and decision-tree foundations validated 2026-09-03; canonical DNF tree construction open |
-| Probability | Finite `p`-random restriction distribution | Not started |
+| Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Not started |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
@@ -109,3 +109,12 @@ depth monotonicity. A constructive Shannon expansion proves the universal
 search. The audited headline theorems use no axioms beyond Lean's standard
 `propext`, `Classical.choice`, and `Quot.sound`. The canonical tree used in the
 switching proof remains open.
+
+The random-restriction distribution passed the same gates on 2026-09-03. For
+`0 <= p <= 1`, each coordinate has exact masses `p`, `(1-p)/2`, and `(1-p)/2`
+for live, fixed-false, and fixed-true states. The finite product normalization
+is proved, and every restriction's point mass is proved equal to
+`p^(live count) * ((1-p)/2)^(fixed count)`. Event probability, complement, and
+unit upper-bound lemmas are derived from that PMF. The audited normalization
+chain uses no axioms beyond Lean's standard `propext`, `Classical.choice`, and
+`Quot.sound`.
