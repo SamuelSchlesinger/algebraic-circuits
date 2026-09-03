@@ -7,7 +7,8 @@ import Algebraic.MassProduction.RoutingWiring
 This module identifies each affine-point bit in the grouped scheduler output
 with the corresponding incidence-key wire.  It is the narrow bridge from the
 semantic schedule to the zero-cost routing-record wiring layer; assembly of
-the scatter, resource, and gather circuits is kept in `RoutingAssembly`.
+the scatter and gather records is kept in the focused `ScatterAssembly` and
+`GatherAssembly` modules.
 -/
 
 namespace Algebraic
