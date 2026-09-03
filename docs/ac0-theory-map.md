@@ -72,7 +72,7 @@ coordinates, then
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Dynamic canonical DNF tree, semantic correctness, and live-variable depth bound validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
-| Switching | Explicit finite switching lemma | Weighted engine and explicit canonical replay decoder validated 2026-09-03; event-wide injection and final bound open |
+| Switching | Explicit finite switching lemma | Event-wide canonical injection and exact scaled probability bound validated 2026-09-03; standard `9pt` corollary and target `5pt` bound open |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Not started |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
@@ -214,3 +214,16 @@ coordinates from the refined output is then proved to recover the original
 restriction. Thus the decoder is a kernel-checked left inverse for every valid
 canonical trace encoding; choosing traces uniformly over the bad event and
 instantiating the weighted injection theorem remain open.
+
+The canonical-injection submilestone passed the same gates on 2026-09-03.
+For every restriction in the canonical-depth-`s` event, proof-level classical
+choice selects an exact-length structural path and its source-term trace. The
+resulting total encoder is proved injective on the event by the explicit
+decoder, and its extension fixes exactly `s` initially live coordinates. The
+weighted engine now gives the exact division-free inequality
+`((1-p)/2)^s * Pr[bad] <= (4t)^s * p^s`
+
+for every positive width bound `t` and `0 <= p <= 1`. This is already a finite,
+kernel-checked switching estimate. Converting it under `p <= 1/9` to the
+standard intermediate `(9pt)^s` statement, handling zero-width edge cases,
+and then sharpening to the source target `(5pt)^s` remain open.
