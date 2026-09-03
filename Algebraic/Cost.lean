@@ -1,4 +1,5 @@
 import Algebraic.Circuit
+import Mathlib.Algebra.BigOperators.Fin
 
 /-!
 # Weighted circuit cost
@@ -9,6 +10,8 @@ are the corresponding sums over gates. Designating output wires is free.
 -/
 
 namespace Algebraic
+
+open scoped BigOperators
 
 /-- A natural-number cost assigned to every operation in a signature. -/
 abbrev OperationCost (σ : Signature) := σ.Op → Nat
@@ -33,6 +36,19 @@ def Program.cost (operationCost : OperationCost σ) :
     (line : Line σ n g) :
     (program.gate line).cost operationCost =
       program.cost operationCost + operationCost line.op := rfl
+
+/-- Program cost is the sum of the costs of its gates viewed in the final
+wire namespace. -/
+theorem Program.cost_eq_sum_lines
+    (program : Program σ n g)
+    (operationCost : OperationCost σ) :
+    program.cost operationCost =
+      ∑ gate : Fin g, operationCost (program.lines gate).op := by
+  induction program with
+  | empty => simp
+  | @gate g program line inductionHypothesis =>
+      rw [Program.cost_gate, Fin.sum_univ_castSucc]
+      simp [inductionHypothesis]
 
 /-- If every operation costs at most `K`, a program of `g` gates costs at most
 `K * g`. -/

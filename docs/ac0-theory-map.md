@@ -81,7 +81,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact normalized product PMF validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Simultaneous bounded-bottom-gate switching and exact shallow-function normal forms validated 2026-09-03; gate substitution open |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Semantic shallow-layer invariant, exact charged-gate count, and shallow-function normal forms validated 2026-09-03; layer advancement open |
 | Parity | Restriction resilience and quantitative depth-`k` lower bound | Not started |
 | Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
 
@@ -115,6 +115,20 @@ defines same-variable Boolean restrictions, sequential refinement, exact live
 sets and counts, conversion to `InputSubstitution`, restriction of scalar and
 multi-output targets, and the proof that restricted semantics depend only on
 live coordinates. Its public theorem audit uses no axioms beyond Lean's
+standard `propext`, `Classical.choice`, and `Quot.sound`.
+
+The semantic-layer invariant submilestone passed the full gates on 2026-09-03.
+`Program.ShallowUpTo rho i t` states that every wire through source logical
+depth `i` has semantic decision-tree depth at most `t` after `rho`. It is
+proved stable under further restrictions, and checked input negations give the
+depth-zero base case via explicit one-query literal trees. Every argument of
+an AND or OR gate is proved to have strictly smaller logical depth, furnishing
+the induction step's structural premise. Separately, the finite set of
+connective gates is proved to have cardinality exactly the program's charged
+AND/OR cost; later union bounds therefore charge the source circuit size
+rather than raw program gates containing free NOTs. Advancing the invariant
+through one full connective layer using bounded DNF/CNF composition is the
+next open obligation. The audited public theorems use no axioms beyond Lean's
 standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The decoder-algebra extension to partial assignments passed the same gates on
