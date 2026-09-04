@@ -571,4 +571,30 @@ example :
     (Nonuniform.Propagation.circuit 4).cost DeMorgan.standardCost = 8 :=
   Nonuniform.Propagation.circuit_cost 4
 
+/-- Batched table lookup exports an unconditional circuit-existence theorem
+with explicit polynomial overhead and arbitrary repeated query addresses. -/
+example (keyWidth valueWidth requests : Nat)
+    (table : (Fin keyWidth → Bool) → Fin valueWidth → Bool) :
+    ∃ gates, ∃ lookup : Circuit DeMorgan.signature (requests * keyWidth) gates
+        (requests * valueWidth),
+      (∀ input request bit, lookup.eval DeMorgan.interpretation input
+        (finProdFinEquiv (request, bit)) =
+          table (fun addressBit => input (finProdFinEquiv (request, addressBit))) bit) ∧
+      lookup.cost DeMorgan.standardCost ≤
+        256 * (2 ^ keyWidth + requests) *
+          (FiniteParameters.binaryDepth (2 ^ keyWidth + requests) + keyWidth + valueWidth + 2) ^ 5 :=
+  Nonuniform.BatchLookup.existsCircuit keyWidth valueWidth requests table
+
+/-- Repeated addresses return separate outputs in their original query
+positions. The third query has a different first address bit. -/
+example :
+    let table := fun address : Fin 2 → Bool => address
+    let lookup := Nonuniform.BatchLookup.circuit table
+      (by decide : 2 ^ 2 + 3 + 1 = Sorting.networkRecords 3)
+    let input : Fin 6 → Bool := ![true, false, true, false, false, true]
+    lookup.eval DeMorgan.interpretation input (finProdFinEquiv (1, 0)) = true ∧
+      lookup.eval DeMorgan.interpretation input (finProdFinEquiv (2, 0)) = false := by
+  dsimp only
+  constructor <;> rw [Nonuniform.BatchLookup.circuit_eval] <;> rfl
+
 end AlgebraicTests.MassProduction

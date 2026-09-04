@@ -22,8 +22,9 @@ routing, and the finite cost bounds used by those theorems. Approximation
 results are intentionally outside this formalization.
 
 The nonuniform extension additionally proves universal scheduling menus,
-linear-size propagation primitives, high-rate systematic line-recovery codes,
-and their Boolean packing semantics. The complete nonuniform scheduler cost
+linear-size propagation primitives, a complete batched table lookup circuit,
+high-rate systematic line-recovery codes, and their Boolean packing semantics.
+The complete nonuniform scheduler cost
 and improved exponential-range leading coefficient remain outside the checked
 endpoints; see the `Nonuniform` and `HighRate` umbrella docstrings.
 -/

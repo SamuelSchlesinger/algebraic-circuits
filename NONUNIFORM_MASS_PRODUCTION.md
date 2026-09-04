@@ -15,6 +15,10 @@ The added modules prove, without new axioms or proof placeholders:
 - A concrete shared propagation circuit costing exactly two charged gates
   per record, and record payload broadcast costing at most
   `records * (6 * keyWidth + 4)` per payload bit.
+- A complete two-sort batched table lookup, including repeated queries,
+  metadata preservation, and fixed output wires. For
+  `T = 2^keyWidth + requests`, the charged cost is at most
+  `256 * T * (ceil(log2 T) + keyWidth + valueWidth + 2)^5`.
 - Common-zero-block monomial line parity, independence of reduced monomial
   evaluations, and existence of a systematic information set of exact size
   `A^m - (A-1)^m` over `A^m` points. Here `A = 2^(dimension * blockWidth)`
@@ -29,16 +33,16 @@ nonuniform choices made offline. Their existence is proved, not assumed.
 
 Still required for the manuscript's new end-to-end bound:
 
-1. Assemble and verify the full batched prefix lookup. The offline lookup can
-   include code number, information point, and bit selector together, using
-   one record for each source prefix and avoiding runtime division.
-2. Assemble candidate point generation, shared occupancy broadcast, collision
+1. Assemble candidate point generation, shared occupancy broadcast, collision
    detection, exact-half selection, compaction, and all halving phases into
    one circuit with a cost linear in the batch size up to polynomial factors
    in the bit widths.
-3. Integrate that circuit and the high-rate code with the resource bank and
+2. Integrate that circuit and the high-rate code with the resource bank and
    routing pipeline, then prove the exponential-range parameter estimates
    and the coefficient `1 / (1 - gamma)` in the integer precision model.
+
+The now-proved batched lookup can include code number, information point,
+and bit selector together in its offline table. This avoids runtime division.
 
 Neither the old theorem nor the existence of a short menu alone proves these
 remaining circuit costs. The new coefficient must not be described as fully
