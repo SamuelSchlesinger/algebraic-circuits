@@ -46,6 +46,7 @@ import Algebraic.LowerBound.GateElimination
 import Algebraic.LowerBound.Approximation
 import Algebraic.LowerBound.Fusion
 import Algebraic.LowerBound.Monotone.Clique.Exponential
+import Algebraic.LowerBound.Noncommutative
 
 /-!
 # Circuit lower bounds

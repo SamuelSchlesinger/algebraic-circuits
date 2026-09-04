@@ -50,6 +50,7 @@ import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds
 import AlgebraicTests.MassProduction
+import AlgebraicTests.NoncommutativeDescendingChain
 
 /-!
 # Algebraic public API regression suite
