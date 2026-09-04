@@ -8,8 +8,8 @@ an arbitrary scale `t`. If
 
 `(20 * (t + 1))^(d - 1) <= n`,
 
-then every checked input-negation-normal depth-`d` circuit computing parity
-satisfies
+then every depth-`d` circuit computing parity, even with arbitrary internal
+NOT gates, satisfies
 
 `2^(t + 1) <= 20 * t * S`,
 
@@ -67,10 +67,10 @@ end ParityParameters
 
 namespace Circuit
 
-/-- Quantitative parity size tradeoff at an arbitrary integral scale. -/
-theorem parity_size_tradeoff_at_scale
+/-- Quantitative parity size tradeoff at an arbitrary integral scale, with
+arbitrary internal NOT gates charged at zero. -/
+theorem parity_size_tradeoff_at_scale_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (normal : Program.NegationsAtInputs circuit.program)
     (computes : circuit.Computes interpretation (Parity.target n))
     (depth t : Nat)
     (twoLeDepth : 2 ≤ depth)
@@ -83,10 +83,25 @@ theorem parity_size_tradeoff_at_scale
   have small :
       20 * t * circuit.program.cost andOrCost < 2 ^ (t + 1) := by
     omega
-  exact not_computes_parity_of_integral_bounds
-    circuit normal depth t twoLeDepth circuitDepth oneLe small
+  exact not_computes_parity_of_integral_bounds_raw
+    circuit depth t twoLeDepth circuitDepth oneLe small
     (ParityParameters.survivors_of_scalePow
       n depth t twoLeDepth oneLe inputLarge) computes
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem parity_size_tradeoff_at_scale
+    (circuit : Algebraic.Circuit signature n g 1)
+    (_normal : Program.NegationsAtInputs circuit.program)
+    (computes : circuit.Computes interpretation (Parity.target n))
+    (depth t : Nat)
+    (twoLeDepth : 2 ≤ depth)
+    (circuitDepth : logicalDepth circuit ≤ depth)
+    (oneLe : 1 ≤ t)
+    (inputLarge : (20 * (t + 1)) ^ (depth - 1) ≤ n) :
+    2 ^ (t + 1) ≤
+      20 * t * circuit.program.cost andOrCost :=
+  parity_size_tradeoff_at_scale_raw circuit computes depth t twoLeDepth
+    circuitDepth oneLe inputLarge
 
 end Circuit
 end AC0

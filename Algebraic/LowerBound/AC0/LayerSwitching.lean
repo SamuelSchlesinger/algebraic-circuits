@@ -81,12 +81,13 @@ theorem logicalGateDepth_eq_zero_of_not_connective
     (Op.eq_not_of_connective_eq_none notConnective)
 
 /-- If every charged gate in the next layer is shallow after an extension,
-then the semantic shallow-layer invariant advances by one. -/
-theorem ShallowUpTo.succ_of_connective
+then the semantic shallow-layer invariant advances by one. Arbitrary internal
+NOT chains are handled directly by topological induction and negating the
+tree for their source wire. -/
+theorem ShallowUpTo.succ_of_connective_raw
     {program : Algebraic.Program signature n g}
     {rho extension : PartialAssignment n}
     {level bound : Nat}
-    (normal : NegationsAtInputs program)
     (shallow : ShallowUpTo program rho level bound)
     (next : forall gate,
       gate ∈ connectiveGates program ->
@@ -96,27 +97,135 @@ theorem ShallowUpTo.succ_of_connective
           (program.gateFunction interpretation gate)
           (rho.refine extension)) bound) :
     ShallowUpTo program (rho.refine extension) (level + 1) bound := by
-  intro wire wireDepth
-  by_cases priorDepth : logicalWireDepths program wire ≤ level
-  · exact shallow.restrict extension wire priorDepth
-  · revert wireDepth priorDepth
-    refine Fin.addCases (fun input wireDepth priorDepth => ?_)
-      (fun gate wireDepth priorDepth => ?_) wire
-    · exfalso
-      apply priorDepth
-      simp
-    · have gateDepth : logicalGateDepths program gate ≤ level + 1 := by
-        simpa using wireDepth
-      have connective : gate ∈ connectiveGates program := by
-        rw [mem_connectiveGates]
-        by_contra notConnective
-        have connectiveEq : (program.lines gate).op.connective = none :=
-          notConnective
-        have depthZero := logicalGateDepth_eq_zero_of_not_connective
-          program normal gate connectiveEq
-        apply priorDepth
-        simp [depthZero]
-      simpa using next gate connective gateDepth
+  induction program generalizing rho extension level bound with
+  | empty =>
+      intro wire _
+      let input : Fin n := ⟨wire.val, by omega⟩
+      have wireEq : wire = Wire.input (g := 0) input := by
+        apply Fin.ext
+        rfl
+      apply shallow.restrict extension wire
+      rw [wireEq, logicalWireDepths_input]
+      exact Nat.zero_le level
+  | @gate gateCount prior line inductionHypothesis =>
+      have priorShallow : ShallowUpTo prior rho level bound := by
+        intro wire wireDepth
+        have widenedDepth :
+            logicalWireDepths (prior.gate line) wire.castSucc ≤ level := by
+          simpa [logicalWireDepths] using wireDepth
+        have widened := shallow wire.castSucc widenedDepth
+        have functionEq :
+            (prior.gate line).wireFunction interpretation wire.castSucc =
+              prior.wireFunction interpretation wire := by
+          funext input
+          exact Algebraic.Program.trace_gate_castSucc
+            prior line interpretation input wire
+        rw [functionEq] at widened
+        exact widened
+      have priorNext : forall gate,
+          gate ∈ connectiveGates prior ->
+          logicalGateDepths prior gate ≤ level + 1 ->
+          DecisionTree.DepthAtMost
+            (ScalarFunction.restrict
+              (prior.gateFunction interpretation gate)
+              (rho.refine extension)) bound := by
+        intro gate connective gateDepth
+        have widenedConnective :
+            gate.castSucc ∈ connectiveGates (prior.gate line) := by
+          rw [mem_connectiveGates, Algebraic.Program.lines_gate_castSucc]
+          simpa using (mem_connectiveGates prior gate).1 connective
+        have widenedDepth :
+            logicalGateDepths (prior.gate line) gate.castSucc ≤ level + 1 := by
+          simpa [logicalGateDepths] using gateDepth
+        have widened := next gate.castSucc widenedConnective widenedDepth
+        simpa [Algebraic.Program.gateFunction] using widened
+      have priorResult :
+          ShallowUpTo prior (rho.refine extension) (level + 1) bound :=
+        inductionHypothesis priorShallow priorNext
+      intro wire wireDepth
+      revert wireDepth
+      refine Fin.addCases (fun input _ => ?_)
+        (fun gate wireDepth => ?_) wire
+      · exact shallow.restrict extension (Wire.input input) (by simp)
+      · rw [logicalWireDepths_gate] at wireDepth
+        rw [Algebraic.Program.wireFunction_gate]
+        revert wireDepth
+        refine Fin.lastCases (fun wireDepth => ?_)
+          (fun priorGate wireDepth => ?_) gate
+        · have gateDepth :
+              logicalGateDepths (prior.gate line) (Fin.last gateCount) ≤
+                level + 1 := by
+            exact wireDepth
+          cases line with
+          | mk operation wires =>
+              cases operation with
+              | not =>
+                  have sourceDepth :
+                      logicalWireDepths prior (wires 0) ≤ level + 1 := by
+                    unfold logicalGateDepths at gateDepth
+                    rw [Algebraic.Program.eval_gate_last] at gateDepth
+                    simpa [Algebraic.Line.eval, logicalDepthInterpretation,
+                      logicalWireDepths, Algebraic.Program.trace] using gateDepth
+                  have sourceBounded := priorResult (wires 0) sourceDepth
+                  have gateFunctionEq :
+                      ScalarFunction.restrict
+                          ((prior.gate ⟨.not, wires⟩).gateFunction
+                            interpretation (Fin.last gateCount))
+                          (rho.refine extension) =
+                        fun input => !((ScalarFunction.restrict
+                          (prior.wireFunction interpretation (wires 0))
+                          (rho.refine extension)) input) := by
+                    funext input
+                    simp only [ScalarFunction.restrict_apply,
+                      Algebraic.Program.gateFunction_gate_last,
+                      Algebraic.Line.eval, interpretation_not,
+                      Function.comp_apply]
+                    rfl
+                  rw [gateFunctionEq]
+                  exact sourceBounded.negate
+              | and fanIn =>
+                  have connective :
+                      Fin.last gateCount ∈
+                        connectiveGates (prior.gate ⟨.and fanIn, wires⟩) := by
+                    rw [mem_connectiveGates,
+                      Algebraic.Program.lines_gate_last]
+                    simp [Op.connective]
+                  exact next (Fin.last gateCount) connective gateDepth
+              | or fanIn =>
+                  have connective :
+                      Fin.last gateCount ∈
+                        connectiveGates (prior.gate ⟨.or fanIn, wires⟩) := by
+                    rw [mem_connectiveGates,
+                      Algebraic.Program.lines_gate_last]
+                    simp [Op.connective]
+                  exact next (Fin.last gateCount) connective gateDepth
+        · have priorDepth :
+              logicalWireDepths prior (Wire.gate priorGate) ≤ level + 1 := by
+            unfold logicalGateDepths at wireDepth
+            rw [Algebraic.Program.eval_gate_castSucc] at wireDepth
+            rw [logicalWireDepths_gate]
+            unfold logicalGateDepths
+            exact wireDepth
+          have bounded := priorResult (Wire.gate priorGate) priorDepth
+          simpa only [Algebraic.Program.wireFunction_gate,
+            Algebraic.Program.gateFunction_gate_castSucc] using bounded
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem ShallowUpTo.succ_of_connective
+    {program : Algebraic.Program signature n g}
+    {rho extension : PartialAssignment n}
+    {level bound : Nat}
+    (_normal : NegationsAtInputs program)
+    (shallow : ShallowUpTo program rho level bound)
+    (next : forall gate,
+      gate ∈ connectiveGates program ->
+      logicalGateDepths program gate ≤ level + 1 ->
+      DecisionTree.DepthAtMost
+        (ScalarFunction.restrict
+          (program.gateFunction interpretation gate)
+          (rho.refine extension)) bound) :
+    ShallowUpTo program (rho.refine extension) (level + 1) bound :=
+  shallow.succ_of_connective_raw next
 
 end Program
 
@@ -324,12 +433,12 @@ theorem ShallowUpTo.probability_exists_connective_in_nextLayer_not_depthAtMost_r
 
 /-- One random switching step advances the semantic shallow-tree invariant by
 one logical layer, except on an event of charged-size times the standard
-switching-lemma failure probability. -/
-theorem ShallowUpTo.probability_not_succ_refine_le_five
+switching-lemma failure probability. This raw form permits arbitrary internal
+NOT gates. -/
+theorem ShallowUpTo.probability_not_succ_refine_le_five_raw
     {program : Algebraic.Program signature n g}
     {rho : PartialAssignment n}
     {level bound : Nat}
-    (normal : NegationsAtInputs program)
     (shallow : ShallowUpTo program rho level bound)
     (p : NNReal)
     (atMostOne : p ≤ 1) :
@@ -357,7 +466,7 @@ theorem ShallowUpTo.probability_not_succ_refine_le_five
       intro extension failure
       by_contra noGateFailure
       apply failure
-      apply shallow.succ_of_connective normal
+      apply shallow.succ_of_connective_raw
       intro gate connective gateDepth
       by_contra gateFailure
       exact noGateFailure ⟨gate, connective, gateDepth, gateFailure⟩
@@ -366,6 +475,24 @@ theorem ShallowUpTo.probability_not_succ_refine_le_five
             (bound + 1)) :=
       shallow.probability_exists_connective_in_nextLayer_not_depthAtMost_refine_le_five
         p atMostOne
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem ShallowUpTo.probability_not_succ_refine_le_five
+    {program : Algebraic.Program signature n g}
+    {rho : PartialAssignment n}
+    {level bound : Nat}
+    (_normal : NegationsAtInputs program)
+    (shallow : ShallowUpTo program rho level bound)
+    (p : NNReal)
+    (atMostOne : p ≤ 1) :
+    RandomRestriction.probability n p atMostOne
+        (fun extension =>
+          ¬ShallowUpTo program (rho.refine extension)
+            (level + 1) bound) ≤
+      (program.cost andOrCost : ENNReal) *
+        (((5 : ENNReal) * (p : ENNReal) * (bound : ENNReal)) ^
+          (bound + 1)) :=
+  shallow.probability_not_succ_refine_le_five_raw p atMostOne
 
 end Program
 

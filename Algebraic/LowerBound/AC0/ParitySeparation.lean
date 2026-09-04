@@ -15,10 +15,11 @@ The finite theorem forces `2^(t+1) <= 20 * t * S(n)`, while substituting this
 input width into the polynomial upper bound leaves a fixed polynomial in `t`.
 The latter is eventually at most `2^t`, giving a contradiction.
 
-The reusable family theorem below needs only input-level negations, not
-alternation. The final checked endpoint is stated for `AC0.Computable`.
-Dual-rail normalization then transfers the separation to `AC0.RawComputable`,
-whose circuits may contain NOT gates at arbitrary internal wires.
+The reusable family theorem works directly for arbitrary internal NOT gates:
+the switching argument follows free NOT chains semantically and charges only
+AND/OR gates. The checked `AC0.Computable` endpoint is retained as a
+specialization, while `AC0.RawComputable` now follows without dual-rail
+normalization or its factor-two cost expansion.
 -/
 
 namespace Algebraic
@@ -74,14 +75,13 @@ end ParityParameters
 
 namespace Family
 
-/-- No family with polynomial AND/OR cost, constant logical depth, and only
-input-level negations computes parity at every input width. -/
-theorem not_computes_parity
+/-- No family with polynomial AND/OR cost and constant logical depth computes
+parity at every input width, even when NOT gates occur at arbitrary internal
+wires. -/
+theorem not_computes_parity_raw
     (family : Algebraic.Circuit.Family signature 1)
     (polynomialCost : family.HasPolynomialCost andOrCost)
-    (constantDepth : HasConstantLogicalDepth family)
-    (negationsAtInputs : forall n,
-      Program.NegationsAtInputs (family.circuit n).program) :
+    (constantDepth : HasConstantLogicalDepth family) :
     Not (family.Computes interpretation Parity.targetFamily) := by
   intro computes
   obtain ⟨coefficient, degree, costBound⟩ := polynomialCost
@@ -105,8 +105,8 @@ theorem not_computes_parity
   have lower :
       2 ^ (scale + 1) <=
         20 * scale * (family.circuit n).program.cost andOrCost :=
-    Circuit.parity_size_tradeoff_at_scale
-      (family.circuit n) (negationsAtInputs n) (computes n)
+    Circuit.parity_size_tradeoff_at_scale_raw
+      (family.circuit n) (computes n)
       depth scale twoLeDepth circuitDepth (by omega) (by
         simp [n, ParityParameters.diagonalInput])
   have upper :
@@ -127,6 +127,17 @@ theorem not_computes_parity
     Nat.pow_lt_pow_right (by omega) (Nat.lt_succ_self scale)
   exact (Nat.not_lt_of_ge impossible) strict
 
+/-- Compatibility specialization to families with checked input-level
+negations. -/
+theorem not_computes_parity
+    (family : Algebraic.Circuit.Family signature 1)
+    (polynomialCost : family.HasPolynomialCost andOrCost)
+    (constantDepth : HasConstantLogicalDepth family)
+    (_negationsAtInputs : forall n,
+      Program.NegationsAtInputs (family.circuit n).program) :
+    Not (family.Computes interpretation Parity.targetFamily) :=
+  not_computes_parity_raw family polynomialCost constantDepth
+
 end Family
 
 /-- The parity target family is not computable by nonuniform AC0 as defined
@@ -139,12 +150,13 @@ theorem parity_not_computable :
     negationsAtInputs computes
 
 /-- Parity is not computable even in the raw presentation that allows NOT
-gates at arbitrary internal wires. -/
+gates at arbitrary internal wires. This conclusion is now direct and does not
+pass through dual-rail normalization. -/
 theorem parity_not_raw_computable :
     Not (RawComputable Parity.targetFamily) := by
-  intro computes
-  exact parity_not_computable
-    ((rawComputable_iff_computable Parity.targetFamily).1 computes)
+  rintro ⟨family, computes, polynomialCost, constantDepth⟩
+  exact Family.not_computes_parity_raw family polynomialCost constantDepth
+    computes
 
 end AC0
 end Algebraic

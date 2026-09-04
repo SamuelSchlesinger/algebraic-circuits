@@ -28,12 +28,12 @@ namespace Program
 open scoped ENNReal
 
 /-- Advance the shallow invariant when old layers have a possibly smaller
-bound than the newly exposed layer. -/
-theorem ShallowUpTo.succ_of_connective_bounds
+bound than the newly exposed layer. Arbitrary internal NOT gates are handled
+by the raw one-bound successor theorem. -/
+theorem ShallowUpTo.succ_of_connective_bounds_raw
     {program : Algebraic.Program signature n g}
     {rho extension : PartialAssignment n}
     {level sourceBound targetBound : Nat}
-    (normal : NegationsAtInputs program)
     (shallow : ShallowUpTo program rho level sourceBound)
     (sourceLeTarget : sourceBound ≤ targetBound)
     (next : ∀ gate,
@@ -44,27 +44,28 @@ theorem ShallowUpTo.succ_of_connective_bounds
           (program.gateFunction interpretation gate)
           (rho.refine extension)) targetBound) :
     ShallowUpTo program (rho.refine extension) (level + 1) targetBound := by
-  intro wire wireDepth
-  by_cases priorDepth : logicalWireDepths program wire ≤ level
-  · exact (shallow.restrict extension wire priorDepth).mono sourceLeTarget
-  · revert wireDepth priorDepth
-    refine Fin.addCases (fun input wireDepth priorDepth => ?_)
-      (fun gate wireDepth priorDepth => ?_) wire
-    · exfalso
-      apply priorDepth
-      simp
-    · have gateDepth : logicalGateDepths program gate ≤ level + 1 := by
-        simpa using wireDepth
-      have connective : gate ∈ connectiveGates program := by
-        rw [mem_connectiveGates]
-        by_contra notConnective
-        have connectiveEq : (program.lines gate).op.connective = none :=
-          notConnective
-        have depthZero := logicalGateDepth_eq_zero_of_not_connective
-          program normal gate connectiveEq
-        apply priorDepth
-        simp [depthZero]
-      simpa using next gate connective gateDepth
+  have widened : ShallowUpTo program rho level targetBound := by
+    intro wire wireDepth
+    exact (shallow wire wireDepth).mono sourceLeTarget
+  exact widened.succ_of_connective_raw next
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem ShallowUpTo.succ_of_connective_bounds
+    {program : Algebraic.Program signature n g}
+    {rho extension : PartialAssignment n}
+    {level sourceBound targetBound : Nat}
+    (_normal : NegationsAtInputs program)
+    (shallow : ShallowUpTo program rho level sourceBound)
+    (sourceLeTarget : sourceBound ≤ targetBound)
+    (next : ∀ gate,
+      gate ∈ connectiveGates program →
+      logicalGateDepths program gate ≤ level + 1 →
+      DecisionTree.DepthAtMost
+        (ScalarFunction.restrict
+          (program.gateFunction interpretation gate)
+          (rho.refine extension)) targetBound) :
+    ShallowUpTo program (rho.refine extension) (level + 1) targetBound :=
+  shallow.succ_of_connective_bounds_raw sourceLeTarget next
 
 /-- A gate represented by source-width normal form fails the target tree-depth
 bound with the two-parameter switching-lemma estimate. -/
@@ -230,12 +231,12 @@ theorem ShallowUpTo.probability_exists_connective_in_nextLayer_not_depthAtMost_r
 
 /-- One random restriction advances the semantic invariant from source bound
 `sourceBound` to target bound `targetBound`, except with the standard charged
-two-parameter switching probability. -/
-theorem ShallowUpTo.probability_not_succ_refine_le_five_bounds
+two-parameter switching probability. This raw form permits arbitrary internal
+NOT gates. -/
+theorem ShallowUpTo.probability_not_succ_refine_le_five_bounds_raw
     {program : Algebraic.Program signature n g}
     {rho : PartialAssignment n}
     {level sourceBound targetBound : Nat}
-    (normal : NegationsAtInputs program)
     (shallow : ShallowUpTo program rho level sourceBound)
     (sourceLeTarget : sourceBound ≤ targetBound)
     (p : NNReal)
@@ -264,7 +265,7 @@ theorem ShallowUpTo.probability_not_succ_refine_le_five_bounds
       intro extension failure
       by_contra noGateFailure
       apply failure
-      apply shallow.succ_of_connective_bounds normal sourceLeTarget
+      apply shallow.succ_of_connective_bounds_raw sourceLeTarget
       intro gate connective gateDepth
       by_contra gateFailure
       exact noGateFailure ⟨gate, connective, gateDepth, gateFailure⟩
@@ -273,6 +274,26 @@ theorem ShallowUpTo.probability_not_succ_refine_le_five_bounds
               (sourceBound : ENNReal)) ^ (targetBound + 1)) :=
       shallow.probability_exists_connective_in_nextLayer_not_depthAtMost_refine_le_five_bounds
         p atMostOne
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem ShallowUpTo.probability_not_succ_refine_le_five_bounds
+    {program : Algebraic.Program signature n g}
+    {rho : PartialAssignment n}
+    {level sourceBound targetBound : Nat}
+    (_normal : NegationsAtInputs program)
+    (shallow : ShallowUpTo program rho level sourceBound)
+    (sourceLeTarget : sourceBound ≤ targetBound)
+    (p : NNReal)
+    (atMostOne : p ≤ 1) :
+    RandomRestriction.probability n p atMostOne
+        (fun extension =>
+          ¬ShallowUpTo program (rho.refine extension)
+            (level + 1) targetBound) ≤
+      (program.cost andOrCost : ENNReal) *
+        (((5 : ENNReal) * (p : ENNReal) * (sourceBound : ENNReal)) ^
+          (targetBound + 1)) :=
+  shallow.probability_not_succ_refine_le_five_bounds_raw
+    sourceLeTarget p atMostOne
 
 end Program
 end AC0

@@ -88,10 +88,10 @@ theorem liveCount_le_of_shallowUpTo_computes_parity
     (wireFunction_output_eq_parity_of_computes computes)
 
 /-- Any parity circuit satisfying the iterated switching premises forces the
-final survivor schedule below the common tree-depth allowance. -/
-theorem retained_le_bound_of_iterated_parity
+final survivor schedule below the common tree-depth allowance, with arbitrary
+internal NOT gates. -/
+theorem retained_le_bound_of_iterated_parity_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (normal : Program.NegationsAtInputs circuit.program)
     (computes : circuit.Computes interpretation (Parity.target n))
     (depth bound : Nat)
     (circuitDepth : logicalDepth circuit <= depth)
@@ -110,17 +110,41 @@ theorem retained_le_bound_of_iterated_parity
           (p : ENNReal) * (retained level : ENNReal)) :
     retained depth <= bound := by
   obtain ⟨rho, shallow, survivors⟩ :=
-    Program.exists_shallowUpTo_with_liveCount circuit.program normal
+    Program.exists_shallowUpTo_with_liveCount_raw circuit.program
       depth bound oneLeBound p atMostOne retained initial failureLe room
   exact survivors.trans
     (liveCount_le_of_shallowUpTo_computes_parity
       computes circuitDepth shallow)
 
-/-- Parameterized iterated-switching lower bound: if the survivor schedule
-ends above the tree allowance, the circuit cannot compute parity. -/
-theorem not_computes_parity_of_iterated_switching
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem retained_le_bound_of_iterated_parity
     (circuit : Algebraic.Circuit signature n g 1)
-    (normal : Program.NegationsAtInputs circuit.program)
+    (_normal : Program.NegationsAtInputs circuit.program)
+    (computes : circuit.Computes interpretation (Parity.target n))
+    (depth bound : Nat)
+    (circuitDepth : logicalDepth circuit <= depth)
+    (oneLeBound : 1 <= bound)
+    (p : NNReal)
+    (atMostOne : p <= 1)
+    (retained : Nat -> Nat)
+    (initial : retained 0 <= n)
+    (failureLe :
+      Program.layerFailureBound circuit.program p bound <= (p : ENNReal))
+    (room : forall level,
+      level < depth ->
+        Program.layerFailureBound circuit.program p bound *
+              (retained level : ENNReal) +
+            (retained (level + 1) : ENNReal) <
+          (p : ENNReal) * (retained level : ENNReal)) :
+    retained depth <= bound :=
+  retained_le_bound_of_iterated_parity_raw circuit computes depth bound
+    circuitDepth oneLeBound p atMostOne retained initial failureLe room
+
+/-- Parameterized iterated-switching lower bound: if the survivor schedule
+ends above the tree allowance, the circuit cannot compute parity, even with
+arbitrary internal NOT gates. -/
+theorem not_computes_parity_of_iterated_switching_raw
+    (circuit : Algebraic.Circuit signature n g 1)
     (depth bound : Nat)
     (circuitDepth : logicalDepth circuit <= depth)
     (oneLeBound : 1 <= bound)
@@ -140,9 +164,34 @@ theorem not_computes_parity_of_iterated_switching
     Not (circuit.Computes interpretation (Parity.target n)) := by
   intro computes
   exact (Nat.not_lt_of_ge
-    (retained_le_bound_of_iterated_parity
-      circuit normal computes depth bound circuitDepth oneLeBound
+    (retained_le_bound_of_iterated_parity_raw
+      circuit computes depth bound circuitDepth oneLeBound
       p atMostOne retained initial failureLe room)) tooMany
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem not_computes_parity_of_iterated_switching
+    (circuit : Algebraic.Circuit signature n g 1)
+    (_normal : Program.NegationsAtInputs circuit.program)
+    (depth bound : Nat)
+    (circuitDepth : logicalDepth circuit <= depth)
+    (oneLeBound : 1 <= bound)
+    (p : NNReal)
+    (atMostOne : p <= 1)
+    (retained : Nat -> Nat)
+    (initial : retained 0 <= n)
+    (failureLe :
+      Program.layerFailureBound circuit.program p bound <= (p : ENNReal))
+    (room : forall level,
+      level < depth ->
+        Program.layerFailureBound circuit.program p bound *
+              (retained level : ENNReal) +
+            (retained (level + 1) : ENNReal) <
+          (p : ENNReal) * (retained level : ENNReal))
+    (tooMany : bound < retained depth) :
+    Not (circuit.Computes interpretation (Parity.target n)) :=
+  not_computes_parity_of_iterated_switching_raw circuit depth bound
+    circuitDepth oneLeBound p atMostOne retained initial failureLe room
+    tooMany
 
 end Circuit
 end AC0

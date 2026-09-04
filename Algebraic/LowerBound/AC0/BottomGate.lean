@@ -4,11 +4,12 @@ import Algebraic.Fin
 /-!
 # Extracting bottom AC0 gates as bounded normal forms
 
-Source logical depth counts AND/OR gates and gives an input negation zero
-delay. This module proves the structural fact needed for circuit depth
-reduction: under the checked input-negation condition, every wire of logical
-depth zero computes a signed original input. Hence every connective gate at
-logical depth one has literal inputs.
+Source logical depth counts AND/OR gates and gives every negation zero delay.
+This module proves the structural fact needed for circuit depth reduction:
+every wire of logical depth zero, including an arbitrary internal NOT chain,
+computes a signed original input. The older bottom-gate extraction API retains
+its checked input-negation premise for compatibility; semantic layer reduction
+uses the unrestricted literal theorem directly.
 
 Those literal inputs are converted to the exact DNF or CNF from
 `LiteralGate`. The resulting formula computes the internal shared-DAG gate
@@ -122,41 +123,89 @@ theorem NegationsAtInputs.line
       · rw [Algebraic.Program.lines_gate_castSucc]
         exact (inductionHypothesis priorNormal priorGate).castSucc
 
-/-- Every source-depth-zero wire of an input-negation-normal program computes
-an explicit signed original-input literal. -/
-theorem exists_literal_of_logicalWireDepth_zero
+/-- Every source-depth-zero wire computes an explicit signed original-input
+literal, even when NOT gates form arbitrary internal chains. -/
+theorem exists_literal_of_logicalWireDepth_zero_raw
     (program : Algebraic.Program signature n g)
-    (normal : NegationsAtInputs program)
     (wire : Wire n g)
     (depthZero : logicalWireDepths program wire = 0) :
     Exists fun literal : Literal n =>
       program.wireFunction interpretation wire = literal.eval := by
-  revert depthZero
-  refine Fin.addCases (fun input _ => ?_) (fun gate depthZero => ?_) wire
-  · refine ⟨⟨input, true⟩, ?_⟩
-    rw [Algebraic.Program.wireFunction_input]
-    funext assignment
-    cases inputValue : assignment input <;> simp [Literal.eval, inputValue]
-  · have gateDepthZero : logicalGateDepths program gate = 0 := by
-      simpa using depthZero
-    have operation := line_op_eq_not_of_logicalDepth_zero
-      program gate gateDepthZero
-    have lineNormal := normal.line gate
-    generalize lineEqual : program.lines gate = line at operation lineNormal
-    cases line with
-    | mk op wires =>
-        cases op with
-        | not =>
-            obtain ⟨input, source⟩ := lineNormal
-            refine ⟨⟨input, false⟩, ?_⟩
-            funext assignment
-            rw [Algebraic.Program.wireFunction_gate]
-            change program.eval interpretation assignment gate = _
-            rw [← Algebraic.Program.lines_eval program interpretation
-              assignment gate, lineEqual]
-            simp [Algebraic.Line.eval, interpretation, source, Literal.eval]
-        | and literalCount => contradiction
-        | or literalCount => contradiction
+  induction program with
+  | empty =>
+      let input : Fin n := ⟨wire.val, by omega⟩
+      refine ⟨⟨input, true⟩, ?_⟩
+      have wireEq : wire = Wire.input (g := 0) input := by
+        apply Fin.ext
+        rfl
+      rw [wireEq, Algebraic.Program.wireFunction_input]
+      funext assignment
+      cases inputValue : assignment input <;> simp [Literal.eval, inputValue]
+  | @gate gateCount prior line inductionHypothesis =>
+      revert depthZero
+      refine Fin.lastCases (fun depthZero => ?_)
+        (fun priorWire depthZero => ?_) wire
+      · have gateDepthZero :
+            logicalGateDepths (prior.gate line) (Fin.last gateCount) = 0 := by
+          simpa [← Fin.natAdd_last] using depthZero
+        have operation : line.op = .not := by
+          have widenedOperation := line_op_eq_not_of_logicalDepth_zero
+            (prior.gate line) (Fin.last gateCount) gateDepthZero
+          simpa using widenedOperation
+        cases line with
+        | mk op wires =>
+            cases op with
+            | not =>
+                have sourceDepthZero :
+                    logicalWireDepths prior (wires 0) = 0 := by
+                  unfold logicalGateDepths at gateDepthZero
+                  rw [Algebraic.Program.eval_gate_last] at gateDepthZero
+                  simpa [Algebraic.Line.eval, logicalDepthInterpretation,
+                    logicalWireDepths, Algebraic.Program.trace] using
+                      gateDepthZero
+                obtain ⟨literal, computes⟩ :=
+                  inductionHypothesis (wires 0) sourceDepthZero
+                refine ⟨literal.negate, ?_⟩
+                funext assignment
+                unfold Algebraic.Program.wireFunction
+                have sourceValue := congrFun computes assignment
+                calc
+                  (prior.gate ⟨.not, wires⟩).trace interpretation assignment
+                      (Fin.last (n + gateCount)) =
+                      (⟨.not, wires⟩ : Algebraic.Line signature n gateCount).eval
+                        interpretation assignment
+                          (prior.eval interpretation assignment) :=
+                    Algebraic.Program.trace_gate_last prior ⟨.not, wires⟩
+                      interpretation assignment
+                  _ = !(prior.wireFunction interpretation (wires 0)
+                        assignment) := by
+                    rfl
+                  _ = !(literal.eval assignment) :=
+                    congrArg Bool.not sourceValue
+                  _ = literal.negate.eval assignment := by
+                    rw [Literal.eval_negate]
+            | and fanIn => simp at operation
+            | or fanIn => simp at operation
+      · have priorDepthZero :
+            logicalWireDepths prior priorWire = 0 := by
+          simpa [logicalWireDepths] using depthZero
+        obtain ⟨literal, computes⟩ :=
+          inductionHypothesis priorWire priorDepthZero
+        refine ⟨literal, ?_⟩
+        funext assignment
+        have sourceValue := congrFun computes assignment
+        simpa [Algebraic.Program.wireFunction] using sourceValue
+
+/-- Every source-depth-zero wire of an input-negation-normal program computes
+an explicit signed original-input literal. -/
+theorem exists_literal_of_logicalWireDepth_zero
+    (program : Algebraic.Program signature n g)
+    (_normal : NegationsAtInputs program)
+    (wire : Wire n g)
+    (depthZero : logicalWireDepths program wire = 0) :
+    Exists fun literal : Literal n =>
+      program.wireFunction interpretation wire = literal.eval :=
+  exists_literal_of_logicalWireDepth_zero_raw program wire depthZero
 
 end Program
 

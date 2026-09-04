@@ -23,10 +23,10 @@ namespace Circuit
 open scoped ENNReal
 
 /-- A depth-`rounds + 1` parity circuit satisfying an explicit reduction
-schedule forces the final survivor count below the final tree bound. -/
-theorem retained_le_treeBound_of_iterated_parity
+schedule forces the final survivor count below the final tree bound, with no
+restriction on the placement of NOT gates. -/
+theorem retained_le_treeBound_of_iterated_parity_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (normal : Program.NegationsAtInputs circuit.program)
     (computes : circuit.Computes interpretation (Parity.target n))
     (rounds : Nat)
     (circuitDepth : logicalDepth circuit ≤ rounds + 1)
@@ -50,19 +50,48 @@ theorem retained_le_treeBound_of_iterated_parity
         (p level : ENNReal) * (retained level : ENNReal)) :
     retained rounds ≤ treeBound rounds := by
   obtain ⟨rho, shallow, survivors⟩ :=
-    Program.exists_shallowUpTo_with_liveCount_bounds
-      circuit.program normal rounds treeBound oneLeInitialBound p
+    Program.exists_shallowUpTo_with_liveCount_bounds_raw
+      circuit.program rounds treeBound oneLeInitialBound p
       atMostOne boundMonotone retained initial failureLe room
   exact survivors.trans
-    (liveCount_le_of_shallowBelowTop_computes_parity
-      normal computes circuitDepth shallow)
+    (liveCount_le_of_shallowBelowTop_computes_parity_raw
+      computes circuitDepth shallow)
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem retained_le_treeBound_of_iterated_parity
+    (circuit : Algebraic.Circuit signature n g 1)
+    (_normal : Program.NegationsAtInputs circuit.program)
+    (computes : circuit.Computes interpretation (Parity.target n))
+    (rounds : Nat)
+    (circuitDepth : logicalDepth circuit ≤ rounds + 1)
+    (treeBound : Nat → Nat)
+    (oneLeInitialBound : 1 ≤ treeBound 0)
+    (p : Nat → NNReal)
+    (atMostOne : ∀ level, level < rounds → p level ≤ 1)
+    (boundMonotone : ∀ level, level < rounds →
+      treeBound level ≤ treeBound (level + 1))
+    (retained : Nat → Nat)
+    (initial : retained 0 ≤ n)
+    (failureLe : ∀ level, level < rounds →
+      Program.layerFailureBoundOfBounds circuit.program (p level)
+          (treeBound level) (treeBound (level + 1)) ≤
+        (p level : ENNReal))
+    (room : ∀ level, level < rounds →
+      Program.layerFailureBoundOfBounds circuit.program (p level)
+              (treeBound level) (treeBound (level + 1)) *
+            (retained level : ENNReal) +
+          (retained (level + 1) : ENNReal) <
+        (p level : ENNReal) * (retained level : ENNReal)) :
+    retained rounds ≤ treeBound rounds :=
+  retained_le_treeBound_of_iterated_parity_raw circuit computes rounds
+    circuitDepth treeBound oneLeInitialBound p atMostOne boundMonotone
+    retained initial failureLe room
 
 /-- Parameterized `rounds`-step parity lower bound with one unreduced top
-layer: a schedule ending above its final tree allowance rules out the
-circuit. -/
-theorem not_computes_parity_of_iterated_switching_below_top
+layer: a schedule ending above its final tree allowance rules out the circuit,
+with arbitrary internal NOT gates. -/
+theorem not_computes_parity_of_iterated_switching_below_top_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (normal : Program.NegationsAtInputs circuit.program)
     (rounds : Nat)
     (circuitDepth : logicalDepth circuit ≤ rounds + 1)
     (treeBound : Nat → Nat)
@@ -87,10 +116,40 @@ theorem not_computes_parity_of_iterated_switching_below_top
     ¬circuit.Computes interpretation (Parity.target n) := by
   intro computes
   exact (Nat.not_lt_of_ge
-    (retained_le_treeBound_of_iterated_parity
-      circuit normal computes rounds circuitDepth treeBound
+    (retained_le_treeBound_of_iterated_parity_raw
+      circuit computes rounds circuitDepth treeBound
       oneLeInitialBound p atMostOne boundMonotone retained initial
       failureLe room)) tooMany
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem not_computes_parity_of_iterated_switching_below_top
+    (circuit : Algebraic.Circuit signature n g 1)
+    (_normal : Program.NegationsAtInputs circuit.program)
+    (rounds : Nat)
+    (circuitDepth : logicalDepth circuit ≤ rounds + 1)
+    (treeBound : Nat → Nat)
+    (oneLeInitialBound : 1 ≤ treeBound 0)
+    (p : Nat → NNReal)
+    (atMostOne : ∀ level, level < rounds → p level ≤ 1)
+    (boundMonotone : ∀ level, level < rounds →
+      treeBound level ≤ treeBound (level + 1))
+    (retained : Nat → Nat)
+    (initial : retained 0 ≤ n)
+    (failureLe : ∀ level, level < rounds →
+      Program.layerFailureBoundOfBounds circuit.program (p level)
+          (treeBound level) (treeBound (level + 1)) ≤
+        (p level : ENNReal))
+    (room : ∀ level, level < rounds →
+      Program.layerFailureBoundOfBounds circuit.program (p level)
+              (treeBound level) (treeBound (level + 1)) *
+            (retained level : ENNReal) +
+          (retained (level + 1) : ENNReal) <
+        (p level : ENNReal) * (retained level : ENNReal))
+    (tooMany : treeBound rounds < retained rounds) :
+    ¬circuit.Computes interpretation (Parity.target n) :=
+  not_computes_parity_of_iterated_switching_below_top_raw circuit rounds
+    circuitDepth treeBound oneLeInitialBound p atMostOne boundMonotone
+    retained initial failureLe room tooMany
 
 end Circuit
 end AC0

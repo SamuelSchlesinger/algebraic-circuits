@@ -43,12 +43,12 @@ theorem layerFailureBoundOfBounds_self
   rfl
 
 /-- Sufficient first-moment room produces a refinement that advances from the
-source bound to the target bound while retaining the requested live count. -/
-theorem ShallowUpTo.exists_refine_succ_with_liveCount_bounds
+source bound to the target bound while retaining the requested live count.
+This raw form permits arbitrary internal NOT gates. -/
+theorem ShallowUpTo.exists_refine_succ_with_liveCount_bounds_raw
     {program : Algebraic.Program signature n g}
     {rho : PartialAssignment n}
     {level sourceBound targetBound : Nat}
-    (normal : NegationsAtInputs program)
     (shallow : ShallowUpTo program rho level sourceBound)
     (sourceLeTarget : sourceBound ≤ targetBound)
     (p : NNReal)
@@ -72,10 +72,32 @@ theorem ShallowUpTo.exists_refine_succ_with_liveCount_bounds
       (layerFailureBoundOfBounds program p sourceBound targetBound) retained
       (by
         simpa [layerFailureBoundOfBounds] using
-          shallow.probability_not_succ_refine_le_five_bounds
-            normal sourceLeTarget p atMostOne)
+          shallow.probability_not_succ_refine_le_five_bounds_raw
+            sourceLeTarget p atMostOne)
       room
   exact ⟨extension, not_not.mp succeeds, survivors⟩
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem ShallowUpTo.exists_refine_succ_with_liveCount_bounds
+    {program : Algebraic.Program signature n g}
+    {rho : PartialAssignment n}
+    {level sourceBound targetBound : Nat}
+    (_normal : NegationsAtInputs program)
+    (shallow : ShallowUpTo program rho level sourceBound)
+    (sourceLeTarget : sourceBound ≤ targetBound)
+    (p : NNReal)
+    (atMostOne : p ≤ 1)
+    (retained : Nat)
+    (room :
+      layerFailureBoundOfBounds program p sourceBound targetBound *
+            (rho.liveCount : ENNReal) +
+          (retained : ENNReal) <
+        (p : ENNReal) * (rho.liveCount : ENNReal)) :
+    ∃ extension : PartialAssignment n,
+      ShallowUpTo program (rho.refine extension) (level + 1) targetBound ∧
+        retained ≤ (rho.refine extension).liveCount :=
+  shallow.exists_refine_succ_with_liveCount_bounds_raw
+    sourceLeTarget p atMostOne retained room
 
 end Program
 end AC0

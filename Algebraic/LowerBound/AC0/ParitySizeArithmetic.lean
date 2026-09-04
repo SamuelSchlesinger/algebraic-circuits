@@ -104,10 +104,10 @@ end ParityParameters
 
 namespace Circuit
 
-/-- Fully integral finite AC0 parity lower bound. -/
-theorem not_computes_parity_of_integral_bounds
+/-- Fully integral finite AC0 parity lower bound, allowing arbitrary internal
+NOT gates without changing the AND/OR cost. -/
+theorem not_computes_parity_of_integral_bounds_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (normal : Program.NegationsAtInputs circuit.program)
     (depth t : Nat)
     (twoLeDepth : 2 ≤ depth)
     (circuitDepth : logicalDepth circuit ≤ depth)
@@ -117,11 +117,27 @@ theorem not_computes_parity_of_integral_bounds
     (survivors :
       t < n / (20 * (20 * t) ^ (depth - 2))) :
     ¬circuit.Computes interpretation (Parity.target n) := by
-  exact not_computes_parity_of_concrete_depth_reduction
-    circuit normal depth t twoLeDepth circuitDepth oneLe
+  exact not_computes_parity_of_concrete_depth_reduction_raw
+    circuit depth t twoLeDepth circuitDepth oneLe
     (ParityParameters.switchingFailure_lt_minimum_of_nat
       circuit.program t oneLe small)
     survivors
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem not_computes_parity_of_integral_bounds
+    (circuit : Algebraic.Circuit signature n g 1)
+    (_normal : Program.NegationsAtInputs circuit.program)
+    (depth t : Nat)
+    (twoLeDepth : 2 ≤ depth)
+    (circuitDepth : logicalDepth circuit ≤ depth)
+    (oneLe : 1 ≤ t)
+    (small :
+      20 * t * circuit.program.cost andOrCost < 2 ^ (t + 1))
+    (survivors :
+      t < n / (20 * (20 * t) ^ (depth - 2))) :
+    ¬circuit.Computes interpretation (Parity.target n) :=
+  not_computes_parity_of_integral_bounds_raw circuit depth t twoLeDepth
+    circuitDepth oneLe small survivors
 
 end Circuit
 end AC0

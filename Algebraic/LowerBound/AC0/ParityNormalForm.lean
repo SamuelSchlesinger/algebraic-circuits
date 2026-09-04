@@ -1,4 +1,5 @@
 import Algebraic.LowerBound.AC0.Parity
+import Algebraic.LowerBound.AC0.Duality
 
 /-!
 # Normal-form width lower bounds for restricted parity
@@ -20,6 +21,42 @@ namespace Algebraic
 namespace AC0
 
 namespace Parity
+
+/-- A Boolean function is parity up to a possible output negation. This is
+the invariant preserved while following a chain of internal NOT gates. -/
+def UpToNegation (candidate : ScalarFunction Bool n) : Prop :=
+  candidate = function n ∨
+    candidate = fun input => !(function n input)
+
+/-- Parity itself is parity up to output negation. -/
+theorem upToNegation_self : UpToNegation (function n) :=
+  Or.inl rfl
+
+/-- The parity-up-to-negation predicate is closed under output negation. -/
+theorem UpToNegation.negate
+    {candidate : ScalarFunction Bool n}
+    (phase : UpToNegation candidate) :
+    UpToNegation (fun input => !(candidate input)) := by
+  rcases phase with computes | computes
+  · right
+    funext input
+    rw [computes]
+  · left
+    funext input
+    rw [computes]
+    simp
+
+/-- Output negation does not change whether a function is parity up to
+negation. -/
+@[simp] theorem upToNegation_negate_iff
+    (candidate : ScalarFunction Bool n) :
+    UpToNegation (fun input => !(candidate input)) ↔
+      UpToNegation candidate := by
+  constructor
+  · intro phase
+    have twice := phase.negate
+    simpa only [Bool.not_not] using twice
+  · exact UpToNegation.negate
 
 /-- Restricted parity attains true whenever at least one selected coordinate
 is live. -/
@@ -215,6 +252,58 @@ theorem liveCount_le_width_of_computes_parity
       _ ≤ clause.support.card := Finset.card_le_card covers
       _ = clause.width := rfl
       _ ≤ bound := bounded clause present
+
+end CNF
+
+namespace DNF
+
+/-- The width obstruction is insensitive to complementing parity's output. -/
+theorem liveCount_le_width_of_computes_parityUpToNegation
+    (formula : DNF n)
+    (rho : PartialAssignment n)
+    (bound : Nat)
+    (bounded : formula.WidthAtMost bound)
+    (candidate : ScalarFunction Bool n)
+    (phase : Parity.UpToNegation candidate)
+    (computes : ∀ input,
+      formula.eval input = candidate.restrict rho input) :
+    rho.liveCount ≤ bound := by
+  rcases phase with parity | complement
+  · apply formula.liveCount_le_width_of_computes_parity rho bound bounded
+    intro input
+    simpa [parity] using computes input
+  · apply formula.negate.liveCount_le_width_of_computes_parity
+      rho bound bounded.negate
+    intro input
+    rw [DNF.eval_negate, computes input, ScalarFunction.restrict_apply,
+      complement]
+    simp
+
+end DNF
+
+namespace CNF
+
+/-- The width obstruction is insensitive to complementing parity's output. -/
+theorem liveCount_le_width_of_computes_parityUpToNegation
+    (formula : CNF n)
+    (rho : PartialAssignment n)
+    (bound : Nat)
+    (bounded : formula.WidthAtMost bound)
+    (candidate : ScalarFunction Bool n)
+    (phase : Parity.UpToNegation candidate)
+    (computes : ∀ input,
+      formula.eval input = candidate.restrict rho input) :
+    rho.liveCount ≤ bound := by
+  rcases phase with parity | complement
+  · apply formula.liveCount_le_width_of_computes_parity rho bound bounded
+    intro input
+    simpa [parity] using computes input
+  · apply formula.negate.liveCount_le_width_of_computes_parity
+      rho bound bounded.negate
+    intro input
+    rw [CNF.eval_negate, computes input, ScalarFunction.restrict_apply,
+      complement]
+    simp
 
 end CNF
 

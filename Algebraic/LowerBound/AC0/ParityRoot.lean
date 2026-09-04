@@ -11,7 +11,7 @@ This module selects a canonical scale from Mathlib's verified natural-number
 
 and use `t = q - 1`. Once `40^(d-1) <= n`, one has `q >= 2` and
 `20 * (t + 1) <= Nat.nthRoot (d - 1) n`, so the scale theorem applies. Every
-checked input-negation-normal depth-`d` parity circuit then satisfies
+depth-`d` parity circuit, even with arbitrary internal NOT gates, then satisfies
 
 `2^q <= 20 * (q - 1) * S`.
 
@@ -97,10 +97,10 @@ end ParityParameters
 
 namespace Circuit
 
-/-- Root-selected product-form lower bound for depth-`d` parity circuits. -/
-theorem parity_size_tradeoff_at_root
+/-- Root-selected product-form lower bound for depth-`d` parity circuits,
+allowing arbitrary internal NOT gates at zero cost. -/
+theorem parity_size_tradeoff_at_root_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (normal : Program.NegationsAtInputs circuit.program)
     (computes : circuit.Computes interpretation (Parity.target n))
     (depth : Nat)
     (twoLeDepth : 2 ≤ depth)
@@ -109,8 +109,8 @@ theorem parity_size_tradeoff_at_root
     2 ^ ParityParameters.rootQuotient n depth ≤
       20 * ParityParameters.rootScale n depth *
         circuit.program.cost andOrCost := by
-  have tradeoff := parity_size_tradeoff_at_scale
-    circuit normal computes depth (ParityParameters.rootScale n depth)
+  have tradeoff := parity_size_tradeoff_at_scale_raw
+    circuit computes depth (ParityParameters.rootScale n depth)
     twoLeDepth circuitDepth
     (ParityParameters.one_le_rootScale
       n depth twoLeDepth inputLarge)
@@ -119,11 +119,25 @@ theorem parity_size_tradeoff_at_root
   simpa [ParityParameters.rootScale_succ
     n depth twoLeDepth inputLarge] using tradeoff
 
-/-- Root-selected lower bound with the AND/OR cost isolated by natural-number
-floor division. -/
-theorem parity_andOrCost_lower_bound_at_root
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem parity_size_tradeoff_at_root
     (circuit : Algebraic.Circuit signature n g 1)
-    (normal : Program.NegationsAtInputs circuit.program)
+    (_normal : Program.NegationsAtInputs circuit.program)
+    (computes : circuit.Computes interpretation (Parity.target n))
+    (depth : Nat)
+    (twoLeDepth : 2 ≤ depth)
+    (circuitDepth : logicalDepth circuit ≤ depth)
+    (inputLarge : 40 ^ (depth - 1) ≤ n) :
+    2 ^ ParityParameters.rootQuotient n depth ≤
+      20 * ParityParameters.rootScale n depth *
+        circuit.program.cost andOrCost :=
+  parity_size_tradeoff_at_root_raw circuit computes depth twoLeDepth
+    circuitDepth inputLarge
+
+/-- Root-selected lower bound with the AND/OR cost isolated by natural-number
+floor division, allowing arbitrary internal NOT gates at zero cost. -/
+theorem parity_andOrCost_lower_bound_at_root_raw
+    (circuit : Algebraic.Circuit signature n g 1)
     (computes : circuit.Computes interpretation (Parity.target n))
     (depth : Nat)
     (twoLeDepth : 2 ≤ depth)
@@ -133,8 +147,23 @@ theorem parity_andOrCost_lower_bound_at_root
         (20 * ParityParameters.rootScale n depth) ≤
       circuit.program.cost andOrCost := by
   apply Nat.div_le_of_le_mul
-  simpa [mul_assoc] using parity_size_tradeoff_at_root
-    circuit normal computes depth twoLeDepth circuitDepth inputLarge
+  simpa [mul_assoc] using parity_size_tradeoff_at_root_raw
+    circuit computes depth twoLeDepth circuitDepth inputLarge
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem parity_andOrCost_lower_bound_at_root
+    (circuit : Algebraic.Circuit signature n g 1)
+    (_normal : Program.NegationsAtInputs circuit.program)
+    (computes : circuit.Computes interpretation (Parity.target n))
+    (depth : Nat)
+    (twoLeDepth : 2 ≤ depth)
+    (circuitDepth : logicalDepth circuit ≤ depth)
+    (inputLarge : 40 ^ (depth - 1) ≤ n) :
+    2 ^ ParityParameters.rootQuotient n depth /
+        (20 * ParityParameters.rootScale n depth) ≤
+      circuit.program.cost andOrCost :=
+  parity_andOrCost_lower_bound_at_root_raw circuit computes depth twoLeDepth
+    circuitDepth inputLarge
 
 end Circuit
 end AC0

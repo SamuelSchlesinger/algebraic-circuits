@@ -73,10 +73,9 @@ theorem layerFailureBound_ne_top
 
 /-- Iterated semantic depth reduction along an explicit survivor schedule.
 The result is one cumulative restriction, not a sampled or searched-for
-witness. -/
-theorem exists_shallowUpTo_with_liveCount
+witness. This raw form permits arbitrary internal NOT gates. -/
+theorem exists_shallowUpTo_with_liveCount_raw
     (program : Algebraic.Program signature n g)
-    (normal : NegationsAtInputs program)
     (depth bound : Nat)
     (oneLeBound : 1 <= bound)
     (p : NNReal)
@@ -97,7 +96,7 @@ theorem exists_shallowUpTo_with_liveCount
   induction depth with
   | zero =>
       refine ⟨PartialAssignment.empty, ?_, ?_⟩
-      · exact (shallowUpTo_zero program normal
+      · exact (shallowUpTo_zero_raw program
           (PartialAssignment.empty : PartialAssignment n)).mono oneLeBound
       · simpa using initial
   | succ prior inductionHypothesis =>
@@ -105,13 +104,37 @@ theorem exists_shallowUpTo_with_liveCount
         (fun level before =>
           room level (Nat.lt_succ_of_lt before))
       obtain ⟨extension, next, nextSurvivors⟩ :=
-        shallow.exists_refine_succ_with_liveCount normal p atMostOne
+        shallow.exists_refine_succ_with_liveCount_raw p atMostOne
           (retained (prior + 1))
           (layerRoom_mono
             (layerFailureBound_ne_top program p bound)
             failureLe survivors
             (room prior (Nat.lt_succ_self prior)))
       exact ⟨rho.refine extension, next, nextSurvivors⟩
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem exists_shallowUpTo_with_liveCount
+    (program : Algebraic.Program signature n g)
+    (_normal : NegationsAtInputs program)
+    (depth bound : Nat)
+    (oneLeBound : 1 <= bound)
+    (p : NNReal)
+    (atMostOne : p <= 1)
+    (retained : Nat -> Nat)
+    (initial : retained 0 <= n)
+    (failureLe :
+      layerFailureBound program p bound <= (p : ENNReal))
+    (room : forall level,
+      level < depth ->
+        layerFailureBound program p bound *
+              (retained level : ENNReal) +
+            (retained (level + 1) : ENNReal) <
+          (p : ENNReal) * (retained level : ENNReal)) :
+    exists rho : PartialAssignment n,
+      ShallowUpTo program rho depth bound /\
+        retained depth <= rho.liveCount :=
+  exists_shallowUpTo_with_liveCount_raw program depth bound oneLeBound p
+    atMostOne retained initial failureLe room
 
 end Program
 end AC0

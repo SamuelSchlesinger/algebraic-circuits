@@ -42,10 +42,10 @@ theorem layerFailureBoundOfBounds_ne_top
 
 /-- Iterated semantic depth reduction along explicit restriction, tree-bound,
 and survivor schedules. The result is one cumulative restriction satisfying
-the scheduled final invariant. -/
-theorem exists_shallowUpTo_with_liveCount_bounds
+the scheduled final invariant. This raw form permits arbitrary internal NOT
+gates. -/
+theorem exists_shallowUpTo_with_liveCount_bounds_raw
     (program : Algebraic.Program signature n g)
-    (normal : NegationsAtInputs program)
     (rounds : Nat)
     (treeBound : Nat → Nat)
     (oneLeInitialBound : 1 ≤ treeBound 0)
@@ -71,7 +71,7 @@ theorem exists_shallowUpTo_with_liveCount_bounds
   induction rounds with
   | zero =>
       refine ⟨PartialAssignment.empty, ?_, ?_⟩
-      · exact (shallowUpTo_zero program normal
+      · exact (shallowUpTo_zero_raw program
           (PartialAssignment.empty : PartialAssignment n)).mono
             oneLeInitialBound
       · simpa using initial
@@ -83,7 +83,7 @@ theorem exists_shallowUpTo_with_liveCount_bounds
         (fun level before => failureLe level (Nat.lt_succ_of_lt before))
         (fun level before => room level (Nat.lt_succ_of_lt before))
       obtain ⟨extension, next, nextSurvivors⟩ :=
-        shallow.exists_refine_succ_with_liveCount_bounds normal
+        shallow.exists_refine_succ_with_liveCount_bounds_raw
           (boundMonotone prior (Nat.lt_succ_self prior))
           (p prior) (atMostOne prior (Nat.lt_succ_self prior))
           (retained (prior + 1))
@@ -93,6 +93,35 @@ theorem exists_shallowUpTo_with_liveCount_bounds
             (failureLe prior (Nat.lt_succ_self prior)) survivors
             (room prior (Nat.lt_succ_self prior)))
       exact ⟨rho.refine extension, next, nextSurvivors⟩
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem exists_shallowUpTo_with_liveCount_bounds
+    (program : Algebraic.Program signature n g)
+    (_normal : NegationsAtInputs program)
+    (rounds : Nat)
+    (treeBound : Nat → Nat)
+    (oneLeInitialBound : 1 ≤ treeBound 0)
+    (p : Nat → NNReal)
+    (atMostOne : ∀ level, level < rounds → p level ≤ 1)
+    (boundMonotone : ∀ level, level < rounds →
+      treeBound level ≤ treeBound (level + 1))
+    (retained : Nat → Nat)
+    (initial : retained 0 ≤ n)
+    (failureLe : ∀ level, level < rounds →
+      layerFailureBoundOfBounds program (p level)
+          (treeBound level) (treeBound (level + 1)) ≤
+        (p level : ENNReal))
+    (room : ∀ level, level < rounds →
+      layerFailureBoundOfBounds program (p level)
+              (treeBound level) (treeBound (level + 1)) *
+            (retained level : ENNReal) +
+          (retained (level + 1) : ENNReal) <
+        (p level : ENNReal) * (retained level : ENNReal)) :
+    ∃ rho : PartialAssignment n,
+      ShallowUpTo program rho rounds (treeBound rounds) ∧
+        retained rounds ≤ rho.liveCount :=
+  exists_shallowUpTo_with_liveCount_bounds_raw program rounds treeBound
+    oneLeInitialBound p atMostOne boundMonotone retained initial failureLe room
 
 end Program
 end AC0

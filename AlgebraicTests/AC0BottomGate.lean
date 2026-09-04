@@ -11,6 +11,15 @@ open Algebraic.AC0
 
 example
     (program : Program signature n g)
+    (wire : Wire n g)
+    (depthZero : AC0.Program.logicalWireDepths program wire = 0) :
+    Exists fun literal : Literal n =>
+      program.wireFunction interpretation wire = literal.eval :=
+  AC0.Program.exists_literal_of_logicalWireDepth_zero_raw
+    program wire depthZero
+
+example
+    (program : Program signature n g)
     (normal : AC0.Program.NegationsAtInputs program)
     (wire : Wire n g)
     (depthZero : AC0.Program.logicalWireDepths program wire = 0) :

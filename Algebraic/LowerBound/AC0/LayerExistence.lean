@@ -47,12 +47,11 @@ noncomputable def layerFailureBound
 
 /-- A one-step switching estimate plus sufficient first-moment room produces
 one refinement that advances the invariant and retains the requested number
-of live variables. -/
-theorem ShallowUpTo.exists_refine_succ_with_liveCount
+of live variables. This raw form permits arbitrary internal NOT gates. -/
+theorem ShallowUpTo.exists_refine_succ_with_liveCount_raw
     {program : Algebraic.Program signature n g}
     {rho : PartialAssignment n}
     {level bound : Nat}
-    (normal : NegationsAtInputs program)
     (shallow : ShallowUpTo program rho level bound)
     (p : NNReal)
     (atMostOne : p <= 1)
@@ -75,9 +74,29 @@ theorem ShallowUpTo.exists_refine_succ_with_liveCount
       (layerFailureBound program p bound) retained
       (by
         simpa [layerFailureBound] using
-          shallow.probability_not_succ_refine_le_five normal p atMostOne)
+          shallow.probability_not_succ_refine_le_five_raw p atMostOne)
       room
   exact ⟨extension, not_not.mp succeeds, survivors⟩
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem ShallowUpTo.exists_refine_succ_with_liveCount
+    {program : Algebraic.Program signature n g}
+    {rho : PartialAssignment n}
+    {level bound : Nat}
+    (_normal : NegationsAtInputs program)
+    (shallow : ShallowUpTo program rho level bound)
+    (p : NNReal)
+    (atMostOne : p <= 1)
+    (retained : Nat)
+    (room :
+      layerFailureBound program p bound *
+            (rho.liveCount : ENNReal) +
+          (retained : ENNReal) <
+        (p : ENNReal) * (rho.liveCount : ENNReal)) :
+    exists extension : PartialAssignment n,
+      ShallowUpTo program (rho.refine extension) (level + 1) bound /\
+        retained <= (rho.refine extension).liveCount :=
+  shallow.exists_refine_succ_with_liveCount_raw p atMostOne retained room
 
 end Program
 end AC0

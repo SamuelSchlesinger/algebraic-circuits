@@ -25,6 +25,15 @@ exact natural-number inequality underneath this real-exponent notation and
 derives the source-facing root-selected corollary with the required rounding
 proved explicitly.
 
+The Lean theorem is slightly stronger at the presentation boundary: the same
+finite inequalities hold directly for shared DAG circuits with arbitrary
+internal NOT gates, counted at zero cost and zero logical depth. It does not
+first apply the factor-two dual-rail compiler. Decision-tree depth and the
+parity width obstruction are invariant under output negation, so the proof
+propagates shallow trees through NOT chains and follows the output chain back
+to its first connective gate. This is classified as exact formalization and
+resource-accounting strengthening, not as a new asymptotic lower bound.
+
 The switching endpoint is the decision-tree form of Hastad's switching lemma,
 stated explicitly in the introduction of
 [*Criticality of AC0-Formulae*](https://eccc.weizmann.ac.il/report/2022/182/):
@@ -69,10 +78,12 @@ bit and excludes the all-zero difference string from every nonfinal block.
 - `InputSubstitution` already gives semantic substitution and single-variable
   fixing, while `DeMorgan.ProgramRestriction` performs basis-specific partial
   evaluation for the binary De Morgan basis.
-- The Hastad model therefore needs its own arbitrary-fan-in basis and a
-  negation-normal representation. The dual-rail compiler now constructs that
-  representation explicitly; internal NOT gates are never silently made free
-  or depthless in the generic circuit model.
+- The Hastad model therefore uses its own arbitrary-fan-in basis and logical
+  resource measures. The checked presentation retains a negation-normal
+  invariant, and the dual-rail compiler constructs it explicitly. Separately,
+  the lower-bound proof now works directly on the raw presentation: NOT gates
+  remain ordinary generic gates syntactically, but contribute zero to the AC0
+  AND/OR cost and logical depth by explicit definitions and proofs.
 
 ## Milestones
 
@@ -84,9 +95,9 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Exact `d-1`-round circuit reduction, concrete probabilities, and floor-divided survivor schedule validated 2026-09-03 |
-| Parity | Scale- and root-selected bounded-depth lower bounds | Integral finite core and explicit `exp(Omega(n^(1/(d-1))))` product and isolated-cost forms validated 2026-09-03 |
-| Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Checked and arbitrary-internal-NOT endpoints validated 2026-09-03 |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Exact `d-1`-round circuit reduction, including direct arbitrary-internal-NOT variants, concrete probabilities, and floor-divided survivor schedule validated 2026-09-03 |
+| Parity | Scale- and root-selected bounded-depth lower bounds | Integral finite core and explicit `exp(Omega(n^(1/(d-1))))` product and isolated-cost forms, directly at raw AND/OR cost, validated 2026-09-03 |
+| Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Checked and direct arbitrary-internal-NOT endpoints validated 2026-09-03 |
 
 ## Headline theorem correspondence
 
@@ -95,15 +106,19 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | `AC0.RandomRestriction.probability_depthAtLeast_restrict_le_five` | Width-`t` DNF switching bound `Pr[DT(F|rho) >= s] <= (5pt)^s` | Literature theorem: Hastad switching lemma, via the Beame--Thapen encoding route cited above |
 | `AC0.RandomRestriction.probability_cnf_depthAtLeast_restrict_le_five` | Exact CNF dual of the switching bound | Formalization strengthening by checked De Morgan transport |
 | `AC0.Circuit.not_computes_parity_of_concrete_depth_reduction` | Exact finite `d-1`-restriction parity contradiction | Finite trusted core of the standard Hastad depth-reduction argument |
+| `AC0.Circuit.not_computes_parity_of_concrete_depth_reduction_raw` | The same exact finite contradiction for arbitrary internal NOT placement, with unchanged AND/OR cost | Formalization strengthening by direct negation-invariant depth reduction |
 | `AC0.Circuit.parity_size_tradeoff_at_scale` | If `(20(t+1))^(d-1) <= n`, then `2^(t+1) <= 20tS` | Source-grounded quantitative theorem with conservative, nonoptimized constants |
+| `AC0.Circuit.parity_size_tradeoff_at_scale_raw` | The same scale tradeoff for raw shared DAGs, charging their original AND/OR count `S` | Exact resource-accounting strengthening; no dual-rail factor two |
 | `AC0.Circuit.parity_andOrCost_lower_bound_at_root` | Root-selected `exp(Omega(n^(1/(d-1))))` AND/OR-cost lower bound | Standard asymptotic corollary with explicit natural-number rounding |
+| `AC0.Circuit.parity_andOrCost_lower_bound_at_root_raw` | Root-selected lower bound directly for arbitrary internal NOT placement | Exact raw-presentation strengthening of the same standard argument |
 | `AC0.DualRail.normalize` | Eliminate internal NOT gates while preserving semantics and logical depth, with exact AND/OR cost `2S` and total size `n+2S` | Standard dual-rail normalization, formally verified for shared DAG circuits |
 | `AC0.rawComputable_iff_computable` | Arbitrary-NOT and checked input-negation presentations define the same nonuniform class | Formalization strengthening with explicit resource accounting |
 | `AC0.restrictCircuit` | Partially evaluate a shared DAG over exactly the live inputs, with nonincreasing logical depth, gate count, and AND/OR cost | Standard restriction simplification, formally verified with explicit constant outputs |
 | `AC0.restrictOneOutputCircuit` | Convert a restricted one-output residual circuit back to ordinary circuit syntax with logical depth, gate-count, and cost overhead at most one | Exact model-boundary accounting for nullary constant gates |
-| `AC0.Family.not_computes_parity` | Polynomial cost and constant depth cannot compute parity at every width | Qualitative consequence; alternation is not needed by this theorem |
+| `AC0.Family.not_computes_parity_raw` | Polynomial cost and constant depth cannot compute parity at every width, with arbitrary internal NOT gates | Direct qualitative consequence of the raw finite tradeoff |
+| `AC0.Family.not_computes_parity` | Checked input-negation specialization of the raw family theorem | Compatibility endpoint; alternation is not needed |
 | `AC0.parity_not_computable` | `PARITY` is not in the library's nonuniform `AC0` class | Headline class separation in the checked source model |
-| `AC0.parity_not_raw_computable` | `PARITY` is not computable even when source circuits use arbitrary internal NOT gates | Corollary of verified dual-rail normalization and the checked separation |
+| `AC0.parity_not_raw_computable` | `PARITY` is not computable even when source circuits use arbitrary internal NOT gates | Direct corollary of the raw finite theorem, independent of dual-rail normalization |
 
 ## Claim labels
 
@@ -122,6 +137,24 @@ The entries below preserve the sequence of verified checkpoints. Phrases such
 as "next obligation" record the frontier at that checkpoint; the current
 status is the milestone table above, and later entries close those historical
 obligations.
+
+The direct arbitrary-NOT depth-reduction strengthening passed
+`lake build Algebraic AlgebraicTests --wfail`, `lake test`, `lake lint`,
+`git diff --check`, documentation generation, a forbidden-token scan, and a
+headline axiom audit on 2026-09-03. The depth-zero base now follows arbitrary
+NOT chains to a signed input literal. Each layer step propagates a shallow
+decision tree through NOT by complementing its leaves and continues to union
+bound over exactly the original AND/OR gates. At the unreduced output layer,
+the proof follows NOT chains while maintaining the phase-insensitive predicate
+"parity up to output negation"; De Morgan duality proves that the DNF/CNF
+width obstruction is phase-insensitive as well. Consequently every finite,
+scale-selected, root-selected, and family-level `_raw` theorem uses the raw
+circuit's original AND/OR cost, with no input-negation premise and no
+dual-rail factor two. Compatibility wrappers preserve the checked APIs. This
+is a uniform exact-accounting strengthening of the standard switching
+argument, not a claimed new asymptotic lower bound. The audited public
+theorems use no axioms beyond Lean's standard `propext`, `Classical.choice`,
+and `Quot.sound`.
 
 The AC0 partial-evaluation milestone passed the full gates on 2026-09-03. For
 an arbitrary-fan-in AND or OR, the local simplifier returns the absorbing
@@ -152,8 +185,9 @@ depth, has exact charged cost `2S`, has exact total size `n+2S`, and satisfies
 the input-negation invariant. Pointwise normalization of families preserves
 computation and constant depth, turns polynomial charged cost into polynomial
 total size, and proves `AC0.RawComputable` equivalent to the checked
-`AC0.Computable` presentation. Consequently the parity separation now covers
-circuits with arbitrary internal NOT gates. This is a symbolic compiler over
+`AC0.Computable` presentation. This remains an independently verified route
+between the two class presentations; the current parity proof also handles
+raw circuits directly without using it. This is a symbolic compiler over
 shared DAGs; it performs no enumeration, sampling, optimizer search, or finite
 lower-bound experiment. The audited public theorems use no axioms beyond
 Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
@@ -161,16 +195,18 @@ Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 The qualitative class-separation milestone passed
 `lake build Algebraic AlgebraicTests --wfail`, `lake test`, `lake lint`,
 `git diff --check`, documentation generation, a forbidden-token scan, and a
-headline axiom audit on 2026-09-03. Lean proves that no family with polynomial
-AND/OR cost, constant logical depth, and input-only negations computes parity
-at every width. The proof chooses the single symbolic diagonal width
+headline axiom audit on 2026-09-03. Lean proves directly that no family with
+polynomial AND/OR cost and constant logical depth computes parity at every
+width, even with arbitrary internal NOT placement. The proof chooses the
+single symbolic diagonal width
 `n = (20(t+1))^(d-1)` from the alleged global bounds: the finite lower bound
 forces `2^(t+1) <= 20tS(n)`, while a generic verified growth lemma eventually
 bounds the substituted polynomial by `2^t`. The public
-`AC0.parity_not_computable` theorem follows immediately from the checked class
-definition. It performs no enumeration, optimization, sampling, or fixed-size
-experiment. The audited public theorems use no axioms beyond Lean's standard
-`propext`, `Classical.choice`, and `Quot.sound`.
+`AC0.parity_not_raw_computable` theorem follows immediately from the raw class
+definition; the checked endpoint is a specialization. It performs no
+enumeration, optimization, sampling, or fixed-size experiment. The audited
+public theorems use no axioms beyond Lean's standard `propext`,
+`Classical.choice`, and `Quot.sound`.
 
 The generic circuit-resource growth cleanup passed the same gates on
 2026-09-03. The exponential-dominates-fixed-polynomial theorem now lives at
@@ -188,13 +224,14 @@ The root-selected quantitative parity lower bound passed the full gates on
 `exp(Omega(n^(1/(d-1))))` form with conservative constants. It reuses the
 verified root specification and performs no circuit enumeration or bounded
 experiment. The checked source-model theorem itself assumes input-level
-negations; the verified dual-rail theorem now transfers it to unrestricted
-internal NOT gates. The audited public theorems use no
+negations for compatibility, while the parallel `_raw` theorem proves the
+same inequality directly for unrestricted internal NOT gates and the original
+AND/OR cost. The audited public theorems use no
 axioms beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The quantitative scale-form parity lower bound passed the full gates on
-2026-09-03. For every `d >= 2` and `t >= 1`, Lean proves that a checked
-input-negation-normal depth-`d` parity circuit obeys
+2026-09-03. For every `d >= 2` and `t >= 1`, Lean proves that a raw depth-`d`
+parity circuit, with arbitrary internal NOT placement, obeys
 `2^(t+1) <= 20*t*S` whenever `(20*(t+1))^(d-1) <= n`. The proof first shows
 that this clean power condition implies the exact floor-divided survivor
 inequality, then contradicts the integral finite lower bound. This theorem
@@ -207,16 +244,16 @@ The integral size-arithmetic submilestone passed the full gates on 2026-09-03.
 For `t >= 1`, Lean proves that the exact switching-smallness condition is
 equivalent to `20*t*S < 2^(t+1)`. The public circuit theorem now uses only
 natural-number hypotheses: this size inequality and
-`t < n/(20*(20t)^(d-2))` rule out parity for every checked normal-form circuit
-of logical depth at most `d`, with `d >= 2`. All denominator cancellation is
+`t < n/(20*(20t)^(d-2))` rule out parity for every raw circuit of logical
+depth at most `d`, with `d >= 2`. All denominator cancellation is
 symbolic and exact. Selecting `t` as a controlled integer root to derive the
 conventional exponential size statement is the remaining step; no bounded
 search or numerical fitting is used. The audited public theorems use no
 axioms beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The concrete finite parity lower bound passed the full gates on 2026-09-03.
-For every `d >= 2` and `t >= 1`, a checked input-negation-normal circuit of
-logical depth at most `d` cannot compute parity if
+For every `d >= 2` and `t >= 1`, a raw circuit of logical depth at most `d`,
+with arbitrary internal NOT placement, cannot compute parity if
 `S*(1/2)^(t+1) < 1/(20t)` and
 `t < n/(20*(20t)^(d-2))`. Lean instantiates the probability, tree-bound, and
 floor-divided survivor schedules, discharges every strict first-moment room
@@ -262,8 +299,8 @@ The source-faithful parameterized parity contradiction passed the full gates
 on 2026-09-03. For any circuit of logical depth at most `r+1`, an explicit
 `r`-round schedule satisfying the variable switching and survivor inequalities
 forces `a_r <= t_r`; a schedule with `t_r < a_r` therefore rules out parity.
-This composes the checked variable-parameter iteration with the unreduced
-top-gate obstruction, so a depth-`d` circuit uses exactly `d-1` restrictions.
+This composes the raw variable-parameter iteration with the unreduced top-gate
+obstruction, so a depth-`d` circuit uses exactly `d-1` restrictions.
 The first round may start at literal width one and later rounds at the common
 tree bound, preserving the standard exponent rather than the inferior
 all-layers decision-tree exponent. Closed-form choices of the schedules remain
@@ -273,11 +310,11 @@ beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 The parity top-gate submilestone passed the full gates on 2026-09-03. If a
 parity circuit has logical depth at most `i+1` and every wire through depth
 `i` becomes a decision tree of depth at most `t`, Lean proves that at most
-`t` variables remain live. If the output is already in the reduced layers,
-the exact decision-tree lower bound applies. Otherwise checked input-negation
-normal form forces the output to be an AND or OR in the next layer, where the
-exact bounded CNF or DNF representation and its parity width lower bound
-apply. The theorem makes no syntactic top-gate assumption and is the bridge
+`t` variables remain live. Lean follows any output NOT chain backward while
+tracking parity up to output negation. It either reaches an already reduced
+wire or an AND/OR in the next layer, where the exact bounded CNF or DNF
+representation and a complement-invariant parity width lower bound apply. The
+theorem makes no syntactic top-gate or negation-placement assumption and is the bridge
 that permits only `d-1` restriction rounds for depth `d`. The audited public
 theorem uses no axioms beyond Lean's standard `propext`, `Classical.choice`,
 and `Quot.sound`.
@@ -425,9 +462,9 @@ remains open. The audited public theorems use no axioms beyond Lean's standard
 `propext`, `Classical.choice`, and `Quot.sound`.
 
 The one-step semantic layer-switching theorem passed the full gates on
-2026-09-03. Under checked input-negation form, every non-connective gate is
-proved to have logical depth zero, so advancing a layer only requires new
-bounds for charged AND/OR gates. For a base witness
+2026-09-03. A topological induction propagates decision trees through arbitrary
+internal NOT chains by negating their leaves, so advancing a logical layer
+only requires new bounds for charged AND/OR gates. For a base witness
 `ShallowUpTo program rho i t`, exact DNF/CNF gate representations and the
 switching lemma give each next-layer gate failure probability at most
 `(5pt)^(t+1)`. A finite union over the proved connective-gate set yields the
@@ -443,8 +480,9 @@ axioms beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 The semantic-layer invariant submilestone passed the full gates on 2026-09-03.
 `Program.ShallowUpTo rho i t` states that every wire through source logical
 depth `i` has semantic decision-tree depth at most `t` after `rho`. It is
-proved stable under further restrictions, and checked input negations give the
-depth-zero base case via explicit one-query literal trees. Every argument of
+proved stable under further restrictions, and every depth-zero wire, including
+an arbitrary chain of NOT gates, is shown to be a signed input literal with an
+explicit one-query tree. Every argument of
 an AND or OR gate is proved to have strictly smaller logical depth, furnishing
 the induction step's structural premise. Separately, the finite set of
 connective gates is proved to have cardinality exactly the program's charged

@@ -17,6 +17,14 @@ example : Not (AC0.RawComputable AC0.Parity.targetFamily) :=
 example
     (family : Circuit.Family AC0.signature 1)
     (polynomialCost : family.HasPolynomialCost AC0.andOrCost)
+    (constantDepth : AC0.Family.HasConstantLogicalDepth family) :
+    Not (family.Computes AC0.interpretation AC0.Parity.targetFamily) :=
+  AC0.Family.not_computes_parity_raw
+    family polynomialCost constantDepth
+
+example
+    (family : Circuit.Family AC0.signature 1)
+    (polynomialCost : family.HasPolynomialCost AC0.andOrCost)
     (constantDepth : AC0.Family.HasConstantLogicalDepth family)
     (negationsAtInputs : forall n,
       AC0.Program.NegationsAtInputs (family.circuit n).program) :

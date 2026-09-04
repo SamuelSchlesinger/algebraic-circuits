@@ -112,20 +112,28 @@ theorem ShallowUpTo.restrict
   have restricted := (shallow wire depthBound).restrict extension
   simpa only [ScalarFunction.restrict_refine] using restricted
 
-/-- Original inputs and checked input negations establish the depth-zero base
-of the semantic layer invariant. -/
-theorem shallowUpTo_zero
+/-- Original inputs and arbitrary chains of NOT gates establish the
+depth-zero base of the semantic layer invariant. -/
+theorem shallowUpTo_zero_raw
     (program : Algebraic.Program signature n g)
-    (normal : NegationsAtInputs program)
     (rho : PartialAssignment n) :
     ShallowUpTo program rho 0 1 := by
   intro wire depthBound
   have depthZero : logicalWireDepths program wire = 0 :=
     Nat.eq_zero_of_le_zero depthBound
   obtain ⟨literal, computes⟩ :=
-    exists_literal_of_logicalWireDepth_zero program normal wire depthZero
+    exists_literal_of_logicalWireDepth_zero_raw program wire depthZero
   rw [computes]
   exact literal.depthAtMost_eval.restrict rho
+
+/-- Original inputs and checked input negations establish the depth-zero base
+of the semantic layer invariant. -/
+theorem shallowUpTo_zero
+    (program : Algebraic.Program signature n g)
+    (_normal : NegationsAtInputs program)
+    (rho : PartialAssignment n) :
+    ShallowUpTo program rho 0 1 :=
+  shallowUpTo_zero_raw program rho
 
 /-- Each argument of an AND or OR gate has strictly smaller source logical
 depth than the gate itself. -/

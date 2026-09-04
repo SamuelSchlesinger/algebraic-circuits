@@ -15,10 +15,11 @@ and
 
 `t < n / (20 * (20t)^(d-2))`.
 
-Here `S` is the number of AND/OR gates. Under checked input-negation normal
-form these inequalities rule out exact computation of parity. The result is
-uniform in every parameter and follows from symbolic inequalities; it is not
-a fixed-size experiment or a finite circuit search.
+Here `S` is the number of AND/OR gates. These inequalities rule out exact
+computation of parity even with arbitrary internal NOT gates, without changing
+`S`. The checked input-negation statements remain compatibility wrappers. The
+result is uniform in every parameter and follows from symbolic inequalities;
+it is not a fixed-size experiment or a finite circuit search.
 -/
 
 namespace Algebraic
@@ -43,10 +44,10 @@ namespace Circuit
 open scoped ENNReal
 
 /-- Concrete `rounds`-step parity contradiction using the canonical
-probabilities, tree bounds, and floor-divided survivor targets. -/
-theorem not_computes_parity_of_concrete_parameters
+probabilities, tree bounds, and floor-divided survivor targets, with arbitrary
+internal NOT gates. -/
+theorem not_computes_parity_of_concrete_parameters_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (normal : Program.NegationsAtInputs circuit.program)
     (rounds : Nat)
     (circuitDepth : logicalDepth circuit ≤ rounds + 1)
     (t : Nat)
@@ -57,8 +58,8 @@ theorem not_computes_parity_of_concrete_parameters
     ¬circuit.Computes interpretation (Parity.target n) := by
   have finalPositive : 0 < ParityParameters.retained n t rounds := by
     omega
-  apply not_computes_parity_of_iterated_switching_below_top
-    circuit normal rounds circuitDepth
+  apply not_computes_parity_of_iterated_switching_below_top_raw
+    circuit rounds circuitDepth
     (ParityParameters.treeBound t) (by simp)
     (ParityParameters.probability t)
     (fun level _ => ParityParameters.probability_le_one t oneLe level)
@@ -76,12 +77,26 @@ theorem not_computes_parity_of_concrete_parameters
   · exact (ParityParameters.treeBound_le_target
       t oneLe rounds).trans_lt tooMany
 
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem not_computes_parity_of_concrete_parameters
+    (circuit : Algebraic.Circuit signature n g 1)
+    (_normal : Program.NegationsAtInputs circuit.program)
+    (rounds : Nat)
+    (circuitDepth : logicalDepth circuit ≤ rounds + 1)
+    (t : Nat)
+    (oneLe : 1 ≤ t)
+    (small : ParityParameters.switchingFailure circuit.program t <
+      (ParityParameters.minimumRatio t : ENNReal))
+    (tooMany : t < ParityParameters.retained n t rounds) :
+    ¬circuit.Computes interpretation (Parity.target n) :=
+  not_computes_parity_of_concrete_parameters_raw circuit rounds
+    circuitDepth t oneLe small tooMany
+
 /-- Depth-facing concrete parity lower bound. A depth-`d` circuit uses exactly
 `d-1` restriction rounds, leaving the top gate for the normal-form
-obstruction. -/
-theorem not_computes_parity_of_concrete_depth_reduction
+obstruction. Arbitrary internal NOT gates are permitted. -/
+theorem not_computes_parity_of_concrete_depth_reduction_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (normal : Program.NegationsAtInputs circuit.program)
     (depth t : Nat)
     (twoLeDepth : 2 ≤ depth)
     (circuitDepth : logicalDepth circuit ≤ depth)
@@ -91,11 +106,27 @@ theorem not_computes_parity_of_concrete_depth_reduction
     (survivors :
       t < n / (20 * (20 * t) ^ (depth - 2))) :
     ¬circuit.Computes interpretation (Parity.target n) := by
-  apply not_computes_parity_of_concrete_parameters
-    circuit normal (depth - 1) (by omega) t oneLe small
+  apply not_computes_parity_of_concrete_parameters_raw
+    circuit (depth - 1) (by omega) t oneLe small
   have roundsEq : depth - 1 = (depth - 2) + 1 := by omega
   rw [roundsEq, ParityParameters.retained_closed]
   exact survivors
+
+/-- Compatibility wrapper for the checked input-negation presentation. -/
+theorem not_computes_parity_of_concrete_depth_reduction
+    (circuit : Algebraic.Circuit signature n g 1)
+    (_normal : Program.NegationsAtInputs circuit.program)
+    (depth t : Nat)
+    (twoLeDepth : 2 ≤ depth)
+    (circuitDepth : logicalDepth circuit ≤ depth)
+    (oneLe : 1 ≤ t)
+    (small : ParityParameters.switchingFailure circuit.program t <
+      (ParityParameters.minimumRatio t : ENNReal))
+    (survivors :
+      t < n / (20 * (20 * t) ^ (depth - 2))) :
+    ¬circuit.Computes interpretation (Parity.target n) :=
+  not_computes_parity_of_concrete_depth_reduction_raw circuit depth t
+    twoLeDepth circuitDepth oneLe small survivors
 
 end Circuit
 end AC0
