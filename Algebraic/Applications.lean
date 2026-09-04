@@ -1,6 +1,7 @@
 import Algebraic.Basis.Arithmetic.Power
-import Algebraic.LowerBound.FanIn
+import Algebraic.LowerBound.AC0.ParitySeparation
 import Algebraic.LowerBound.Counting.Shannon
+import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.GateElimination.DeMorganXor
 import Algebraic.LowerBound.Monotone.Clique.Exponential
 import Algebraic.LowerBound.Fusion.Cyclic.Complete
@@ -47,6 +48,11 @@ export Fusion.SumOfTerms.Rectangle (diagonal_lowerBound)
 export Monotone.Clique.Exponential
   (powSelf_lt_circuitSize
    twoPow_lt_circuitSize)
+
+export AC0
+  (parity_not_computable
+   parity_not_raw_computable
+   rawComputable_iff_computable)
 
 end Applications
 end Algebraic

@@ -79,4 +79,18 @@ example :
       AC0.Circuit.logicalDepth internalNotCircuit := by
   simp
 
+example (family : Circuit.Family AC0.signature 1)
+    (smallDepth : AC0.Family.IsRawSmallDepth family) :
+    AC0.Family.IsSmallDepth (AC0.DualRail.normalizeFamily family) :=
+  AC0.DualRail.normalizeFamily_isSmallDepth family smallDepth
+
+example (family : Circuit.Family AC0.signature 1)
+    (polynomialCost : family.HasPolynomialCost AC0.andOrCost) :
+    (AC0.DualRail.normalizeFamily family).HasPolynomialSize :=
+  AC0.DualRail.normalizeFamily_hasPolynomialSize family polynomialCost
+
+example (target : Target.Family Bool 1) :
+    AC0.RawComputable target <-> AC0.Computable target :=
+  AC0.rawComputable_iff_computable target
+
 end AlgebraicTests.AC0Normalization

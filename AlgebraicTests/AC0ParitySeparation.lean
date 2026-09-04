@@ -11,6 +11,9 @@ open Algebraic
 example : Not (AC0.Computable AC0.Parity.targetFamily) :=
   AC0.parity_not_computable
 
+example : Not (AC0.RawComputable AC0.Parity.targetFamily) :=
+  AC0.parity_not_raw_computable
+
 example
     (family : Circuit.Family AC0.signature 1)
     (polynomialCost : family.HasPolynomialCost AC0.andOrCost)

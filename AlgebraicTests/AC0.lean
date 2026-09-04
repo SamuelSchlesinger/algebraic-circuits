@@ -63,7 +63,8 @@ example : AC0.Circuit.logicalDepth notInputCircuit = 0 := rfl
 example : notInputCircuit.cost AC0.andOrCost = 0 := rfl
 
 example : AC0.Circuit.NormalForm notInputCircuit := by
-  simp [AC0.Circuit.NormalForm, AC0.Program.NegationsAtInputs,
+  simp [AC0.Circuit.NormalForm, AC0.Circuit.NegationsAtInputs,
+    AC0.Program.NegationsAtInputs,
     AC0.Program.Alternating, AC0.Line.NegationAtInput,
     AC0.Line.AlternatesAfter, notInputCircuit]
 
@@ -88,12 +89,13 @@ theorem orAllFamily_computes :
 
 theorem orAllFamily_normal : AC0.Family.NormalForm orAllFamily := by
   intro n
-  simp [AC0.Circuit.NormalForm, AC0.Program.NegationsAtInputs,
+  simp [AC0.Circuit.NormalForm, AC0.Circuit.NegationsAtInputs,
+    AC0.Program.NegationsAtInputs,
     AC0.Program.Alternating, AC0.Line.NegationAtInput,
     AC0.Line.AlternatesAfter, orAllFamily, orAllCircuit]
 
 theorem orAllFamily_smallDepth : AC0.Family.IsSmallDepth orAllFamily := by
-  refine ⟨?_, ?_, orAllFamily_normal⟩
+  refine ⟨?_, ?_, orAllFamily_normal.negationsAtInputs⟩
   · exact ⟨1, 0, fun n => by simp [Circuit.Family.cost, orAllFamily,
       orAllCircuit, Circuit.cost, Program.cost]⟩
   · refine ⟨1, ?_⟩

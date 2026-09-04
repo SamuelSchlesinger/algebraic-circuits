@@ -6,10 +6,10 @@ import Algebraic.CircuitFamily
 This module models the source convention used by Hastad's small-depth lower
 bound. AND and OR gates have arbitrary finite fan-in. NOT is explicit in the
 generic circuit syntax, but the source-facing cost charges only AND/OR gates
-and the source-facing logical depth gives NOT zero delay. The checked
-`Circuit.NormalForm` predicate prevents that convention from making internal
-negation free: every NOT must read an original input, and adjacent AND/OR gates
-must have different connectives.
+and the source-facing logical depth gives NOT zero delay. The checked class
+presentation requires every NOT to read an original input. A stronger
+`Circuit.NormalForm` predicate additionally records alternation of adjacent
+AND/OR gates.
 -/
 
 namespace Algebraic
@@ -157,6 +157,11 @@ private theorem foldl_max_zero (n : Nat) :
 
 namespace Circuit
 
+/-- Every NOT gate in the circuit is an input literal. -/
+def NegationsAtInputs
+    (circuit : Algebraic.Circuit signature n g m) : Prop :=
+  Program.NegationsAtInputs circuit.program
+
 /-- Logical depth of each designated output in Hastad's convention. -/
 def logicalOutputDepths
     (circuit : Algebraic.Circuit signature n g m) : Fin m -> Nat :=
@@ -177,8 +182,15 @@ theorem logicalDepth_one_output
 /-- Source-facing normal form: negations are input literals and consecutive
 AND/OR gates alternate. -/
 def NormalForm (circuit : Algebraic.Circuit signature n g m) : Prop :=
-  Program.NegationsAtInputs circuit.program ∧
+  NegationsAtInputs circuit ∧
     Program.Alternating circuit.program
+
+/-- Strong normal form in particular places every negation at an input. -/
+theorem NormalForm.negationsAtInputs
+    {circuit : Algebraic.Circuit signature n g m}
+    (normal : NormalForm circuit) :
+    NegationsAtInputs circuit :=
+  normal.1
 
 end Circuit
 
@@ -195,18 +207,46 @@ def NormalForm
     (family : Algebraic.Circuit.Family signature m) : Prop :=
   forall n, Circuit.NormalForm (family.circuit n)
 
+/-- Every family member has only input-level negations. -/
+def NegationsAtInputs
+    (family : Algebraic.Circuit.Family signature m) : Prop :=
+  forall n, Circuit.NegationsAtInputs (family.circuit n)
+
+/-- Strong family normal form implies the input-negation invariant used by
+the switching-lemma development. -/
+theorem NormalForm.negationsAtInputs
+    {family : Algebraic.Circuit.Family signature m}
+    (normal : NormalForm family) :
+    NegationsAtInputs family :=
+  fun n => (normal n).negationsAtInputs
+
 /-- One source-level depth bound works at every input width. -/
 def HasConstantLogicalDepth
     (family : Algebraic.Circuit.Family signature m) : Prop :=
   Algebraic.Circuit.Resource.ConstantlyBounded (logicalDepth family)
 
-/-- A source-model AC0 family has polynomial AND/OR cost, constant logical
-depth, and checked negation/alternation normal form. -/
+/-- An unrestricted small-depth family has polynomial AND/OR cost and constant
+logical depth. Internal NOT gates are allowed in this raw presentation. -/
+def IsRawSmallDepth
+    (family : Algebraic.Circuit.Family signature 1) : Prop :=
+  family.HasPolynomialCost andOrCost ∧
+    HasConstantLogicalDepth family
+
+/-- A checked AC0 family has polynomial AND/OR cost, constant logical depth,
+and only input-level negations. Alternation is available separately through
+`Family.NormalForm` but is not needed for the class definition. -/
 def IsSmallDepth
     (family : Algebraic.Circuit.Family signature 1) : Prop :=
   family.HasPolynomialCost andOrCost ∧
     HasConstantLogicalDepth family ∧
-    NormalForm family
+    NegationsAtInputs family
+
+/-- Forgetting the input-negation invariant yields a raw small-depth family. -/
+theorem IsSmallDepth.raw
+    {family : Algebraic.Circuit.Family signature 1}
+    (smallDepth : IsSmallDepth family) :
+    IsRawSmallDepth family :=
+  ⟨smallDepth.1, smallDepth.2.1⟩
 
 end Family
 
@@ -214,6 +254,14 @@ end Family
 def Computable (target : Target.Family Bool 1) : Prop :=
   Exists fun family : Algebraic.Circuit.Family signature 1 =>
     family.Computes interpretation target ∧ Family.IsSmallDepth family
+
+/-- Raw nonuniform AC0 computability, allowing NOT gates at arbitrary internal
+wires. Dual-rail normalization proves this presentation equivalent to
+`Computable`. -/
+def RawComputable (target : Target.Family Bool 1) : Prop :=
+  Exists fun family : Algebraic.Circuit.Family signature 1 =>
+    family.Computes interpretation target ∧
+      Family.IsRawSmallDepth family
 
 end AC0
 end Algebraic

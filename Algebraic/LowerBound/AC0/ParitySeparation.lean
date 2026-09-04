@@ -1,3 +1,4 @@
+import Algebraic.Basis.AC0.Normalization
 import Algebraic.CircuitFamily.Growth
 import Algebraic.LowerBound.AC0.ParityScale
 
@@ -14,10 +15,10 @@ The finite theorem forces `2^(t+1) <= 20 * t * S(n)`, while substituting this
 input width into the polynomial upper bound leaves a fixed polynomial in `t`.
 The latter is eventually at most `2^t`, giving a contradiction.
 
-The reusable family theorem below needs only input-level negations, not the
-alternation half of source normal form. The final endpoint is stated for
-`AC0.Computable`, whose definition requires the full checked source normal
-form. Thus no normalization theorem is hidden inside this result.
+The reusable family theorem below needs only input-level negations, not
+alternation. The final checked endpoint is stated for `AC0.Computable`.
+Dual-rail normalization then transfers the separation to `AC0.RawComputable`,
+whose circuits may contain NOT gates at arbitrary internal wires.
 -/
 
 namespace Algebraic
@@ -132,9 +133,18 @@ end Family
 by the library's checked source model. -/
 theorem parity_not_computable :
     Not (Computable Parity.targetFamily) := by
-  rintro ⟨family, computes, polynomialCost, constantDepth, normal⟩
+  rintro ⟨family, computes, polynomialCost, constantDepth,
+    negationsAtInputs⟩
   exact Family.not_computes_parity family polynomialCost constantDepth
-    (fun n => (normal n).1) computes
+    negationsAtInputs computes
+
+/-- Parity is not computable even in the raw presentation that allows NOT
+gates at arbitrary internal wires. -/
+theorem parity_not_raw_computable :
+    Not (RawComputable Parity.targetFamily) := by
+  intro computes
+  exact parity_not_computable
+    ((rawComputable_iff_computable Parity.targetFamily).1 computes)
 
 end AC0
 end Algebraic

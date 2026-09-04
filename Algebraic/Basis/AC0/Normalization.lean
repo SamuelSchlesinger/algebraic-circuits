@@ -705,6 +705,175 @@ private theorem cost_two_mul_andOrCost
       2 * circuit.cost andOrCost := by
   simp [normalize, positiveOutputs]
 
+private theorem compileProgram_gateCount
+    (program : Program signature n g) :
+    (translation.compileProgram program).gateCount =
+      2 * program.cost andOrCost := by
+  induction program with
+  | empty => rfl
+  | gate program line inductionHypothesis =>
+      change (translation.compileProgram program).gateCount +
+          gateCount line.op =
+        2 * (program.cost andOrCost + andOrCost line.op)
+      rw [inductionHypothesis]
+      cases line.op <;> simp [gateCount, andOrCost, Nat.mul_add]
+
+/-- Normalization uses one input-literal gate per input and two gates per
+charged source gate. -/
+@[simp] theorem normalize_size
+    (circuit : Circuit signature n g m) :
+    (normalize circuit).size =
+      n + 2 * circuit.cost andOrCost := by
+  change n + translation.compiledGateCount circuit = _
+  rw [BlockTranslation.compiledGateCount,
+    compileProgram_gateCount circuit.program]
+  rfl
+
+/-! ## Family-level normalization -/
+
+/-- Normalize every member of a circuit family. -/
+def normalizeFamily
+    (family : Circuit.Family signature m) :
+    Circuit.Family signature m where
+  gateCount := fun n =>
+    n + translation.compiledGateCount (family.circuit n)
+  circuit := fun n => normalize (family.circuit n)
+
+/-- The member at width `n` is the normalization of the source member. -/
+@[simp] theorem normalizeFamily_circuit
+    (family : Circuit.Family signature m)
+    (n : Nat) :
+    (normalizeFamily family).circuit n =
+      normalize (family.circuit n) :=
+  rfl
+
+/-- Family normalization doubles charged cost pointwise. -/
+@[simp] theorem normalizeFamily_cost
+    (family : Circuit.Family signature m)
+    (n : Nat) :
+    (normalizeFamily family).cost andOrCost n =
+      2 * family.cost andOrCost n := by
+  change (normalize (family.circuit n)).cost andOrCost =
+    2 * (family.circuit n).cost andOrCost
+  exact normalize_andOrCost (family.circuit n)
+
+/-- Family normalization has one input-literal gate per input and two gates
+per charged source gate. -/
+@[simp] theorem normalizeFamily_gateCount
+    (family : Circuit.Family signature m)
+    (n : Nat) :
+    (normalizeFamily family).gateCount n =
+      n + 2 * family.cost andOrCost n := by
+  change (normalize (family.circuit n)).size =
+    n + 2 * (family.circuit n).cost andOrCost
+  exact normalize_size (family.circuit n)
+
+/-- Family normalization preserves logical depth pointwise. -/
+@[simp] theorem normalizeFamily_logicalDepth
+    (family : Circuit.Family signature m)
+    (n : Nat) :
+    Family.logicalDepth (normalizeFamily family) n =
+      Family.logicalDepth family n := by
+  change Circuit.logicalDepth (normalize (family.circuit n)) =
+    Circuit.logicalDepth (family.circuit n)
+  exact normalize_logicalDepth (family.circuit n)
+
+/-- Family normalization preserves the computed target. -/
+theorem normalizeFamily_computes
+    (family : Circuit.Family signature m)
+    (target : Target.Family Bool m)
+    (computes : family.Computes interpretation target) :
+    (normalizeFamily family).Computes interpretation target := by
+  intro n input
+  change (normalize (family.circuit n)).eval interpretation input =
+    target n input
+  exact (normalize_eval (family.circuit n) input).trans (computes n input)
+
+/-- Every normalized family member has only input-level negations. -/
+theorem normalizeFamily_negationsAtInputs
+    (family : Circuit.Family signature m) :
+    Family.NegationsAtInputs (normalizeFamily family) := by
+  intro n
+  exact normalize_negationsAtInputs (family.circuit n)
+
+/-- Polynomial AND/OR cost is preserved by family normalization. -/
+theorem normalizeFamily_hasPolynomialCost
+    (family : Circuit.Family signature m)
+    (bounded : family.HasPolynomialCost andOrCost) :
+    (normalizeFamily family).HasPolynomialCost andOrCost := by
+  obtain ⟨coefficient, degree, bound⟩ := bounded
+  refine ⟨2 * coefficient, degree, ?_⟩
+  intro n
+  rw [normalizeFamily_cost]
+  calc
+    2 * family.cost andOrCost n <=
+        2 * (coefficient * (n + 1) ^ degree) :=
+      Nat.mul_le_mul_left 2 (bound n)
+    _ = (2 * coefficient) * (n + 1) ^ degree := by
+      rw [Nat.mul_assoc]
+
+/-- Normalization turns polynomial charged cost into polynomial total gate
+count, with the explicit bound
+`(2 * coefficient + 1) * (n + 1) ^ (degree + 1)`. -/
+theorem normalizeFamily_hasPolynomialSize
+    (family : Circuit.Family signature m)
+    (bounded : family.HasPolynomialCost andOrCost) :
+    (normalizeFamily family).HasPolynomialSize := by
+  obtain ⟨coefficient, degree, bound⟩ := bounded
+  refine ⟨2 * coefficient + 1, degree + 1, ?_⟩
+  intro n
+  change (normalizeFamily family).gateCount n <= _
+  rw [normalizeFamily_gateCount]
+  have basePositive : 0 < n + 1 := by omega
+  have inputBound : n <= (n + 1) ^ (degree + 1) :=
+    (Nat.le_succ n).trans (Nat.le_pow (by omega))
+  have powerBound :
+      (n + 1) ^ degree <= (n + 1) ^ (degree + 1) :=
+    Nat.pow_le_pow_right basePositive (Nat.le_succ degree)
+  calc
+    n + 2 * family.cost andOrCost n <=
+        (n + 1) ^ (degree + 1) +
+          2 * (coefficient * (n + 1) ^ degree) :=
+      Nat.add_le_add inputBound (Nat.mul_le_mul_left 2 (bound n))
+    _ <= (n + 1) ^ (degree + 1) +
+          2 * (coefficient * (n + 1) ^ (degree + 1)) := by
+      apply Nat.add_le_add_left
+      simpa [Nat.mul_assoc] using
+        Nat.mul_le_mul_left (2 * coefficient) powerBound
+    _ = (2 * coefficient + 1) * (n + 1) ^ (degree + 1) := by
+      simp [Nat.add_mul, Nat.mul_assoc, Nat.add_comm]
+
+/-- Constant logical depth is preserved by family normalization. -/
+theorem normalizeFamily_hasConstantLogicalDepth
+    (family : Circuit.Family signature m)
+    (bounded : Family.HasConstantLogicalDepth family) :
+    Family.HasConstantLogicalDepth (normalizeFamily family) := by
+  obtain ⟨depth, bound⟩ := bounded
+  exact ⟨depth, fun n => by simpa using bound n⟩
+
+/-- Every raw small-depth family has an equivalent checked family. -/
+theorem normalizeFamily_isSmallDepth
+    (family : Circuit.Family signature 1)
+    (smallDepth : Family.IsRawSmallDepth family) :
+    Family.IsSmallDepth (normalizeFamily family) :=
+  ⟨normalizeFamily_hasPolynomialCost family smallDepth.1,
+    normalizeFamily_hasConstantLogicalDepth family smallDepth.2,
+    normalizeFamily_negationsAtInputs family⟩
+
 end DualRail
+
+/-- Raw and input-negation-normalized presentations define the same
+nonuniform AC0 class. -/
+theorem rawComputable_iff_computable
+    (target : Target.Family Bool 1) :
+    RawComputable target <-> Computable target := by
+  constructor
+  · rintro ⟨family, computes, smallDepth⟩
+    exact ⟨DualRail.normalizeFamily family,
+      DualRail.normalizeFamily_computes family target computes,
+      DualRail.normalizeFamily_isSmallDepth family smallDepth⟩
+  · rintro ⟨family, computes, smallDepth⟩
+    exact ⟨family, computes, smallDepth.raw⟩
+
 end AC0
 end Algebraic

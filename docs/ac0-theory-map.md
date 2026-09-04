@@ -68,22 +68,23 @@ bit and excludes the all-zero difference string from every nonfinal block.
   fixing, while `DeMorgan.ProgramRestriction` performs basis-specific partial
   evaluation for the binary De Morgan basis.
 - The Hastad model therefore needs its own arbitrary-fan-in basis and a
-  negation-normal representation. Internal NOT gates cannot silently be made
-  free or depthless in the generic circuit model.
+  negation-normal representation. The dual-rail compiler now constructs that
+  representation explicitly; internal NOT gates are never silently made free
+  or depthless in the generic circuit model.
 
 ## Milestones
 
 | Milestone | Formal endpoint | Status |
 | --- | --- | --- |
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
-| AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, class predicate, and checked normal form validated; normalization theorem open |
+| AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, dual-rail normalization, and raw/checked class equivalence validated 2026-09-03 |
 | Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
 | Depth reduction | Iterated simplification of bounded-depth circuits | Exact `d-1`-round circuit reduction, concrete probabilities, and floor-divided survivor schedule validated 2026-09-03 |
 | Parity | Scale- and root-selected bounded-depth lower bounds | Integral finite core and explicit `exp(Omega(n^(1/(d-1))))` product and isolated-cost forms validated 2026-09-03 |
-| Class separation | Qualitative `PARITY` not in nonuniform `AC0` | `AC0.parity_not_computable` validated 2026-09-03 for the checked source model |
+| Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Checked and arbitrary-internal-NOT endpoints validated 2026-09-03 |
 
 ## Headline theorem correspondence
 
@@ -94,8 +95,11 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | `AC0.Circuit.not_computes_parity_of_concrete_depth_reduction` | Exact finite `d-1`-restriction parity contradiction | Finite trusted core of the standard Hastad depth-reduction argument |
 | `AC0.Circuit.parity_size_tradeoff_at_scale` | If `(20(t+1))^(d-1) <= n`, then `2^(t+1) <= 20tS` | Source-grounded quantitative theorem with conservative, nonoptimized constants |
 | `AC0.Circuit.parity_andOrCost_lower_bound_at_root` | Root-selected `exp(Omega(n^(1/(d-1))))` AND/OR-cost lower bound | Standard asymptotic corollary with explicit natural-number rounding |
+| `AC0.DualRail.normalize` | Eliminate internal NOT gates while preserving semantics and logical depth, with exact AND/OR cost `2S` and total size `n+2S` | Standard dual-rail normalization, formally verified for shared DAG circuits |
+| `AC0.rawComputable_iff_computable` | Arbitrary-NOT and checked input-negation presentations define the same nonuniform class | Formalization strengthening with explicit resource accounting |
 | `AC0.Family.not_computes_parity` | Polynomial cost and constant depth cannot compute parity at every width | Qualitative consequence; alternation is not needed by this theorem |
 | `AC0.parity_not_computable` | `PARITY` is not in the library's nonuniform `AC0` class | Headline class separation in the checked source model |
+| `AC0.parity_not_raw_computable` | `PARITY` is not computable even when source circuits use arbitrary internal NOT gates | Corollary of verified dual-rail normalization and the checked separation |
 
 ## Claim labels
 
@@ -109,6 +113,22 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The dual-rail normalization milestone passed the full release gates on
+2026-09-03. Every source wire is represented by a value rail and a complement
+rail. NOT swaps the rails without a target gate; AND and OR each emit their
+ordinary gate and De Morgan dual. An explicit input encoder contributes one
+input-literal NOT per original input. Lean proves that whole-circuit
+normalization preserves the complete output vector and every output's logical
+depth, has exact charged cost `2S`, has exact total size `n+2S`, and satisfies
+the input-negation invariant. Pointwise normalization of families preserves
+computation and constant depth, turns polynomial charged cost into polynomial
+total size, and proves `AC0.RawComputable` equivalent to the checked
+`AC0.Computable` presentation. Consequently the parity separation now covers
+circuits with arbitrary internal NOT gates. This is a symbolic compiler over
+shared DAGs; it performs no enumeration, sampling, optimizer search, or finite
+lower-bound experiment. The audited public theorems use no axioms beyond
+Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The qualitative class-separation milestone passed
 `lake build Algebraic AlgebraicTests --wfail`, `lake test`, `lake lint`,
@@ -139,9 +159,9 @@ The root-selected quantitative parity lower bound passed the full gates on
 `2^q/(20*(q-1)) <= S`. This is the conventional explicit
 `exp(Omega(n^(1/(d-1))))` form with conservative constants. It reuses the
 verified root specification and performs no circuit enumeration or bounded
-experiment. Normalizing a broader raw syntax with unrestricted internal NOT
-gates remains a useful interoperability theorem, but is not an assumption of
-the checked source-model class separation. The audited public theorems use no
+experiment. The checked source-model theorem itself assumes input-level
+negations; the verified dual-rail theorem now transfers it to unrestricted
+internal NOT gates. The audited public theorems use no
 axioms beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The quantitative scale-form parity lower bound passed the full gates on
