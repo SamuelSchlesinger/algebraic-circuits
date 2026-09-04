@@ -597,4 +597,58 @@ example :
   dsimp only
   constructor <;> rw [Nonuniform.BatchLookup.circuit_eval] <;> rfl
 
+/-- Equal keys set both duplicate flags, after restoration to input order. -/
+example (input : Fin 0 → Bool) (index : Fin (Sorting.networkRecords 1)) :
+    (Nonuniform.DuplicateFlags.circuit
+      (fun _ : Fin (Sorting.networkRecords 1) => fun _ : Fin 1 =>
+        (DeMorgan.Wiring.constant true : DeMorgan.Wiring 0))).eval
+      DeMorgan.interpretation input index = true := by
+  rw [Nonuniform.DuplicateFlags.circuit_eval_iff]
+  fin_cases index
+  · exact ⟨⟨1, by decide⟩, by decide, rfl⟩
+  · exact ⟨⟨0, by decide⟩, by decide, rfl⟩
+
+/-- Different keys leave both duplicate flags false. -/
+example (input : Fin 0 → Bool) (index : Fin (Sorting.networkRecords 1)) :
+    (Nonuniform.DuplicateFlags.circuit
+      (fun record : Fin (Sorting.networkRecords 1) => fun _ : Fin 1 =>
+        (DeMorgan.Wiring.constant (decide (record.val = 1)) : DeMorgan.Wiring 0))).eval
+      DeMorgan.interpretation input index = false := by
+  apply Bool.eq_false_iff.mpr
+  intro isTrue
+  obtain ⟨other, different, sameKey⟩ :=
+    (Nonuniform.DuplicateFlags.circuit_eval_iff _ input index).mp isTrue
+  have sameBit := congrFun sameKey 0
+  fin_cases index <;> fin_cases other
+  all_goals first | exact different rfl | cases sameBit
+
+/-- Repeated source keys are aggregated, repeated queries agree, and an
+absent key returns false. -/
+example (input : Fin 0 → Bool) (request : Fin 3) :
+    (Nonuniform.BatchOr.circuit
+      (fun _ : Fin 2 => fun _ : Fin 1 => DeMorgan.Wiring.constant true)
+      (fun source : Fin 2 => fun _ : Fin 1 => DeMorgan.Wiring.constant (decide (source.val = 1)))
+      (fun query : Fin 3 => fun _ : Fin 1 => DeMorgan.Wiring.constant (decide (query.val ≠ 0)))
+      (show 2 + 3 + 3 = Sorting.networkRecords 3 from rfl)).eval
+        DeMorgan.interpretation input (finProdFinEquiv (request, (0 : Fin 1))) =
+      decide (request.val ≠ 0) := by
+  apply Bool.eq_iff_iff.mpr
+  rw [Nonuniform.BatchOr.circuit_eval_iff]
+  simp only [DeMorgan.Wiring.eval_constant, funext_iff]
+  fin_cases request <;> decide
+
+/-- An empty source array produces false even for a valid query. -/
+example (input : Fin 0 → Bool) :
+    (Nonuniform.BatchOr.circuit
+      (fun source : Fin 0 => Fin.elim0 source : Fin 0 → Fin 1 → DeMorgan.Wiring 0)
+      (fun source : Fin 0 => Fin.elim0 source : Fin 0 → Fin 1 → DeMorgan.Wiring 0)
+      (fun _ : Fin 1 => fun _ : Fin 1 => DeMorgan.Wiring.constant true)
+      (show 0 + 1 + 0 = Sorting.networkRecords 0 from rfl)).eval
+        DeMorgan.interpretation input (finProdFinEquiv ((0 : Fin 1), (0 : Fin 1))) = false := by
+  apply Bool.eq_false_iff.mpr
+  intro isTrue
+  obtain ⟨source, _⟩ :=
+    (Nonuniform.BatchOr.circuit_eval_iff _ _ _ _ input (0 : Fin 1) (0 : Fin 1)).mp isTrue
+  exact Fin.elim0 source
+
 end AlgebraicTests.MassProduction

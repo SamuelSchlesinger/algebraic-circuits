@@ -19,6 +19,18 @@ The added modules prove, without new axioms or proof placeholders:
   metadata preservation, and fixed output wires. For
   `T = 2^keyWidth + requests`, the charged cost is at most
   `256 * T * (ceil(log2 T) + keyWidth + valueWidth + 2)^5`.
+- A complete candidate-selection circuit: sort requests by clean flags,
+  sort whole candidate blocks by their success bit, and select a clean
+  prefix from one successful candidate by fixed output wires.
+- Computed-key sorting and exact collision marking, with preserved distinct
+  identifiers returning every record and duplicate flag to its original
+  position. Their bounds are linear in record count with polynomial width
+  and sorting-depth factors.
+- A duplicate-flag circuit that adds its own fixed ordering identifiers, and
+  a shared batched OR circuit accepting repeated source keys, repeated
+  queries, and absent keys. Their charged costs are bounded respectively by
+  `256 * records * (depth + keyWidth + 1)^5` and
+  `256 * (sources + queries + 1) * (depth + keyWidth + valueWidth + 2)^5`.
 - Common-zero-block monomial line parity, independence of reduced monomial
   evaluations, and existence of a systematic information set of exact size
   `A^m - (A-1)^m` over `A^m` points. Here `A = 2^(dimension * blockWidth)`

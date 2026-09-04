@@ -152,4 +152,34 @@ theorem payloadCircuit_routesSorted
   exact payloadCircuit_routesInterval bit input source destination ordered
     sourceTag sourceUnique interval
 
+/-- Boolean broadcast computes the OR of every same-key source bit. This
+form permits repeated source keys and gives false when no source matches. -/
+theorem payloadCircuit_routesSorted_iff
+    (bit : Fin payloadWidth)
+    (input : Fin (networkBits depth (recordWidth keyWidth payloadWidth)) → Bool)
+    (sorted : FlatKeysSorted (keyAndTagFitsRecord keyWidth payloadWidth) true input)
+    (destination : Fin (networkRecords depth))
+    (destinationTag : recordTag input destination = true) :
+    (payloadCircuit depth keyWidth payloadWidth bit).eval
+        DeMorgan.interpretation input destination = true ↔
+      ∃ source, recordKey input source = recordKey input destination ∧
+        recordTag input source = false ∧ recordPayload input source bit = true := by
+  rw [payloadCircuit_eq_true_iff]
+  constructor
+  · rintro ⟨source, ordered, sourceTag, sourceBit, links⟩
+    exact ⟨source, sameKeyOfLinked input source destination ordered links, sourceTag, sourceBit⟩
+  · rintro ⟨source, sameKey, sourceTag, sourceBit⟩
+    obtain ⟨ordered, interval⟩ := sourceIntervalOfSorted input sorted source destination
+      sameKey sourceTag destinationTag
+    refine ⟨source, ordered, sourceTag, sourceBit, ?_⟩
+    intro index after before
+    have positive : 0 < index.val := Nat.lt_of_le_of_lt (Nat.zero_le _) after
+    apply (linkExpression_eval_eq_true_iff input index positive).mpr
+    exact (interval (predecessor index positive) (by
+        change source.val ≤ index.val - 1
+        exact Nat.le_sub_one_of_lt after) (by
+        change index.val - 1 ≤ destination.val
+        exact (Nat.sub_le _ _).trans before)).trans
+      (interval index after.le before).symm
+
 end Algebraic.MassProduction.Nonuniform.Broadcast
