@@ -783,5 +783,142 @@ theorem restrictCircuit_eval_projectLive
   rw [(restrictCircuit source rho).eval_eq]
   rw [PartialAssignment.toLiveInputSubstitution_projectLive]
 
+/-! ## Materializing a one-output residual circuit -/
+
+/-- A nullary gate realizing a Boolean constant. -/
+def constantLine (value : Bool) : Line signature n g :=
+  match value with
+  | false =>
+      { op := .or 0
+        wires := Fin.elim0 }
+  | true =>
+      { op := .and 0
+        wires := Fin.elim0 }
+
+@[simp] theorem constantLine_eval
+    (value : Bool)
+    (program : Program signature n g)
+    (input : Fin n -> Bool) :
+    (constantLine (n := n) (g := g) value).eval interpretation input
+      (program.eval interpretation input) = value := by
+  cases value <;> rfl
+
+/-- Materializing the sole output of a residual circuit as an ordinary wire
+requires at most one nullary constant gate. -/
+structure ResidualCircuit.Materialization
+    (source : ResidualCircuit n g 1) where
+  /-- Gate count of the ordinary circuit. -/
+  gateCount : Nat
+  /-- Ordinary one-output circuit. -/
+  result : Circuit signature n gateCount 1
+  /-- Materialization preserves the residual output. -/
+  eval_eq : forall input, result.eval interpretation input = source.eval input
+  /-- At most one gate is added. -/
+  gateCount_le : gateCount <= g + 1
+  /-- At most one charged constant gate is added. -/
+  cost_le : result.cost andOrCost <= source.cost + 1
+
+namespace ResidualCircuit
+
+/-- Convert a one-output residual circuit into an ordinary circuit. Wire
+outputs are free; constant outputs receive one nullary AND or OR gate. -/
+def materialize
+    (source : ResidualCircuit n g 1) : source.Materialization := by
+  cases output_eq : source.outputs 0 with
+  | wire sourceWire =>
+      let result : Circuit signature n g 1 :=
+        { program := source.program
+          outputs := fun _ => sourceWire }
+      exact
+        { gateCount := g
+          result := result
+          eval_eq := by
+            intro input
+            funext output
+            have output_zero : output = 0 := Fin.eq_zero output
+            subst output
+            change source.program.trace interpretation input sourceWire =
+              (source.outputs 0).eval source.program input
+            rw [output_eq]
+            exact (ResidualValue.eval_wire
+              source.program input sourceWire).symm
+          gateCount_le := Nat.le_succ g
+          cost_le := Nat.le_add_right _ 1 }
+  | constant value =>
+      let line := constantLine (n := n) (g := g) value
+      let result : Circuit signature n (g + 1) 1 :=
+        { program := source.program.gate line
+          outputs := fun _ => Fin.last (n + g) }
+      exact
+        { gateCount := g + 1
+          result := result
+          eval_eq := by
+            intro input
+            funext output
+            have output_zero : output = 0 := Fin.eq_zero output
+            subst output
+            change (source.program.gate line).trace interpretation input
+                (Fin.last (n + g)) =
+              (source.outputs 0).eval source.program input
+            rw [Program.trace_gate_last, constantLine_eval, output_eq,
+              ResidualValue.eval_constant]
+          gateCount_le := Nat.le_refl (g + 1)
+          cost_le := by
+            cases value <;>
+              simp [result, ResidualCircuit.cost, Circuit.cost, line,
+                constantLine, andOrCost] }
+
+end ResidualCircuit
+
+/-- An ordinary one-output circuit obtained by partial evaluation. The single
+unit of possible overhead is exactly the cost of materializing a constant
+output as a wire. -/
+structure OrdinaryCircuitRestriction
+    (source : Circuit signature n g 1)
+    (rho : PartialAssignment n) where
+  /-- Gate count of the materialized restricted circuit. -/
+  gateCount : Nat
+  /-- Ordinary circuit over exactly the live variables. -/
+  result : Circuit signature rho.liveCount gateCount 1
+  /-- Exact pointwise semantics under the compact input substitution. -/
+  eval_eq : forall input,
+    result.eval interpretation input =
+      source.eval interpretation
+        (rho.toLiveInputSubstitution.apply input)
+  /-- Restriction and output materialization add at most one gate overall. -/
+  gateCount_le : gateCount <= g + 1
+  /-- Charged AND/OR cost grows by at most the one constant-output gate. -/
+  cost_le : result.cost andOrCost <= source.cost andOrCost + 1
+
+/-- Partially evaluate a one-output AC0 circuit and materialize its output as
+an ordinary circuit wire. -/
+noncomputable def restrictOneOutputCircuit
+    (source : Circuit signature n g 1)
+    (rho : PartialAssignment n) :
+    OrdinaryCircuitRestriction source rho := by
+  let restricted := restrictCircuit source rho
+  let materialized := restricted.result.materialize
+  exact
+    { gateCount := materialized.gateCount
+      result := materialized.result
+      eval_eq := by
+        intro input
+        exact (materialized.eval_eq input).trans (restricted.eval_eq input)
+      gateCount_le := materialized.gateCount_le.trans
+        (Nat.add_le_add_right restricted.gateCount_le 1)
+      cost_le := materialized.cost_le.trans
+        (Nat.add_le_add_right restricted.cost_le 1) }
+
+/-- Same-width semantics of the materialized restricted circuit. -/
+theorem restrictOneOutputCircuit_eval_projectLive
+    (source : Circuit signature n g 1)
+    (rho : PartialAssignment n)
+    (input : Fin n -> Bool) :
+    (restrictOneOutputCircuit source rho).result.eval interpretation
+        (rho.projectLive input) =
+      source.eval interpretation (rho.apply input) := by
+  rw [(restrictOneOutputCircuit source rho).eval_eq]
+  rw [PartialAssignment.toLiveInputSubstitution_projectLive]
+
 end AC0
 end Algebraic

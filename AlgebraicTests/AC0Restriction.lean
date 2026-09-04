@@ -73,4 +73,26 @@ example
       source.eval interpretation (rho.apply input) :=
   restrictCircuit_eval_projectLive source rho input
 
+example
+    (source : Circuit signature n g 1)
+    (rho : PartialAssignment n) :
+    (restrictOneOutputCircuit source rho).result.cost andOrCost <=
+      source.cost andOrCost + 1 :=
+  (restrictOneOutputCircuit source rho).cost_le
+
+example
+    (source : Circuit signature n g 1)
+    (rho : PartialAssignment n) :
+    (restrictOneOutputCircuit source rho).gateCount <= g + 1 :=
+  (restrictOneOutputCircuit source rho).gateCount_le
+
+example
+    (source : Circuit signature n g 1)
+    (rho : PartialAssignment n)
+    (input : Fin n -> Bool) :
+    (restrictOneOutputCircuit source rho).result.eval interpretation
+        (rho.projectLive input) =
+      source.eval interpretation (rho.apply input) :=
+  restrictOneOutputCircuit_eval_projectLive source rho input
+
 end AlgebraicTests.AC0Restriction
