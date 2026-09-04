@@ -1,8 +1,9 @@
 # AC0 theory map
 
 This document records the source correspondence and trust boundary for the
-nonuniform constant-depth circuit development. It is a roadmap, not evidence
-that unchecked milestones have been proved.
+nonuniform constant-depth circuit development. The status tables summarize
+the development; the cited Lean declarations and validation gates are the
+evidence for completed milestones.
 
 ## Source convention
 
@@ -19,18 +20,19 @@ pushed to inputs with at most a factor-two size increase. The source theorem
 rules out depth-`k` parity circuits of size
 `2^((1/10)^(k-1) * n^(1/(k-1)))`
 
-for `n > n0 ^ k`, for an absolute constant `n0`. The Lean development will use
-an exact natural-number inequality underneath this real-exponent notation and
-derive a source-facing corollary only after rounding has been proved.
+for `n > n0 ^ k`, for an absolute constant `n0`. The Lean development uses an
+exact natural-number inequality underneath this real-exponent notation and
+derives the source-facing root-selected corollary with the required rounding
+proved explicitly.
 
 The switching endpoint is the decision-tree form of Hastad's switching lemma,
 stated explicitly in the introduction of
 [*Criticality of AC0-Formulae*](https://eccc.weizmann.ac.il/report/2022/182/):
 for a width-`t` DNF under a `p`-random restriction, the probability that the
 restricted function has decision-tree depth at least `s` is at most
-`(5 * p * t)^s` (the complementary CNF statement follows by negation). Exact
-probability and small-`p` side conditions will remain visible in the finite
-theorem.
+`(5 * p * t)^s` (the complementary CNF statement follows by negation). The
+formal theorem uses exact finite probability and covers every `0 <= p <= 1`;
+its public statement has no artificial small-`p` premise.
 
 The distinguished DNF decision tree follows the standard dynamic canonical
 construction: restrict the full ordered DNF at the current path, choose the
@@ -115,6 +117,11 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The entries below preserve the sequence of verified checkpoints. Phrases such
+as "next obligation" record the frontier at that checkpoint; the current
+status is the milestone table above, and later entries close those historical
+obligations.
 
 The AC0 partial-evaluation milestone passed the full gates on 2026-09-03. For
 an arbitrary-fan-in AND or OR, the local simplifier returns the absorbing
