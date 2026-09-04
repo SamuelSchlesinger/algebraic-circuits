@@ -1,6 +1,8 @@
 import Algebraic.MassProduction.BlockInduction
 import Algebraic.MassProduction.LupanovSynthesis
 import Algebraic.MassProduction.RoutingPasses
+import Algebraic.MassProduction.Nonuniform
+import Algebraic.MassProduction.HighRate
 
 /-!
 # Boolean circuit mass production
@@ -18,4 +20,10 @@ The imported implementation develops independent direct products, explicit
 De Morgan circuits, finite-field local recovery, disjoint-line scheduling,
 routing, and the finite cost bounds used by those theorems. Approximation
 results are intentionally outside this formalization.
+
+The nonuniform extension additionally proves universal scheduling menus,
+linear-size propagation primitives, high-rate systematic line-recovery codes,
+and their Boolean packing semantics. The complete nonuniform scheduler cost
+and improved exponential-range leading coefficient remain outside the checked
+endpoints; see the `Nonuniform` and `HighRate` umbrella docstrings.
 -/

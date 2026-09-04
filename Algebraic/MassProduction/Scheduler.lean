@@ -82,6 +82,14 @@ section Lines
 
 variable {K V : Type*} [Field K] [AddCommGroup V] [Module K V]
 
+/-- Membership in a punctured line is witnessed by a nonzero scalar. -/
+theorem memPuncturedLine_iff
+    [Finite K] (target : V) (direction : ℙ K V) (point : V) :
+    point ∈ puncturedLine target direction ↔
+      ∃ scalar : K, scalar ≠ 0 ∧ target + scalar • direction.rep = point := by
+  classical
+  simp [puncturedLine]
+
 private theorem pointMap_injective
     (target : V)
     (direction : ℙ K V) :
@@ -271,6 +279,31 @@ theorem puncturedLine_disjoint_of_avoids_differences
   have equalDirection := direction_eq_of_mem_puncturedLine
     target point direction pointOnLine
   exact (avoids point pointUsed pointDifferent) equalDirection.symm
+
+/-- Each occupied point blocks at most one projective direction. This is
+the counting form used when a direction is sampled uniformly. -/
+theorem cardIntersectingDirections_le
+    [Finite K] [Finite V]
+    (target : V)
+    (used : Finset V) :
+    Nat.card {direction : ℙ K V //
+      ¬ Disjoint (puncturedLine target direction) used} ≤ used.card := by
+  classical
+  let _ : Fintype (ℙ K V) := Fintype.ofFinite (ℙ K V)
+  rw [Nat.card_eq_fintype_card, Fintype.card_subtype]
+  apply le_trans (Finset.card_le_card (t := forbiddenDirections target used) ?_)
+    (card_forbiddenDirections_le target used)
+  intro direction membership
+  have intersects := (Finset.mem_filter.mp membership).2
+  obtain ⟨point, pointOnLine, pointUsed⟩ := Finset.not_disjoint_iff.mp intersects
+  have pointDifferent : point ≠ target := by
+    intro equalTarget
+    subst point
+    exact target_not_mem_puncturedLine target direction pointOnLine
+  have forbidden := direction_mem_forbiddenDirections (K := K)
+    target point used pointUsed pointDifferent
+  rwa [direction_eq_of_mem_puncturedLine target point direction pointOnLine]
+    at forbidden
 
 /-- If fewer points are used than there are projective directions, some
 punctured line through a new target avoids the used set. -/

@@ -521,4 +521,54 @@ example (depth : Nat -> Nat)
     UhligTheorem.HasSharpMassProduction depth :=
   LupanovSynthesis.uhlig_massProduction depth depthSmall
 
+/-! The nonuniform modules expose checked scheduler and code components.
+These tests do not assert the unfinished end-to-end nonuniform cost bound. -/
+
+/-- The GF(4) plane admits seven information symbols in sixteen positions,
+with systematic encoding and recovery along every punctured line. -/
+example : ∃ code : HighRate.LineCode (BinaryExtension 2) (Fin 2),
+    Nat.card code.information = 7 := by
+  classical
+  let _ := Fintype.ofFinite (BinaryExtension 2)
+  have fieldCard : Fintype.card (BinaryExtension 2) = 2 ^ (1 * 2) := by
+    simpa only [Nat.card_eq_fintype_card] using
+      card_binaryExtension (by decide : 0 < 2)
+  simpa using HighRate.existsHighRateLineCode
+    (K := BinaryExtension 2) (Coordinate := Fin 2)
+    1 2 (by decide) (by decide) fieldCard
+
+/-- The next field width gives the exact dimension thirty-seven. -/
+example : ∃ code : HighRate.LineCode (BinaryExtension 3) (Fin 2),
+    Nat.card code.information = 37 := by
+  classical
+  let _ := Fintype.ofFinite (BinaryExtension 3)
+  have fieldCard : Fintype.card (BinaryExtension 3) = 2 ^ (1 * 3) := by
+    simpa only [Nat.card_eq_fintype_card] using
+      card_binaryExtension (by decide : 0 < 3)
+  simpa using HighRate.existsHighRateLineCode
+    (K := BinaryExtension 3) (Coordinate := Fin 2)
+    1 3 (by decide) (by decide) fieldCard
+
+/-- A concrete high-precision rate guarantee avoids approximate arithmetic. -/
+example (blocks : Nat) (large : 300 ≤ blocks) :
+    100 * 4 ^ blocks ≤ 101 * HighRate.retainedDimension 4 blocks := by
+  exact HighRate.retainedDimension_rate 4 blocks 100
+    (by decide) (by omega) (by simpa using large)
+
+/-- A source reaches the end of a linked run through shared circuit gates. -/
+example :
+    (Nonuniform.Propagation.circuit 4).eval DeMorgan.interpretation
+      (Fin.append ![false, true, false, false] ![false, false, true, true]) =
+        ![false, true, true, true] := by decide
+
+/-- A broken link prevents the source from crossing into another run. -/
+example :
+    (Nonuniform.Propagation.circuit 4).eval DeMorgan.interpretation
+      (Fin.append ![true, false, false, false] ![false, true, false, true]) =
+        ![true, true, false, false] := by decide
+
+example :
+    (Nonuniform.Propagation.circuit 4).cost DeMorgan.standardCost = 8 :=
+  Nonuniform.Propagation.circuit_cost 4
+
 end AlgebraicTests.MassProduction
