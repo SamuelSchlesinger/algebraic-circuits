@@ -1,5 +1,8 @@
 import Algebraic.Applications
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Cover.Exponential
+import Algebraic.LowerBound.Fusion.Arithmetic.MultiplicativeShadow
+import Algebraic.LowerBound.Fusion.Arithmetic.MultiplicativeShadow.Pairwise
+import Algebraic.LowerBound.Fusion.Arithmetic.MultiplicativeShadow.Polynomial
 import Algebraic.LowerBound.Fusion.Comap
 import Algebraic.LowerBound.Fusion.CrownCollision
 import AlgebraicTests.Circuit
@@ -19,6 +22,57 @@ namespace AlgebraicTests.LowerBounds
 open Algebraic
 open Algebraic.Fusion
 open Algebraic.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant
+
+example {K C U Q : Type}
+    [Field K] [Add U] [Mul U]
+    [AddCommGroup Q] [Module K Q]
+    {constant : C → U}
+    {problem : Fusion.Problem U}
+    (certificate : Fusion.Arithmetic.MultiplicativeShadow.Certificate
+      (K := K) (Q := Q) constant problem)
+    (targets : Fin m → U)
+    (independent : LinearIndependent K (certificate.feature ∘ targets))
+    (circuit : Algebraic.Circuit
+      (Algebraic.Arithmetic.signature C) problem.inputCount g m)
+    (constructs : Fusion.Arithmetic.Interaction.Multiple.Constructs
+      (constant := constant) problem targets circuit) :
+    m ≤ circuit.cost (Algebraic.Arithmetic.additionCost (K := C)) :=
+  Fusion.Arithmetic.MultiplicativeShadow.circuit_addition_lowerBound_of_linearIndependent
+    certificate targets independent circuit constructs
+
+example {K C : Type}
+    [Field K]
+    (constant : C → K)
+    (points : Fin m → K)
+    (injective : Function.Injective points)
+    (nonzero : ∀ point, points point ≠ 0)
+    (circuit : Algebraic.Circuit
+      (Algebraic.Arithmetic.signature C) 1 g m)
+    (constructs : circuit.eval
+      (Algebraic.Arithmetic.interpretation
+        (fun scalar ↦ Polynomial.C (constant scalar)))
+      (Fusion.Arithmetic.MultiplicativeShadow.RootMultiplicity.shiftProblem
+        (K := K)).inputs =
+          Fusion.Arithmetic.MultiplicativeShadow.RootMultiplicity.shiftTargets
+            points) :
+    m ≤ circuit.cost (Algebraic.Arithmetic.additionCost (K := C)) :=
+  Fusion.Arithmetic.MultiplicativeShadow.RootMultiplicity.shiftTargets_addition_lowerBound
+    constant points injective nonzero circuit constructs
+
+example {C : Type}
+    (constant : C → ℚ)
+    (n : Nat)
+    (circuit : Algebraic.Circuit
+      (Algebraic.Arithmetic.signature C) (2 * n) g (n * n))
+    (constructs : Fusion.Arithmetic.Interaction.Multiple.Constructs
+      (constant := fun scalar ↦ MvPolynomial.C (constant scalar))
+      (Fusion.Arithmetic.Interaction.Hessian.Pairwise.inputProblem ℚ n)
+      (Fusion.Arithmetic.MultiplicativeShadow.Pairwise.targets ℚ n)
+      circuit) :
+    n * n + n * n ≤
+      circuit.cost (Algebraic.Arithmetic.gateCost (K := C)) :=
+  Fusion.Arithmetic.MultiplicativeShadow.Pairwise.rational_circuit_gate_lowerBound
+    constant n circuit constructs
 
 private theorem sharedFanInTwo :
     Circuit.sharedCircuit.FanInAtMost 2 := by

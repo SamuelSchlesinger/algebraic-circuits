@@ -15,6 +15,9 @@ import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Rank.Occurrence
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Multiple
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Linear
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Linear.Quotient
+import Algebraic.LowerBound.Fusion.Arithmetic.MultiplicativeShadow
+import Algebraic.LowerBound.Fusion.Arithmetic.MultiplicativeShadow.Polynomial
+import Algebraic.LowerBound.Fusion.Arithmetic.MultiplicativeShadow.Pairwise
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Quotient
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Nonlinear
