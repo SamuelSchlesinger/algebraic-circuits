@@ -81,9 +81,21 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
-| Depth reduction | Iterated simplification of bounded-depth circuits | Concrete probabilities and exact floor-divided survivor schedule proved; final circuit instantiation and asymptotic simplification open |
-| Parity | Root-selected bounded-depth lower bound | Explicit `exp(Omega(n^(1/(d-1))))` product and isolated-cost forms proved for checked normal circuits; normalization/class separation open |
-| Class separation | Qualitative `PARITY` not in nonuniform `AC0` | Not started |
+| Depth reduction | Iterated simplification of bounded-depth circuits | Exact `d-1`-round circuit reduction, concrete probabilities, and floor-divided survivor schedule validated 2026-09-03 |
+| Parity | Scale- and root-selected bounded-depth lower bounds | Integral finite core and explicit `exp(Omega(n^(1/(d-1))))` product and isolated-cost forms validated 2026-09-03 |
+| Class separation | Qualitative `PARITY` not in nonuniform `AC0` | `AC0.parity_not_computable` validated 2026-09-03 for the checked source model |
+
+## Headline theorem correspondence
+
+| Lean endpoint | Mathematical role | Classification |
+| --- | --- | --- |
+| `AC0.RandomRestriction.probability_depthAtLeast_restrict_le_five` | Width-`t` DNF switching bound `Pr[DT(F|rho) >= s] <= (5pt)^s` | Literature theorem: Hastad switching lemma, via the Beame--Thapen encoding route cited above |
+| `AC0.RandomRestriction.probability_cnf_depthAtLeast_restrict_le_five` | Exact CNF dual of the switching bound | Formalization strengthening by checked De Morgan transport |
+| `AC0.Circuit.not_computes_parity_of_concrete_depth_reduction` | Exact finite `d-1`-restriction parity contradiction | Finite trusted core of the standard Hastad depth-reduction argument |
+| `AC0.Circuit.parity_size_tradeoff_at_scale` | If `(20(t+1))^(d-1) <= n`, then `2^(t+1) <= 20tS` | Source-grounded quantitative theorem with conservative, nonoptimized constants |
+| `AC0.Circuit.parity_andOrCost_lower_bound_at_root` | Root-selected `exp(Omega(n^(1/(d-1))))` AND/OR-cost lower bound | Standard asymptotic corollary with explicit natural-number rounding |
+| `AC0.Family.not_computes_parity` | Polynomial cost and constant depth cannot compute parity at every width | Qualitative consequence; alternation is not needed by this theorem |
+| `AC0.parity_not_computable` | `PARITY` is not in the library's nonuniform `AC0` class | Headline class separation in the checked source model |
 
 ## Claim labels
 
@@ -98,6 +110,27 @@ bit and excludes the all-zero difference string from every nonfinal block.
 
 ## Validation record
 
+The qualitative class-separation milestone passed
+`lake build Algebraic AlgebraicTests --wfail`, `lake test`, `lake lint`,
+`git diff --check`, documentation generation, a forbidden-token scan, and a
+headline axiom audit on 2026-09-03. Lean proves that no family with polynomial
+AND/OR cost, constant logical depth, and input-only negations computes parity
+at every width. The proof chooses the single symbolic diagonal width
+`n = (20(t+1))^(d-1)` from the alleged global bounds: the finite lower bound
+forces `2^(t+1) <= 20tS(n)`, while a generic verified growth lemma eventually
+bounds the substituted polynomial by `2^t`. The public
+`AC0.parity_not_computable` theorem follows immediately from the checked class
+definition. It performs no enumeration, optimization, sampling, or fixed-size
+experiment. The audited public theorems use no axioms beyond Lean's standard
+`propext`, `Classical.choice`, and `Quot.sound`.
+
+The generic circuit-resource growth cleanup passed the same gates on
+2026-09-03. The exponential-dominates-fixed-polynomial theorem now lives at
+`Circuit.Resource.eventually_const_mul_pow_le_two_pow`; the original
+mass-production theorem is a compatibility wrapper. This removes an
+irrelevant mass-production dependency from the class-separation proof without
+changing the older public API.
+
 The root-selected quantitative parity lower bound passed the full gates on
 2026-09-03. Using Mathlib's verified `Nat.nthRoot`, let
 `q = nthRoot (d-1) n / 20` and `t = q-1`. Above the explicit threshold
@@ -106,10 +139,10 @@ The root-selected quantitative parity lower bound passed the full gates on
 `2^q/(20*(q-1)) <= S`. This is the conventional explicit
 `exp(Omega(n^(1/(d-1))))` form with conservative constants. It reuses the
 verified root specification and performs no circuit enumeration or bounded
-experiment. The remaining library-level obligations are normalization of
-arbitrary AC0 circuits into the checked representation and the resulting
-family separation. The audited public theorems use no axioms beyond Lean's
-standard `propext`, `Classical.choice`, and `Quot.sound`.
+experiment. Normalizing a broader raw syntax with unrestricted internal NOT
+gates remains a useful interoperability theorem, but is not an assumption of
+the checked source-model class separation. The audited public theorems use no
+axioms beyond Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
 
 The quantitative scale-form parity lower bound passed the full gates on
 2026-09-03. For every `d >= 2` and `t >= 1`, Lean proves that a checked
