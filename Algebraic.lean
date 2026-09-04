@@ -3,6 +3,7 @@ import Algebraic.Basis.Arithmetic
 import Algebraic.Basis.Arithmetic.Expression
 import Algebraic.Basis.Arithmetic.Power
 import Algebraic.Basis.AC0
+import Algebraic.Basis.AC0.Normalization
 import Algebraic.Basis.DeMorgan.Expression
 import Algebraic.Basis.AndOr.Preimage
 import Algebraic.Translation.Optimal
