@@ -13,6 +13,7 @@ import Algebraic.Translation.Contextual
 import Algebraic.Simulation
 import Algebraic.Complexity
 import Algebraic.CircuitFamily
+import Algebraic.CircuitFamily.Growth
 import Algebraic.Analysis
 import Algebraic.Restriction
 import Algebraic.PartialAssignment
