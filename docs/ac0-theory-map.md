@@ -78,7 +78,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | --- | --- | --- |
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, dual-rail normalization, and raw/checked class equivalence validated 2026-09-03 |
-| Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
+| Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics, compact live-input reindexing, and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
@@ -367,18 +367,21 @@ resource lemmas use no axioms or only Lean's standard `propext`,
 `Classical.choice`, and `Quot.sound`; they do not use `sorryAx`, custom axioms,
 or executable proof certificates.
 
-The AC0 basis submilestone passed the same gates on 2026-09-03. The regression
-suite checks arbitrary-fan-in OR semantics, AND/OR cost, the distinction between
+At the original AC0 basis checkpoint on 2026-09-03, the regression suite
+checked arbitrary-fan-in OR semantics, AND/OR cost, the distinction between
 generic depth and source logical depth, checked input-negation normal form, and
-a nonvacuous AC0 family computing disjunction. A normalization construction for
-arbitrary internal negations has not yet been proved.
+a nonvacuous AC0 family computing disjunction. Internal-negation normalization
+was not part of that checkpoint; the later dual-rail milestone recorded above
+now supplies it.
 
 The partial-assignment submilestone passed the same gates on 2026-09-03. It
 defines same-variable Boolean restrictions, sequential refinement, exact live
-sets and counts, conversion to `InputSubstitution`, restriction of scalar and
-multi-output targets, and the proof that restricted semantics depend only on
-live coordinates. Its public theorem audit uses no axioms beyond Lean's
-standard `propext`, `Classical.choice`, and `Quot.sound`.
+sets and counts, the increasing equivalence between compact input indices and
+live coordinates, conversion to same-width and compact `InputSubstitution`s,
+restriction of scalar and multi-output targets, and the proof that projecting
+then restoring live inputs agrees exactly with ordinary restriction. Its
+public theorem audit uses no axioms beyond Lean's standard `propext`,
+`Classical.choice`, and `Quot.sound`.
 
 The next-layer formula-composition submilestone passed the full gates on
 2026-09-03. Finite indexed DNF families are flattened by disjunction and CNF

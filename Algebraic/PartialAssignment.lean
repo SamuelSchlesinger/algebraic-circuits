@@ -1,5 +1,6 @@
 import Algebraic.Restriction
 import Mathlib.Data.Finset.Fin
+import Mathlib.Data.Finset.Sort
 import Mathlib.Data.Fintype.Card
 
 /-!
@@ -234,6 +235,126 @@ def liveVariables (rho : PartialAssignment n) : Finset (Fin n) :=
 /-- The number of variables left live by a partial assignment. -/
 def liveCount (rho : PartialAssignment n) : Nat :=
   rho.liveVariables.card
+
+/-- The increasing bijection from a compact input namespace to the variables
+left live by a partial assignment. -/
+noncomputable def liveOrderIso (rho : PartialAssignment n) :
+    Fin rho.liveCount ≃o {index : Fin n // index ∈ rho.liveVariables} :=
+  rho.liveVariables.orderIsoOfFin rfl
+
+/-- The original input coordinate represented by a compact live-input index. -/
+noncomputable def liveVariable
+    (rho : PartialAssignment n) : Fin rho.liveCount → Fin n :=
+  fun index => rho.liveOrderIso index
+
+theorem liveVariable_mem
+    (rho : PartialAssignment n)
+    (index : Fin rho.liveCount) :
+    rho.liveVariable index ∈ rho.liveVariables :=
+  (rho.liveOrderIso index).property
+
+theorem liveVariable_isLive
+    (rho : PartialAssignment n)
+    (index : Fin rho.liveCount) :
+    rho (rho.liveVariable index) = none :=
+  (mem_liveVariables rho (rho.liveVariable index)).1
+    (liveVariable_mem rho index)
+
+/-- The compact index of an original coordinate known to be live. -/
+noncomputable def liveIndex
+    (rho : PartialAssignment n)
+    (index : Fin n)
+    (live : rho index = none) : Fin rho.liveCount :=
+  rho.liveOrderIso.symm
+    ⟨index, (mem_liveVariables rho index).2 live⟩
+
+@[simp] theorem liveVariable_liveIndex
+    (rho : PartialAssignment n)
+    (index : Fin n)
+    (live : rho index = none) :
+    rho.liveVariable (rho.liveIndex index live) = index := by
+  change ↑(rho.liveOrderIso
+    (rho.liveOrderIso.symm
+      ⟨index, (mem_liveVariables rho index).2 live⟩)) = index
+  simp
+
+@[simp] theorem liveIndex_liveVariable
+    (rho : PartialAssignment n)
+    (index : Fin rho.liveCount) :
+    rho.liveIndex (rho.liveVariable index)
+        (rho.liveVariable_isLive index) = index := by
+  have represented :
+      (⟨rho.liveVariable index,
+          (mem_liveVariables rho (rho.liveVariable index)).2
+            (rho.liveVariable_isLive index)⟩ :
+        {source : Fin n // source ∈ rho.liveVariables}) =
+        rho.liveOrderIso index := by
+    apply Subtype.ext
+    rfl
+  change rho.liveOrderIso.symm _ = index
+  rw [represented, rho.liveOrderIso.symm_apply_apply]
+
+/-- Read a complete input only at the coordinates left live by `rho`. -/
+noncomputable def projectLive
+    (rho : PartialAssignment n)
+    (input : Fin n → Bool) : Fin rho.liveCount → Bool :=
+  fun index => input (rho.liveVariable index)
+
+/-- Express every original input as either a fixed Boolean or one of the
+compactly reindexed live inputs. -/
+noncomputable def toLiveInputSubstitution
+    (rho : PartialAssignment n) :
+    InputSubstitution Bool n rho.liveCount :=
+  fun index input =>
+    if live : rho index = none then
+        input (rho.liveIndex index live)
+    else (rho index).getD false
+
+@[simp] theorem toLiveInputSubstitution_of_fixed
+    (rho : PartialAssignment n)
+    (input : Fin rho.liveCount → Bool)
+    {index : Fin n}
+    {value : Bool}
+    (fixed : rho index = some value) :
+    rho.toLiveInputSubstitution.apply input index = value := by
+  simp [toLiveInputSubstitution, InputSubstitution.apply, fixed]
+
+@[simp] theorem toLiveInputSubstitution_liveVariable
+    (rho : PartialAssignment n)
+    (input : Fin rho.liveCount → Bool)
+    (index : Fin rho.liveCount) :
+    rho.toLiveInputSubstitution.apply input (rho.liveVariable index) =
+      input index := by
+  have live := liveVariable_isLive rho index
+  simp only [InputSubstitution.apply, toLiveInputSubstitution, dif_pos live]
+  exact congrArg input (liveIndex_liveVariable rho index)
+
+/-- Projecting a complete input to its live coordinates and then restoring
+fixed coordinates is exactly ordinary application of the restriction. -/
+theorem toLiveInputSubstitution_projectLive
+    (rho : PartialAssignment n)
+    (input : Fin n → Bool) :
+    rho.toLiveInputSubstitution.apply (rho.projectLive input) =
+      rho.apply input := by
+  funext index
+  cases fixed : rho index with
+  | none =>
+      simp only [InputSubstitution.apply, toLiveInputSubstitution,
+        dif_pos fixed, projectLive]
+      rw [apply_of_live rho input fixed]
+      exact congrArg input (liveVariable_liveIndex rho index fixed)
+  | some value =>
+      simp [toLiveInputSubstitution, InputSubstitution.apply, fixed,
+        apply_of_fixed]
+
+/-- Compact live inputs are recovered after restoring the original input
+namespace. -/
+@[simp] theorem projectLive_toLiveInputSubstitution
+    (rho : PartialAssignment n)
+    (input : Fin rho.liveCount → Bool) :
+    rho.projectLive (rho.toLiveInputSubstitution.apply input) = input := by
+  funext index
+  exact toLiveInputSubstitution_liveVariable rho input index
 
 /-- The finite set of variables fixed by a partial assignment. -/
 def fixedVariables (rho : PartialAssignment n) : Finset (Fin n) :=

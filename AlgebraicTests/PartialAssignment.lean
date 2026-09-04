@@ -24,6 +24,26 @@ example :
   decide
 
 example
+    (rho : PartialAssignment 4)
+    (input : Fin 4 -> Bool) :
+    rho.toLiveInputSubstitution.apply (rho.projectLive input) =
+      rho.apply input :=
+  PartialAssignment.toLiveInputSubstitution_projectLive rho input
+
+example
+    (rho : PartialAssignment 4)
+    (input : Fin rho.liveCount -> Bool) :
+    rho.projectLive (rho.toLiveInputSubstitution.apply input) = input :=
+  PartialAssignment.projectLive_toLiveInputSubstitution rho input
+
+example
+    (rho : PartialAssignment 4)
+    (index : Fin 4)
+    (live : rho index = none) :
+    rho.liveVariable (rho.liveIndex index live) = index :=
+  PartialAssignment.liveVariable_liveIndex rho index live
+
+example
     (rho sigma : PartialAssignment 4)
     (input : Fin 4 -> Bool) :
     (rho.refine sigma).apply input = rho.apply (sigma.apply input) :=
