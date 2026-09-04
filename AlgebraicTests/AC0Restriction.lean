@@ -67,6 +67,13 @@ example
 
 example
     (source : Circuit signature n g m)
+    (rho : PartialAssignment n) :
+    (restrictCircuit source rho).result.logicalDepth <=
+      Circuit.logicalDepth source :=
+  (restrictCircuit source rho).logicalDepth_le
+
+example
+    (source : Circuit signature n g m)
     (rho : PartialAssignment n)
     (input : Fin n -> Bool) :
     (restrictCircuit source rho).result.eval (rho.projectLive input) =
@@ -85,6 +92,13 @@ example
     (rho : PartialAssignment n) :
     (restrictOneOutputCircuit source rho).gateCount <= g + 1 :=
   (restrictOneOutputCircuit source rho).gateCount_le
+
+example
+    (source : Circuit signature n g 1)
+    (rho : PartialAssignment n) :
+    Circuit.logicalDepth (restrictOneOutputCircuit source rho).result <=
+      Circuit.logicalDepth source + 1 :=
+  (restrictOneOutputCircuit source rho).logicalDepth_le
 
 example
     (source : Circuit signature n g 1)

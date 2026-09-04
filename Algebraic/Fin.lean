@@ -23,4 +23,22 @@ theorem le_foldl_max [LinearOrder α]
       · rw [Fin.foldl_succ_last]
         exact (ih (fun i => values i.castSucc) i).trans (le_max_left _ _)
 
+/-- A finite maximum is bounded above when its initial value and every folded
+value are bounded above. -/
+theorem foldl_max_le [LinearOrder α]
+    (values : Fin n -> α)
+    (initial bound : α)
+    (initial_le : initial <= bound)
+    (values_le : forall i, values i <= bound) :
+    Fin.foldl n (fun result i => max result (values i)) initial <= bound := by
+  induction n with
+  | zero => simpa using initial_le
+  | succ n inductionHypothesis =>
+      rw [Fin.foldl_succ_last]
+      apply max_le
+      · apply inductionHypothesis
+        intro i
+        exact values_le i.castSucc
+      · exact values_le (Fin.last n)
+
 end Algebraic.Fin

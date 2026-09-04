@@ -78,7 +78,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | --- | --- | --- |
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, dual-rail normalization, and raw/checked class equivalence validated 2026-09-03 |
-| Restrictions | Partial assignments, composition, and restricted semantics | Compact live-input reindexing, exact residual-circuit simplification, and bounded ordinary-circuit materialization validated 2026-09-03 |
+| Restrictions | Partial assignments, composition, and restricted semantics | Compact live-input reindexing, exact residual-circuit simplification with depth nonincrease, and bounded ordinary-circuit materialization validated 2026-09-03 |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
@@ -97,8 +97,8 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | `AC0.Circuit.parity_andOrCost_lower_bound_at_root` | Root-selected `exp(Omega(n^(1/(d-1))))` AND/OR-cost lower bound | Standard asymptotic corollary with explicit natural-number rounding |
 | `AC0.DualRail.normalize` | Eliminate internal NOT gates while preserving semantics and logical depth, with exact AND/OR cost `2S` and total size `n+2S` | Standard dual-rail normalization, formally verified for shared DAG circuits |
 | `AC0.rawComputable_iff_computable` | Arbitrary-NOT and checked input-negation presentations define the same nonuniform class | Formalization strengthening with explicit resource accounting |
-| `AC0.restrictCircuit` | Partially evaluate a shared DAG over exactly the live inputs, with nonincreasing gate count and AND/OR cost | Standard restriction simplification, formally verified with explicit constant outputs |
-| `AC0.restrictOneOutputCircuit` | Convert a restricted one-output residual circuit back to ordinary circuit syntax with overhead at most one | Exact model-boundary accounting for nullary constant gates |
+| `AC0.restrictCircuit` | Partially evaluate a shared DAG over exactly the live inputs, with nonincreasing logical depth, gate count, and AND/OR cost | Standard restriction simplification, formally verified with explicit constant outputs |
+| `AC0.restrictOneOutputCircuit` | Convert a restricted one-output residual circuit back to ordinary circuit syntax with logical depth, gate-count, and cost overhead at most one | Exact model-boundary accounting for nullary constant gates |
 | `AC0.Family.not_computes_parity` | Polynomial cost and constant depth cannot compute parity at every width | Qualitative consequence; alternation is not needed by this theorem |
 | `AC0.parity_not_computable` | `PARITY` is not in the library's nonuniform `AC0` class | Headline class separation in the checked source model |
 | `AC0.parity_not_raw_computable` | `PARITY` is not computable even when source circuits use arbitrary internal NOT gates | Corollary of verified dual-rail normalization and the checked separation |
@@ -123,16 +123,17 @@ constant and neutral, and otherwise filters neutral constants before retaining
 one gate on the residual wires. A dependent induction then rebuilds a shared
 DAG over exactly `rho.liveCount` inputs and assigns every source wire an exact
 constant-or-wire representative. Lean proves complete wire-trace semantics,
-multi-output circuit semantics, nonincrease of total gate count, and
-nonincrease of charged AND/OR cost. Residual circuits permit constant outputs;
-this is necessary for the exact cost theorem because restricting a zero-gate
-projection can produce a constant. The construction is symbolic in the gate
-arity and circuit syntax; it performs no truth-table enumeration or circuit
-search. For the one-output circuits used by the class theory, a separate
-materializer converts the residual output back to an ordinary wire, preserves
-semantics, and proves total gate count and charged cost at most the source
-quantity plus one. That unit is used exactly when a constant residual output
-needs a nullary AND or OR gate.
+multi-output circuit semantics, output-by-output logical-depth nonincrease,
+nonincrease of total gate count, and nonincrease of charged AND/OR cost.
+Residual circuits permit constant outputs at depth zero; this is necessary for
+the exact cost theorem because restricting a zero-gate projection can produce
+a constant. The construction is symbolic in the gate arity and circuit syntax;
+it performs no truth-table enumeration or circuit search. For the one-output
+circuits used by the class theory, a separate materializer converts the
+residual output back to an ordinary wire, preserves semantics, and proves
+logical depth, total gate count, and charged cost at most the source quantity
+plus one. That unit of possible overhead is used exactly when a constant
+residual output needs a nullary AND or OR gate.
 
 The dual-rail normalization milestone passed the full release gates on
 2026-09-03. Every source wire is represented by a value rail and a complement

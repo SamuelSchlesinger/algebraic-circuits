@@ -1,4 +1,5 @@
 import Algebraic.Basis.AC0
+import Algebraic.Fin
 import Algebraic.PartialAssignment
 import Mathlib.Data.List.OfFn
 
@@ -41,6 +42,11 @@ def eval : (connective : Connective) -> (Fin r -> Bool) -> Bool
   | .and, input => interpretation (.and r) input
   | .or, input => interpretation (.or r) input
 
+/-- Source logical depth of an arbitrary-fan-in connective. -/
+def logicalDepth : (connective : Connective) -> (Fin r -> Nat) -> Nat
+  | .and, input => logicalDepthInterpretation (.and r) input
+  | .or, input => logicalDepthInterpretation (.or r) input
+
 @[simp] theorem operation_cost
     (connective : Connective)
     (arity : Nat) :
@@ -75,6 +81,13 @@ def mapWires
 def wire? : ResidualValue n g -> Option (Wire n g)
   | .constant _ => none
   | .wire sourceWire => some sourceWire
+
+/-- Logical depth of a residual value, assigning depth zero to constants. -/
+def logicalDepth
+    (program : Program signature n g) : ResidualValue n g -> Nat
+  | .constant _ => 0
+  | .wire sourceWire =>
+      program.trace logicalDepthInterpretation (fun _ => 0) sourceWire
 
 @[simp] theorem eval_constant
     (program : Program signature n g)
@@ -118,6 +131,23 @@ theorem eval_mapWires
   | constant value => rfl
   | wire sourceWire =>
       exact preserves sourceWire
+
+/-- Mapping residual wires preserves logical depth when the wire map preserves
+the preceding depth trace. -/
+theorem logicalDepth_mapWires
+    (value : ResidualValue n g)
+    (wireMap : Wire.Renaming n g h)
+    (source : Program signature n g)
+    (result : Program signature n h)
+    (preserves : forall sourceWire,
+      result.trace logicalDepthInterpretation (fun _ => 0)
+          (wireMap sourceWire) =
+        source.trace logicalDepthInterpretation (fun _ => 0) sourceWire) :
+    (value.mapWires wireMap).logicalDepth result =
+      value.logicalDepth source := by
+  cases value with
+  | constant value => rfl
+  | wire sourceWire => exact preserves sourceWire
 
 end ResidualValue
 
@@ -180,6 +210,14 @@ def cost : GateReduction n g -> Nat
 def chargedCost : GateReduction n g -> Nat
   | .value _ => 0
   | .line result => andOrCost result.op
+
+/-- Logical depth contributed by a local gate reduction. -/
+def logicalDepth
+    (program : Program signature n g) : GateReduction n g -> Nat
+  | .value result => result.logicalDepth program
+  | .line result =>
+      result.eval logicalDepthInterpretation (fun _ => 0)
+        (program.eval logicalDepthInterpretation (fun _ => 0))
 
 @[simp] theorem cost_le_one (result : GateReduction n g) :
     result.cost <= 1 := by
@@ -417,6 +455,58 @@ theorem simplifyConnective_chargedCost_le
     · cases connective <;>
         simp [GateReduction.chargedCost, residualLine, andOrCost]
 
+/-- Local connective simplification does not increase logical depth when each
+residual argument is no deeper than its source argument. -/
+theorem simplifyConnective_logicalDepth_le
+    (connective : Connective)
+    (values : Fin r -> ResidualValue n g)
+    (program : Program signature n g)
+    (sourceDepths : Fin r -> Nat)
+    (bounds : forall argument,
+      (values argument).logicalDepth program <= sourceDepths argument) :
+    (simplifyConnective connective values).logicalDepth program <=
+      connective.logicalDepth sourceDepths := by
+  unfold simplifyConnective
+  split
+  · cases connective <;>
+      simp [GateReduction.logicalDepth, ResidualValue.logicalDepth,
+        Connective.logicalDepth, logicalDepthInterpretation]
+  · dsimp only
+    split
+    · cases connective <;>
+        simp [GateReduction.logicalDepth, ResidualValue.logicalDepth,
+          Connective.logicalDepth, logicalDepthInterpretation]
+    · have residualBound (residualArgument :
+          Fin (residualWires values).length) :
+          program.trace logicalDepthInterpretation (fun _ => 0)
+              ((residualWires values).get residualArgument) <=
+            Fin.foldl r
+              (fun depth argument => max depth (sourceDepths argument)) 0 := by
+        have present := List.get_mem (residualWires values) residualArgument
+        obtain ⟨sourceArgument, value_eq⟩ :=
+          (mem_residualWires values _).1 present
+        calc
+          program.trace logicalDepthInterpretation (fun _ => 0)
+              ((residualWires values).get residualArgument) =
+            (values sourceArgument).logicalDepth program := by
+              rw [value_eq]
+              rfl
+          _ <= sourceDepths sourceArgument := bounds sourceArgument
+          _ <= Fin.foldl r
+                (fun depth argument => max depth (sourceDepths argument)) 0 :=
+            Fin.le_foldl_max sourceDepths 0 sourceArgument
+      cases connective <;>
+        change Nat.succ
+            (Fin.foldl (residualWires values).length
+              (fun depth argument => max depth
+                (program.trace logicalDepthInterpretation (fun _ => 0)
+                  ((residualWires values).get argument))) 0) <=
+          Nat.succ
+            (Fin.foldl r
+              (fun depth argument => max depth (sourceDepths argument)) 0) <;>
+        exact Nat.succ_le_succ
+          (Fin.foldl_max_le _ _ _ (Nat.zero_le _) residualBound)
+
 /-- A unary NOT gate on a residual value: constants are folded and wires
 retain one zero-cost NOT line. -/
 def simplifyNot (value : ResidualValue n g) : GateReduction n g :=
@@ -433,6 +523,13 @@ def simplifyNot (value : ResidualValue n g) : GateReduction n g :=
     (input : Fin n -> Bool) :
     (simplifyNot value).eval program input =
       !(value.eval program input) := by
+  cases value <;> rfl
+
+@[simp] theorem simplifyNot_logicalDepth
+    (value : ResidualValue n g)
+    (program : Program signature n g) :
+    (simplifyNot value).logicalDepth program =
+      value.logicalDepth program := by
   cases value <;> rfl
 
 /-- Simplify an AC0 line after assigning a residual value to every wire it
@@ -486,6 +583,47 @@ theorem simplifyLine_chargedCost_le
       exact simplifyConnective_chargedCost_le .or
         (fun argument => values (wires argument))
 
+/-- A simplified line is no deeper than its source line when every represented
+wire is no deeper than the corresponding source wire. -/
+theorem simplifyLine_logicalDepth_le
+    (source : Program signature n g)
+    (line : Line signature n g)
+    (values : Wire n g -> ResidualValue k h)
+    (result : Program signature k h)
+    (bounds : forall sourceWire,
+      (values sourceWire).logicalDepth result <=
+        source.trace logicalDepthInterpretation (fun _ => 0) sourceWire) :
+    (simplifyLine line values).logicalDepth result <=
+      line.eval logicalDepthInterpretation (fun _ => 0)
+        (source.eval logicalDepthInterpretation (fun _ => 0)) := by
+  rcases line with ⟨op, wires⟩
+  cases op with
+  | not =>
+      simpa [simplifyLine, Line.eval, logicalDepthInterpretation,
+        Program.trace] using bounds (wires 0)
+  | and r =>
+      change (simplifyConnective .and
+          (fun argument => values (wires argument))).logicalDepth result <=
+        Connective.logicalDepth .and (fun argument =>
+          source.trace logicalDepthInterpretation (fun _ => 0)
+            (wires argument))
+      exact simplifyConnective_logicalDepth_le .and
+        (fun argument => values (wires argument)) result
+        (fun argument => source.trace logicalDepthInterpretation
+          (fun _ => 0) (wires argument))
+        (fun argument => bounds (wires argument))
+  | or r =>
+      change (simplifyConnective .or
+          (fun argument => values (wires argument))).logicalDepth result <=
+        Connective.logicalDepth .or (fun argument =>
+          source.trace logicalDepthInterpretation (fun _ => 0)
+            (wires argument))
+      exact simplifyConnective_logicalDepth_le .or
+        (fun argument => values (wires argument)) result
+        (fun argument => source.trace logicalDepthInterpretation
+          (fun _ => 0) (wires argument))
+        (fun argument => bounds (wires argument))
+
 /-! ## Whole-program restriction -/
 
 /-- The residual representation of one original input. -/
@@ -524,6 +662,10 @@ structure ProgramRestriction
     (values sourceWire).eval result input =
       source.trace interpretation
         (rho.toLiveInputSubstitution.apply input) sourceWire
+  /-- Every residual wire is no deeper than the source wire it represents. -/
+  logicalDepth_le : forall sourceWire,
+    (values sourceWire).logicalDepth result <=
+      source.trace logicalDepthInterpretation (fun _ => 0) sourceWire
   /-- Partial evaluation does not increase the total gate count. -/
   gateCount_le : gateCount <= g
   /-- Partial evaluation does not increase charged AND/OR cost. -/
@@ -544,6 +686,13 @@ noncomputable def empty
       (fun impossible => Fin.elim0 impossible) sourceWire
     rw [Fin.addCases_left, Program.trace_input]
     exact inputResidual_eval rho sourceInput input
+  logicalDepth_le := by
+    intro sourceWire
+    refine Fin.addCases (fun sourceInput => ?_)
+      (fun impossible => Fin.elim0 impossible) sourceWire
+    rw [Fin.addCases_left, Program.trace_input]
+    by_cases live : rho sourceInput = none <;>
+      simp [inputResidual, live, ResidualValue.logicalDepth, Program.trace]
   gateCount_le := Nat.le_refl 0
   cost_le := Nat.le_refl 0
 
@@ -579,7 +728,11 @@ def reuseLast
         line.eval interpretation
           (rho.toLiveInputSubstitution.apply input)
           (source.eval interpretation
-            (rho.toLiveInputSubstitution.apply input))) :
+            (rho.toLiveInputSubstitution.apply input)))
+    (logicalDepthBound :
+      value.logicalDepth prior.result <=
+        line.eval logicalDepthInterpretation (fun _ => 0)
+          (source.eval logicalDepthInterpretation (fun _ => 0))) :
     ProgramRestriction (source.gate line) rho where
   gateCount := prior.gateCount
   result := prior.result
@@ -601,6 +754,14 @@ def reuseLast
           (Program.trace_gate_last source line interpretation _).symm
     · rw [Fin.lastCases_castSucc, Program.trace_gate_castSucc]
       exact prior.trace_eq input oldWire
+  logicalDepth_le := by
+    intro sourceWire
+    refine Fin.lastCases ?_ (fun oldWire => ?_) sourceWire
+    · rw [Fin.lastCases_last]
+      exact logicalDepthBound.trans_eq
+        (Program.trace_gate_last source line logicalDepthInterpretation _).symm
+    · rw [Fin.lastCases_castSucc, Program.trace_gate_castSucc]
+      exact prior.logicalDepth_le oldWire
   gateCount_le := prior.gateCount_le.trans (Nat.le_succ g)
   cost_le := prior.cost_le.trans (Nat.le_add_right _ (andOrCost line.op))
 
@@ -619,6 +780,11 @@ def retainLast
           (rho.toLiveInputSubstitution.apply input)
           (source.eval interpretation
             (rho.toLiveInputSubstitution.apply input)))
+    (logicalDepthBound :
+      residualLine.eval logicalDepthInterpretation (fun _ => 0)
+          (prior.result.eval logicalDepthInterpretation (fun _ => 0)) <=
+        line.eval logicalDepthInterpretation (fun _ => 0)
+          (source.eval logicalDepthInterpretation (fun _ => 0)))
     (costBound : andOrCost residualLine.op <= andOrCost line.op) :
     ProgramRestriction (source.gate line) rho where
   gateCount := prior.gateCount + 1
@@ -661,6 +827,31 @@ def retainLast
         _ = (source.gate line).trace interpretation
               (rho.toLiveInputSubstitution.apply input) oldWire.castSucc :=
           (Program.trace_gate_castSucc source line interpretation _ _).symm
+  logicalDepth_le := by
+    intro sourceWire
+    refine Fin.lastCases ?_ (fun oldWire => ?_) sourceWire
+    · rw [Fin.lastCases_last, ResidualValue.logicalDepth,
+        Program.trace_gate_last]
+      exact logicalDepthBound.trans_eq
+        (Program.trace_gate_last source line logicalDepthInterpretation _).symm
+    · rw [Fin.lastCases_castSucc]
+      calc
+        ((prior.values oldWire).mapWires
+            Wire.Renaming.castSucc).logicalDepth
+            (prior.result.gate residualLine) =
+          (prior.values oldWire).logicalDepth prior.result :=
+            ResidualValue.logicalDepth_mapWires (prior.values oldWire)
+              Wire.Renaming.castSucc prior.result
+              (prior.result.gate residualLine) (fun targetWire => by
+                simpa only [Wire.Renaming.castSucc_apply] using
+                  Program.trace_gate_castSucc prior.result residualLine
+                    logicalDepthInterpretation (fun _ => 0) targetWire)
+        _ <= source.trace logicalDepthInterpretation (fun _ => 0) oldWire :=
+          prior.logicalDepth_le oldWire
+        _ = (source.gate line).trace logicalDepthInterpretation
+              (fun _ => 0) oldWire.castSucc :=
+          (Program.trace_gate_castSucc source line
+            logicalDepthInterpretation (fun _ => 0) oldWire).symm
   gateCount_le := Nat.add_le_add_right prior.gateCount_le 1
   cost_le := by
     rw [Program.cost_gate, Program.cost_gate]
@@ -680,11 +871,15 @@ noncomputable def append
           simplifyLine line prior.values = .value value := by
         simpa [reduction] using reduction_eq
       apply reuseLast prior line value
-      intro input
-      have simplified := simplifyLine_eval line prior.values
-        prior.result input
-      rw [result_eq] at simplified
-      exact simplified.trans (prior.line_eval line input).symm
+      · intro input
+        have simplified := simplifyLine_eval line prior.values
+          prior.result input
+        rw [result_eq] at simplified
+        exact simplified.trans (prior.line_eval line input).symm
+      · have depthBound := simplifyLine_logicalDepth_le source line
+          prior.values prior.result prior.logicalDepth_le
+        rw [result_eq] at depthBound
+        exact depthBound
   | line residualLine =>
       have result_eq :
           simplifyLine line prior.values = .line residualLine := by
@@ -695,6 +890,10 @@ noncomputable def append
           prior.result input
         rw [result_eq] at simplified
         exact simplified.trans (prior.line_eval line input).symm
+      · have depthBound := simplifyLine_logicalDepth_le source line
+          prior.values prior.result prior.logicalDepth_le
+        rw [result_eq] at depthBound
+        exact depthBound
       · have costBound := simplifyLine_chargedCost_le line prior.values
         rw [result_eq] at costBound
         exact costBound
@@ -733,6 +932,23 @@ def eval
 def cost (circuit : ResidualCircuit n g m) : Nat :=
   circuit.program.cost andOrCost
 
+/-- Logical depth of every residual output, with constant outputs at depth
+zero. -/
+def logicalOutputDepths
+    (circuit : ResidualCircuit n g m) : Fin m -> Nat :=
+  fun output => (circuit.outputs output).logicalDepth circuit.program
+
+/-- Maximum logical depth of a residual output. -/
+def logicalDepth (circuit : ResidualCircuit n g m) : Nat :=
+  Fin.foldl m
+    (fun depth output => max depth (circuit.logicalOutputDepths output)) 0
+
+/-- A one-output residual circuit's depth is its sole output depth. -/
+theorem logicalDepth_one_output
+    (circuit : ResidualCircuit n g 1) :
+    circuit.logicalDepth = circuit.logicalOutputDepths 0 := by
+  simp [logicalDepth, Fin.foldl_succ]
+
 end ResidualCircuit
 
 /-- A circuit-level partial evaluation over the compact namespace of live
@@ -749,6 +965,10 @@ structure CircuitRestriction
     result.eval input =
       source.eval interpretation
         (rho.toLiveInputSubstitution.apply input)
+  /-- Every residual output is no deeper than its source output. -/
+  logicalOutputDepths_le : forall output,
+    result.logicalOutputDepths output <=
+      Circuit.logicalOutputDepths source output
   /-- Partial evaluation does not increase total gate count. -/
   gateCount_le : gateCount <= g
   /-- Partial evaluation does not increase charged AND/OR cost. -/
@@ -769,8 +989,26 @@ noncomputable def restrictCircuit
         intro input
         funext output
         exact restricted.trace_eq input (source.outputs output)
+      logicalOutputDepths_le := fun output =>
+        restricted.logicalDepth_le (source.outputs output)
       gateCount_le := restricted.gateCount_le
       cost_le := restricted.cost_le }
+
+namespace CircuitRestriction
+
+/-- Exact residual-circuit restriction does not increase logical depth. -/
+theorem logicalDepth_le
+    {source : Circuit signature n g m}
+    {rho : PartialAssignment n}
+    (restriction : CircuitRestriction source rho) :
+    restriction.result.logicalDepth <= Circuit.logicalDepth source := by
+  apply Fin.foldl_max_le
+  · exact Nat.zero_le _
+  · intro output
+    exact (restriction.logicalOutputDepths_le output).trans
+      (Fin.le_foldl_max (Circuit.logicalOutputDepths source) 0 output)
+
+end CircuitRestriction
 
 /-- The compact residual circuit also realizes the original same-width
 restriction after projecting a complete input to its live coordinates. -/
@@ -813,6 +1051,9 @@ structure ResidualCircuit.Materialization
   result : Circuit signature n gateCount 1
   /-- Materialization preserves the residual output. -/
   eval_eq : forall input, result.eval interpretation input = source.eval input
+  /-- Materializing a constant output adds at most one logical level. -/
+  logicalDepth_le :
+    Circuit.logicalDepth result <= source.logicalDepth + 1
   /-- At most one gate is added. -/
   gateCount_le : gateCount <= g + 1
   /-- At most one charged constant gate is added. -/
@@ -842,6 +1083,14 @@ def materialize
             rw [output_eq]
             exact (ResidualValue.eval_wire
               source.program input sourceWire).symm
+          logicalDepth_le := by
+            rw [Circuit.logicalDepth_one_output,
+              ResidualCircuit.logicalDepth_one_output]
+            change source.program.trace logicalDepthInterpretation
+                (fun _ => 0) sourceWire <=
+              (source.outputs 0).logicalDepth source.program + 1
+            rw [output_eq]
+            exact Nat.le_add_right _ 1
           gateCount_le := Nat.le_succ g
           cost_le := Nat.le_add_right _ 1 }
   | constant value =>
@@ -862,6 +1111,17 @@ def materialize
               (source.outputs 0).eval source.program input
             rw [Program.trace_gate_last, constantLine_eval, output_eq,
               ResidualValue.eval_constant]
+          logicalDepth_le := by
+            rw [Circuit.logicalDepth_one_output,
+              ResidualCircuit.logicalDepth_one_output]
+            change (source.program.gate line).trace
+                logicalDepthInterpretation (fun _ => 0)
+                (Fin.last (n + g)) <=
+              (source.outputs 0).logicalDepth source.program + 1
+            rw [Program.trace_gate_last, output_eq]
+            cases value <;>
+              simp [line, constantLine, Line.eval,
+                logicalDepthInterpretation, ResidualValue.logicalDepth]
           gateCount_le := Nat.le_refl (g + 1)
           cost_le := by
             cases value <;>
@@ -885,6 +1145,10 @@ structure OrdinaryCircuitRestriction
     result.eval interpretation input =
       source.eval interpretation
         (rho.toLiveInputSubstitution.apply input)
+  /-- Restriction plus constant-output materialization adds at most one
+  logical level. -/
+  logicalDepth_le :
+    Circuit.logicalDepth result <= Circuit.logicalDepth source + 1
   /-- Restriction and output materialization add at most one gate overall. -/
   gateCount_le : gateCount <= g + 1
   /-- Charged AND/OR cost grows by at most the one constant-output gate. -/
@@ -904,6 +1168,8 @@ noncomputable def restrictOneOutputCircuit
       eval_eq := by
         intro input
         exact (materialized.eval_eq input).trans (restricted.eval_eq input)
+      logicalDepth_le := materialized.logicalDepth_le.trans
+        (Nat.add_le_add_right restricted.logicalDepth_le 1)
       gateCount_le := materialized.gateCount_le.trans
         (Nat.add_le_add_right restricted.gateCount_le 1)
       cost_le := materialized.cost_le.trans
