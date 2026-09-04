@@ -23,7 +23,7 @@ example
     (connective : Connective)
     (values : Fin r -> ResidualValue n g) :
     (simplifyConnective connective values).cost <= 1 :=
-  ConnectiveReduction.cost_le_one _
+  GateReduction.cost_le_one _
 
 def forcedAndArguments : Fin 2 -> ResidualValue 1 0
   | 0 => .constant false
@@ -40,5 +40,37 @@ def neutralOrArguments : Fin 2 -> ResidualValue 1 0
 
 example : residualWires neutralOrArguments = [Wire.input 0] := by
   decide
+
+example
+    (source : Program signature n g)
+    (rho : PartialAssignment n)
+    (input : Fin rho.liveCount -> Bool)
+    (sourceWire : Wire n g) :
+    ((restrictProgram rho source).values sourceWire).eval
+        (restrictProgram rho source).result input =
+      source.trace interpretation
+        (rho.toLiveInputSubstitution.apply input) sourceWire :=
+  (restrictProgram rho source).trace_eq input sourceWire
+
+example
+    (source : Circuit signature n g m)
+    (rho : PartialAssignment n) :
+    (restrictCircuit source rho).result.cost <=
+      source.cost andOrCost :=
+  (restrictCircuit source rho).cost_le
+
+example
+    (source : Circuit signature n g m)
+    (rho : PartialAssignment n) :
+    (restrictCircuit source rho).gateCount <= g :=
+  (restrictCircuit source rho).gateCount_le
+
+example
+    (source : Circuit signature n g m)
+    (rho : PartialAssignment n)
+    (input : Fin n -> Bool) :
+    (restrictCircuit source rho).result.eval (rho.projectLive input) =
+      source.eval interpretation (rho.apply input) :=
+  restrictCircuit_eval_projectLive source rho input
 
 end AlgebraicTests.AC0Restriction

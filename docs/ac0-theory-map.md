@@ -78,7 +78,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | --- | --- | --- |
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, dual-rail normalization, and raw/checked class equivalence validated 2026-09-03 |
-| Restrictions | Partial assignments, composition, and restricted semantics | Compact live-input reindexing and arbitrary-fan-in local gate simplification validated 2026-09-03; whole-program simplification open |
+| Restrictions | Partial assignments, composition, and restricted semantics | Compact live-input reindexing and exact residual-circuit simplification validated 2026-09-03; ordinary-circuit constant-output materialization open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
@@ -114,15 +114,20 @@ bit and excludes the all-zero difference string from every nonfinal block.
 
 ## Validation record
 
-The local AC0 partial-evaluation milestone passed the full gates on 2026-09-03.
-For an arbitrary-fan-in AND or OR, the simplifier returns the absorbing
+The AC0 partial-evaluation milestone passed the full gates on 2026-09-03. For
+an arbitrary-fan-in AND or OR, the local simplifier returns the absorbing
 constant when present, returns the neutral constant when every argument is
 constant and neutral, and otherwise filters neutral constants before retaining
-one gate on the residual wires. Lean proves this transformation preserves the
-gate's Boolean value for every preceding residual program and retains at most
-one charged gate. The construction is symbolic in the gate arity; it performs
-no truth-table enumeration or circuit search. Whole-program rebuilding and
-constant-output materialization remain separate milestones.
+one gate on the residual wires. A dependent induction then rebuilds a shared
+DAG over exactly `rho.liveCount` inputs and assigns every source wire an exact
+constant-or-wire representative. Lean proves complete wire-trace semantics,
+multi-output circuit semantics, nonincrease of total gate count, and
+nonincrease of charged AND/OR cost. Residual circuits permit constant outputs;
+this is necessary for the exact cost theorem because restricting a zero-gate
+projection can produce a constant. The construction is symbolic in the gate
+arity and circuit syntax; it performs no truth-table enumeration or circuit
+search. Converting constant outputs back to ordinary output wires with an
+explicit overhead remains a separate milestone.
 
 The dual-rail normalization milestone passed the full release gates on
 2026-09-03. Every source wire is represented by a value rail and a complement
