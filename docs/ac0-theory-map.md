@@ -78,7 +78,7 @@ bit and excludes the all-zero difference string from every nonfinal block.
 | --- | --- | --- |
 | Families | Nonuniform families with exact polynomial-size and constant-depth predicates | Validated 2026-09-03 |
 | AC0 basis | Arbitrary-fan-in AND/OR semantics and source-faithful normal form | Basis, logical resources, dual-rail normalization, and raw/checked class equivalence validated 2026-09-03 |
-| Restrictions | Partial assignments, composition, and restricted semantics | Same-variable semantics, compact live-input reindexing, and reversible live-refinement algebra validated 2026-09-03; circuit simplification open |
+| Restrictions | Partial assignments, composition, and restricted semantics | Compact live-input reindexing and arbitrary-fan-in local gate simplification validated 2026-09-03; whole-program simplification open |
 | Normal forms | Literals, bounded-width CNF/DNF, and decision trees | Exact De Morgan duality and structural depth-`d` tree conversion to width-`d` DNF/CNF validated 2026-09-03 |
 | Probability | Finite `p`-random restriction distribution | Exact product PMF, live-coordinate marginal, survivor expectation, and good-outcome averaging validated 2026-09-03 |
 | Switching | Explicit finite switching lemma | Semantic all-width `(5pt)^s` DNF and CNF decision-tree theorems validated 2026-09-03 |
@@ -113,6 +113,16 @@ bit and excludes the all-zero difference string from every nonfinal block.
   mathematical milestone.
 
 ## Validation record
+
+The local AC0 partial-evaluation milestone passed the full gates on 2026-09-03.
+For an arbitrary-fan-in AND or OR, the simplifier returns the absorbing
+constant when present, returns the neutral constant when every argument is
+constant and neutral, and otherwise filters neutral constants before retaining
+one gate on the residual wires. Lean proves this transformation preserves the
+gate's Boolean value for every preceding residual program and retains at most
+one charged gate. The construction is symbolic in the gate arity; it performs
+no truth-table enumeration or circuit search. Whole-program rebuilding and
+constant-output materialization remain separate milestones.
 
 The dual-rail normalization milestone passed the full release gates on
 2026-09-03. Every source wire is represented by a value rail and a complement

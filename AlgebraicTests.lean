@@ -4,6 +4,7 @@ import AlgebraicTests.CircuitFamily
 import AlgebraicTests.CircuitFamilyGrowth
 import AlgebraicTests.AC0
 import AlgebraicTests.AC0Normalization
+import AlgebraicTests.AC0Restriction
 import AlgebraicTests.AC0DecisionTree
 import AlgebraicTests.AC0Parity
 import AlgebraicTests.AC0ParityParameters
