@@ -1,4 +1,5 @@
 import Algebraic.Basis.AC0
+import Algebraic.Parallel
 import Algebraic.Translation.Block
 
 /-!
@@ -396,6 +397,313 @@ theorem pullCost_andOrCost (op : Op) :
     orCircuit, andPositiveLine, andNegativeLine, orPositiveLine,
     orNegativeLine, BlockTranslation.pullCost, Circuit.cost, Program.cost,
     andOrCost]
+
+/-! ## Whole-circuit normalization -/
+
+/-- The first `g` input-negation gates over an `n`-input namespace. -/
+private def inputNegationProgram (n : Nat) :
+    (g : Nat) -> g <= n -> Program signature n g
+  | 0, _ => .empty
+  | g + 1, bound =>
+      (inputNegationProgram n g
+        (Nat.le_trans (Nat.le_succ g) bound)).gate {
+        op := .not
+        wires := fun _ => Wire.input
+          ⟨g, Nat.lt_of_succ_le bound⟩
+      }
+
+@[simp] private theorem inputNegationProgram_eval
+    (bound : g <= n)
+    (input : Fin n -> Bool)
+    (gate : Fin g) :
+    (inputNegationProgram n g bound).eval interpretation input gate =
+      !input (Fin.castLE bound gate) := by
+  induction g with
+  | zero => exact Fin.elim0 gate
+  | succ g inductionHypothesis =>
+      refine Fin.lastCases ?_ (fun priorGate => ?_) gate
+      · rw [inputNegationProgram, Program.eval_gate_last]
+        simp [Line.eval, interpretation]
+        rw [show (⟨g, by omega⟩ : Fin (n + g)) =
+            (Wire.input (⟨g, Nat.lt_of_succ_le bound⟩ : Fin n) :
+              Wire n g) by
+          apply Fin.ext
+          rfl]
+        rw [Fin.addCases_left]
+        apply congrArg input
+        apply Fin.ext
+        rfl
+      · rw [inputNegationProgram, Program.eval_gate_castSucc]
+        rw [inductionHypothesis]
+        congr 2
+
+/-- Generate the positive and negative literal rails for every input. The
+encoder has one NOT gate per input, and each such gate reads that input
+directly. -/
+def inputEncoder (n : Nat) : Circuit signature n n (n * 2) where
+  program := inputNegationProgram n n (Nat.le_refl n)
+  outputs := Block.flatten fun input rail =>
+    Fin.cases (Wire.input input) (fun _ => Wire.gate input) rail
+
+/-- The input encoder computes each input together with its complement. -/
+@[simp] theorem inputEncoder_eval
+    (input : Fin n -> Bool) :
+    (inputEncoder n).eval interpretation input =
+      Block.flatten (encode ∘ input) := by
+  funext output
+  obtain ⟨⟨sourceInput, rail⟩, rfl⟩ := finProdFinEquiv.surjective output
+  have railCases : rail = 0 ∨ rail = 1 := by omega
+  rcases railCases with rfl | rfl
+  · simp [inputEncoder, Circuit.eval]
+  · simp only [inputEncoder, Circuit.eval, Function.comp_apply,
+      Block.flatten_apply, encode_one]
+    change (inputNegationProgram n n (Nat.le_refl n)).trace
+        interpretation input (Wire.gate sourceInput) = !input sourceInput
+    rw [Program.trace_gateWire]
+    exact inputNegationProgram_eval (Nat.le_refl n) input sourceInput
+
+@[simp] private theorem inputNegationProgram_depth_eval
+    (bound : g <= n)
+    (input : Fin n -> Nat)
+    (gate : Fin g) :
+    (inputNegationProgram n g bound).eval
+        logicalDepthInterpretation input gate =
+      input (Fin.castLE bound gate) := by
+  induction g with
+  | zero => exact Fin.elim0 gate
+  | succ g inductionHypothesis =>
+      refine Fin.lastCases ?_ (fun priorGate => ?_) gate
+      · rw [inputNegationProgram, Program.eval_gate_last]
+        simp [Line.eval, logicalDepthInterpretation]
+        rw [show (⟨g, by omega⟩ : Fin (n + g)) =
+            (Wire.input (⟨g, Nat.lt_of_succ_le bound⟩ : Fin n) :
+              Wire n g) by
+          apply Fin.ext
+          rfl]
+        rw [Fin.addCases_left]
+        apply congrArg input
+        apply Fin.ext
+        rfl
+      · rw [inputNegationProgram, Program.eval_gate_castSucc]
+        rw [inductionHypothesis]
+        congr 1
+
+/-- Input encoding adds no logical depth: both rails inherit their input's
+arrival time. -/
+@[simp] theorem inputEncoder_depth_eval
+    (input : Fin n -> Nat) :
+    (inputEncoder n).eval logicalDepthInterpretation input =
+      Block.flatten (duplicateDepth ∘ input) := by
+  funext output
+  obtain ⟨⟨sourceInput, rail⟩, rfl⟩ := finProdFinEquiv.surjective output
+  have railCases : rail = 0 ∨ rail = 1 := by omega
+  rcases railCases with rfl | rfl
+  · simp [inputEncoder, Circuit.eval]
+  · simp only [inputEncoder, Circuit.eval, Function.comp_apply,
+      Block.flatten_apply, duplicateDepth_apply]
+    change (inputNegationProgram n n (Nat.le_refl n)).trace
+        logicalDepthInterpretation input (Wire.gate sourceInput) =
+      input sourceInput
+    rw [Program.trace_gateWire]
+    exact inputNegationProgram_depth_eval
+      (Nat.le_refl n) input sourceInput
+
+@[simp] private theorem inputNegationProgram_andOrCost
+    (bound : g <= n) :
+    (inputNegationProgram n g bound).cost andOrCost = 0 := by
+  induction g with
+  | zero => rfl
+  | succ g inductionHypothesis =>
+      simp [inputNegationProgram, andOrCost, inductionHypothesis]
+
+/-- Input encoding has zero charged AND/OR cost. -/
+@[simp] theorem inputEncoder_andOrCost (n : Nat) :
+    (inputEncoder n).cost andOrCost = 0 := by
+  exact inputNegationProgram_andOrCost (Nat.le_refl n)
+
+/-- Internal predicate used to prove that the compiled portion contains no
+NOT gates. -/
+private def NegationFree : Program signature n g -> Prop
+  | .empty => True
+  | .gate program line => NegationFree program ∧ line.op ≠ .not
+
+private theorem negationFree_instantiate
+    (source : Program signature n g)
+    (ambient : Program signature n' h)
+    (inputWires : Fin n -> Wire n' h)
+    (sourceFree : NegationFree source)
+    (ambientFree : NegationFree ambient) :
+    NegationFree (source.instantiate ambient inputWires) := by
+  induction source with
+  | empty => simpa [Program.instantiate, NegationFree] using ambientFree
+  | gate source line inductionHypothesis =>
+      exact ⟨inductionHypothesis sourceFree.1,
+        by simpa using sourceFree.2⟩
+
+private theorem operation_negationFree (op : Op) :
+    NegationFree (translation.operation op).program := by
+  cases op <;> simp [translation, notCircuit, andCircuit, orCircuit,
+    andPositiveLine, andNegativeLine, orPositiveLine, orNegativeLine,
+    NegationFree]
+
+private theorem compileProgram_negationFree
+    (source : Program signature n g) :
+    NegationFree (translation.compileProgram source).program := by
+  induction source with
+  | empty => simp [BlockTranslation.compileProgram, NegationFree]
+  | gate source line inductionHypothesis =>
+      simp only [BlockTranslation.compileProgram]
+      exact negationFree_instantiate _ _ _
+        (operation_negationFree line.op) inductionHypothesis
+
+private theorem negationAtInput_map_of_ne
+    (line : Line signature n g)
+    (wireMap : Wire n g -> Wire n' h)
+    (notNegation : line.op ≠ .not) :
+    AC0.Line.NegationAtInput (line.mapWires wireMap) := by
+  rcases line with ⟨op, wires⟩
+  cases op <;>
+    simp [AC0.Line.NegationAtInput, Algebraic.Line.mapWires] at notNegation ⊢
+
+private theorem negationsAtInputs_instantiate_of_negationFree
+    (source : Program signature n g)
+    (ambient : Program signature n' h)
+    (inputWires : Fin n -> Wire n' h)
+    (sourceFree : NegationFree source)
+    (ambientNormal : AC0.Program.NegationsAtInputs ambient) :
+    AC0.Program.NegationsAtInputs
+      (source.instantiate ambient inputWires) := by
+  induction source with
+  | empty => simpa [Program.instantiate] using ambientNormal
+  | gate source line inductionHypothesis =>
+      exact ⟨inductionHypothesis sourceFree.1,
+        negationAtInput_map_of_ne line _ sourceFree.2⟩
+
+private theorem inputNegationProgram_negationsAtInputs
+    (bound : g <= n) :
+    AC0.Program.NegationsAtInputs
+      (inputNegationProgram n g bound) := by
+  induction g with
+  | zero => trivial
+  | succ g inductionHypothesis =>
+      refine ⟨inductionHypothesis _, ?_⟩
+      refine ⟨⟨g, Nat.lt_of_succ_le bound⟩, ?_⟩
+      apply Fin.ext
+      rfl
+
+/-- Every NOT in the input encoder reads an original input. -/
+theorem inputEncoder_negationsAtInputs (n : Nat) :
+    AC0.Program.NegationsAtInputs (inputEncoder n).program :=
+  inputNegationProgram_negationsAtInputs (Nat.le_refl n)
+
+/-- Project the positive rail of every compiled output. -/
+private def positiveOutputs
+    (circuit : Circuit signature n g (m * 2)) :
+    Circuit signature n g m :=
+  circuit.mapOutputs fun output =>
+    finProdFinEquiv (output, (0 : Fin 2))
+
+/-- Eliminate every internal negation by dual-rail compilation. The resulting
+circuit contains `n` input-literal NOT gates followed by a negation-free
+compiled program. -/
+def normalize (circuit : Circuit signature n g m) :
+    Circuit signature n
+      (n + translation.compiledGateCount circuit) m :=
+  (positiveOutputs (translation.compile circuit)).comp (inputEncoder n)
+
+/-- The normalized circuit satisfies the checked input-negation invariant. -/
+theorem normalize_negationsAtInputs
+    (circuit : Circuit signature n g m) :
+    AC0.Program.NegationsAtInputs (normalize circuit).program := by
+  apply negationsAtInputs_instantiate_of_negationFree
+  · exact compileProgram_negationFree circuit.program
+  · exact inputEncoder_negationsAtInputs n
+
+@[simp] private theorem booleanSimulation_map (value : Bool) :
+    booleanSimulation.map value = encode value := rfl
+
+@[simp] private theorem depthSimulation_map (depth : Nat) :
+    depthSimulation.map depth = duplicateDepth depth := rfl
+
+/-- Normalization preserves the full output vector on every Boolean input. -/
+@[simp] theorem normalize_eval
+    (circuit : Circuit signature n g m)
+    (input : Fin n -> Bool) :
+    (normalize circuit).eval interpretation input =
+      circuit.eval interpretation input := by
+  funext output
+  rw [normalize, Circuit.eval_comp, inputEncoder_eval]
+  change (translation.compile circuit).eval interpretation
+      (Block.flatten (encode ∘ input))
+      (finProdFinEquiv (output, (0 : Fin 2))) = _
+  have simulated := congrFun
+    (booleanSimulation.map_compile_eval circuit input)
+    (finProdFinEquiv (output, (0 : Fin 2)))
+  change Block.flatten (encode ∘ circuit.eval interpretation input)
+      (finProdFinEquiv (output, (0 : Fin 2))) =
+    (translation.compile circuit).eval interpretation
+      (Block.flatten (encode ∘ input))
+      (finProdFinEquiv (output, (0 : Fin 2))) at simulated
+  simpa using simulated.symm
+
+/-- Normalization preserves the logical depth of every designated output. -/
+@[simp] theorem normalize_logicalOutputDepths
+    (circuit : Circuit signature n g m) :
+    Circuit.logicalOutputDepths (normalize circuit) =
+      Circuit.logicalOutputDepths circuit := by
+  funext output
+  rw [Circuit.logicalOutputDepths, normalize, Circuit.eval_comp,
+    inputEncoder_depth_eval]
+  change (translation.compile circuit).eval logicalDepthInterpretation
+      (Block.flatten (duplicateDepth ∘ (fun _ : Fin n => 0)))
+      (finProdFinEquiv (output, (0 : Fin 2))) = _
+  have simulated := congrFun
+    (depthSimulation.map_compile_eval circuit (fun _ : Fin n => 0))
+    (finProdFinEquiv (output, (0 : Fin 2)))
+  change Block.flatten
+      (duplicateDepth ∘
+        circuit.eval logicalDepthInterpretation (fun _ : Fin n => 0))
+      (finProdFinEquiv (output, (0 : Fin 2))) =
+    (translation.compile circuit).eval logicalDepthInterpretation
+      (Block.flatten (duplicateDepth ∘ (fun _ : Fin n => 0)))
+      (finProdFinEquiv (output, (0 : Fin 2))) at simulated
+  simpa [Circuit.logicalOutputDepths] using simulated.symm
+
+/-- Normalization preserves maximum logical depth exactly. -/
+@[simp] theorem normalize_logicalDepth
+    (circuit : Circuit signature n g m) :
+    Circuit.logicalDepth (normalize circuit) =
+      Circuit.logicalDepth circuit := by
+  simp [Circuit.logicalDepth]
+
+private theorem cost_two_mul_andOrCost
+    (program : Program signature n g) :
+    program.cost (fun op => 2 * andOrCost op) =
+      2 * program.cost andOrCost := by
+  induction program with
+  | empty => rfl
+  | gate program line inductionHypothesis =>
+      simp [Program.cost, inductionHypothesis, Nat.mul_add]
+
+/-- The compiled dual-rail DAG has exactly twice the source AND/OR cost. -/
+@[simp] theorem compile_andOrCost
+    (circuit : Circuit signature n g m) :
+    (translation.compile circuit).cost andOrCost =
+      2 * circuit.cost andOrCost := by
+  rw [translation.compile_cost]
+  have pulledCost : translation.pullCost andOrCost =
+      fun op => 2 * andOrCost op := by
+    funext op
+    exact pullCost_andOrCost op
+  rw [pulledCost]
+  exact cost_two_mul_andOrCost circuit.program
+
+/-- Whole-circuit normalization has exactly twice the source AND/OR cost. -/
+@[simp] theorem normalize_andOrCost
+    (circuit : Circuit signature n g m) :
+    (normalize circuit).cost andOrCost =
+      2 * circuit.cost andOrCost := by
+  simp [normalize, positiveOutputs]
 
 end DualRail
 end AC0

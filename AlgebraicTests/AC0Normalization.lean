@@ -36,4 +36,47 @@ example (input : Fin 5 -> Nat) :
         (Block.flatten (AC0.DualRail.duplicateDepth ∘ input)) :=
   AC0.DualRail.operation_duplicateDepth (.or 5) input
 
+/-- A source circuit with a genuinely internal NOT gate. -/
+def internalNotCircuit : Circuit AC0.signature 2 2 1 where
+  program := ((Program.empty : Program AC0.signature 2 0).gate {
+    op := .and 2
+    wires := Wire.input
+  }).gate {
+    op := .not
+    wires := fun _ => Wire.gate 0
+  }
+  outputs := fun _ => Wire.gate 1
+
+example :
+    ¬ AC0.Program.NegationsAtInputs internalNotCircuit.program := by
+  simp [internalNotCircuit, AC0.Program.NegationsAtInputs,
+    AC0.Line.NegationAtInput]
+  constructor
+  · intro equality
+    have values := congrArg Fin.val equality
+    simp at values
+  · intro equality
+    have values := congrArg Fin.val equality
+    simp at values
+
+example : AC0.Program.NegationsAtInputs
+    (AC0.DualRail.normalize internalNotCircuit).program :=
+  AC0.DualRail.normalize_negationsAtInputs internalNotCircuit
+
+example (input : Fin 2 -> Bool) :
+    (AC0.DualRail.normalize internalNotCircuit).eval
+        AC0.interpretation input =
+      internalNotCircuit.eval AC0.interpretation input := by
+  simp
+
+example :
+    (AC0.DualRail.normalize internalNotCircuit).cost AC0.andOrCost =
+      2 * internalNotCircuit.cost AC0.andOrCost := by
+  simp
+
+example :
+    AC0.Circuit.logicalDepth (AC0.DualRail.normalize internalNotCircuit) =
+      AC0.Circuit.logicalDepth internalNotCircuit := by
+  simp
+
 end AlgebraicTests.AC0Normalization
