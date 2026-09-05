@@ -39,6 +39,11 @@ The added modules prove, without new axioms or proof placeholders:
 - A fixed-direction point generator using precomputed field offsets. Its
   `2^width` scalar slots represent precisely a punctured line after marking
   the zero scalar invalid, with at most one gate per output bit.
+- A complete universal geometric phase circuit under the packing budget.
+  One fixed power-of-two menu works for every encoded occupied state and
+  target tuple; its successful-candidate premise is discharged by counting.
+  It accepts the rounded-up half prefix, preserves original request data
+  and complete line-point lists, and has an explicit total phase cost bound.
 - Common-zero-block monomial line parity, independence of reduced monomial
   evaluations, and existence of a systematic information set of exact size
   `A^m - (A-1)^m` over `A^m` points. Here `A = 2^(dimension * blockWidth)`
@@ -53,10 +58,9 @@ nonuniform choices made offline. Their existence is proved, not assumed.
 
 Still required for the manuscript's new end-to-end bound:
 
-1. Connect fixed-direction point generation and the universal menu theorem
-   to the encoded geometric state, then compose compaction and all halving
-   phases. The enumerated-menu evaluator is complete; this geometric phase
-   and iteration still require correctness and total cost proofs.
+1. Compose state compaction and all halving phases, using the now-proved
+   universal geometric phase circuit. The iteration still requires a
+   correctness proof and a total scheduler cost bound.
 2. Integrate that circuit and the high-rate code with the resource bank and
    routing pipeline, then prove the exponential-range parameter estimates
    and the coefficient `1 / (1 - gamma)` in the integer precision model.

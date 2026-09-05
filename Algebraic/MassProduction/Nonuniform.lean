@@ -7,6 +7,7 @@ import Algebraic.MassProduction.Nonuniform.BatchOrCircuit
 import Algebraic.MassProduction.Nonuniform.MenuSelection
 import Algebraic.MassProduction.Nonuniform.PaddedLinePoints
 import Algebraic.MassProduction.Nonuniform.PowerLayout
+import Algebraic.MassProduction.Nonuniform.UniversalGeometricPhase
 
 /-!
 # Nonuniform scheduling: proved components
@@ -34,6 +35,11 @@ request payloads and proving an explicit size bound. Its contract requires
 one successful candidate and distinct point slots within each request.
 `PaddedLinePoints` enumerates fixed-direction punctured lines, using at most
 one gate per point bit and marking the zero scalar invalid.
-The encoded geometric phase, all halving iterations, and the new direct
-mass-production theorem still need assembly and cost proofs.
+`GeometricPhase.existsUniversalPhase` connects these components into one
+fixed geometric phase circuit for every encoded state under the packing
+budget. It preserves request data and generated point lists and accepts the
+rounded-up half prefix. `GeometricPhase.circuit_cost_le` includes generation,
+evaluation, and selection in one explicit bound.
+State compaction, all halving iterations, and the new direct mass-production
+theorem still need assembly and cost proofs.
 -/

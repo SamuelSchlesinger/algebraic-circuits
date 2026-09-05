@@ -689,4 +689,23 @@ example (input : Fin 2 → Bool) (point : Fin 2) (bit : Fin 2) :
       (input bit ^^ decide (point.val = 1)) :=
   Nonuniform.ConstantTranslations.circuit_eval _ _ input point bit
 
+/-- Exact phase sizes include the final singleton phase. -/
+example :
+    Nonuniform.acceptedCount 0 = 1 ∧ Nonuniform.pendingCount 0 = 0 ∧
+    Nonuniform.acceptedCount 3 = 4 ∧ Nonuniform.pendingCount 3 = 4 := by decide
+
+/-- The concrete GF(4)^8 regime admits the budget for eight simultaneous requests. -/
+example :
+    512 * 8 * Nat.card (BinaryExtension 2) ≤
+      Nat.card (ℙ (BinaryExtension 2) (Fin 8 → BinaryExtension 2)) := by
+  rw [card_projectiveDirections_div, card_binaryExtension (by decide : 0 < 2)]
+  norm_num
+
+/-- Power-of-two padding preserves each actual menu entry before the repeated suffix. -/
+example (menu : Fin 3 → Bool) :
+    Nonuniform.padMenu menu (by decide) (show 3 ≤ 4 by decide) (0 : Fin 4) = menu 0 ∧
+    Nonuniform.padMenu menu (by decide) (show 3 ≤ 4 by decide) (2 : Fin 4) = menu 2 ∧
+    Nonuniform.padMenu menu (by decide) (show 3 ≤ 4 by decide) (3 : Fin 4) = menu 0 := by
+  simp [Nonuniform.padMenu]
+
 end AlgebraicTests.MassProduction
