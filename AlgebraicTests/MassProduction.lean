@@ -708,4 +708,52 @@ example (menu : Fin 3 → Bool) :
     Nonuniform.padMenu menu (by decide) (show 3 ≤ 4 by decide) (3 : Fin 4) = menu 0 := by
   simp [Nonuniform.padMenu]
 
+/-- Fixed identity prefixes distinguish requests even when every payload repeats. -/
+example (input : Fin 0 → Bool) :
+    Function.Injective (Nonuniform.TaggedBuffer.data
+      (fun _ : Fin (Sorting.networkRecords 3) => fun _ : Fin 1 =>
+        (DeMorgan.Wiring.constant false : DeMorgan.Wiring 0)) input) :=
+  Nonuniform.TaggedBuffer.data_injective _ input
+
+/-- Compaction preserves the selected order after a nontrivial request swap. -/
+example :
+    Nonuniform.BufferOrder.advance (finSumFinEquiv : (Fin 1 ⊕ Fin 3) ≃ Fin 4)
+      (Equiv.swap (0 : Fin 3) 2) (show 2 + 1 = 3 from rfl) (.inl (1 : Fin 3)) = 3 ∧
+    Nonuniform.BufferOrder.advance (finSumFinEquiv : (Fin 1 ⊕ Fin 3) ≃ Fin 4)
+      (Equiv.swap (0 : Fin 3) 2) (show 2 + 1 = 3 from rfl) (.inr (0 : Fin 1)) = 1 := by
+  constructor
+  · change Nonuniform.BufferOrder.advance _ _ _ (.inl (Fin.natAdd 1 (0 : Fin 2))) = _
+    rw [Nonuniform.BufferOrder.advance_accepted]
+    decide
+  · rw [Nonuniform.BufferOrder.advance_pending]
+    decide
+
+/-- The complete scheduler handles eight identical targets in GF(4)^8.
+This uses the semantic endpoint, without evaluating a huge sorting circuit. -/
+example :
+    ∃ gates, ∃ scheduler : Circuit DeMorgan.signature 0 gates
+      (Nonuniform.BufferInput.inputWidth 8 0 19 4 16),
+      scheduler.cost DeMorgan.standardCost ≤
+        8 * 4 * Nonuniform.BufferIteration.polynomialFactor 8 8 2 19 ∧
+      ∀ input : Fin 0 → Bool,
+        ∃ state : Nonuniform.BufferModel.State 8 8 0 8 2,
+          scheduler.eval DeMorgan.interpretation input =
+            Nonuniform.BufferModel.input (by decide : 0 < 2) state
+              (Nonuniform.TaggedBuffer.data (depth := 3)
+                (fun _ : Fin 8 => fun bit : Fin 16 =>
+                  DeMorgan.Wiring.constant (binaryExtensionVectorBits (by decide : 0 < 2)
+                    (0 : Fin 8 → BinaryExtension 2) bit)) input)
+              (fun _ => 0) ∧
+          Nonuniform.BufferModel.WellScheduled state (fun _ => 0) := by
+  have budget : 512 * Sorting.networkRecords 3 * Nat.card (BinaryExtension 2) ≤
+      Nat.card (ℙ (BinaryExtension 2) (Fin 8 → BinaryExtension 2)) := by
+    rw [card_projectiveDirections_div, card_binaryExtension (by decide : 0 < 2)]
+    norm_num [Sorting.networkRecords]
+  obtain ⟨gates, scheduler, bound, correct⟩ := Nonuniform.Scheduler.existsCircuit
+    (by decide : 0 < 2) (by decide : 0 < 8) budget
+    (fun _ : Fin (Sorting.networkRecords 3) => fun bit : Fin 16 =>
+      (DeMorgan.Wiring.constant (binaryExtensionVectorBits (by decide : 0 < 2)
+        (0 : Fin 8 → BinaryExtension 2) bit) : DeMorgan.Wiring 0)) id
+  exact ⟨gates, scheduler, bound, fun input => correct input (fun _ => 0) (fun _ _ => rfl)⟩
+
 end AlgebraicTests.MassProduction

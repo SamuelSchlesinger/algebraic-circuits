@@ -8,6 +8,7 @@ import Algebraic.MassProduction.Nonuniform.MenuSelection
 import Algebraic.MassProduction.Nonuniform.PaddedLinePoints
 import Algebraic.MassProduction.Nonuniform.PowerLayout
 import Algebraic.MassProduction.Nonuniform.UniversalGeometricPhase
+import Algebraic.MassProduction.Nonuniform.SchedulerCircuit
 
 /-!
 # Nonuniform scheduling: proved components
@@ -40,6 +41,12 @@ fixed geometric phase circuit for every encoded state under the packing
 budget. It preserves request data and generated point lists and accepts the
 rounded-up half prefix. `GeometricPhase.circuit_cost_le` includes generation,
 evaluation, and selection in one explicit bound.
-State compaction, all halving iterations, and the new direct mass-production
-theorem still need assembly and cost proofs.
+`Scheduler.existsCircuit` completes initialization, free buffer compaction,
+and every halving phase for a power-of-two batch. It adds fixed identifiers,
+so repeated targets and payloads require no distinctness premise. Its output
+retains all original records and disjoint recovery point lists, and its cost
+is `requests * 2^width` times an explicit fixed polynomial in bit widths and
+the ceiling logarithm of the request count.
+The resource/routing pipeline and the new direct mass-production coefficient
+still need assembly and asymptotic proofs.
 -/

@@ -44,6 +44,17 @@ The added modules prove, without new axioms or proof placeholders:
   target tuple; its successful-candidate premise is discharged by counting.
   It accepts the rounded-up half prefix, preserves original request data
   and complete line-point lists, and has an explicit total phase cost bound.
+- A complete near-linear scheduler for power-of-two batches. Fixed wiring
+  adds request identifiers, compacts each phase's accepted prefix, and
+  preserves every original request exactly once. Iterating to the singleton
+  phase yields disjoint recovery lines for all requests, even with repeated
+  targets and payloads. `Nonuniform.Scheduler.existsCircuit` constructs one
+  circuit that works for all encoded inputs under the direction budget.
+  With `g` requests, `q = 2^width`, `a = dimension * width`,
+  `D = ceil(log2 g)`, and tagged request width `W`, its charged cost is at most
+  `g * q * 10000 * (D + 1) * (14 + 18*a) * (5*D + 4*a + 2*width + W + 10)^5`.
+  The field-size factor occurs only once; the polynomial does not contain
+  the full point-list width.
 - Common-zero-block monomial line parity, independence of reduced monomial
   evaluations, and existence of a systematic information set of exact size
   `A^m - (A-1)^m` over `A^m` points. Here `A = 2^(dimension * blockWidth)`
@@ -58,12 +69,10 @@ nonuniform choices made offline. Their existence is proved, not assumed.
 
 Still required for the manuscript's new end-to-end bound:
 
-1. Compose state compaction and all halving phases, using the now-proved
-   universal geometric phase circuit. The iteration still requires a
-   correctness proof and a total scheduler cost bound.
-2. Integrate that circuit and the high-rate code with the resource bank and
-   routing pipeline, then prove the exponential-range parameter estimates
-   and the coefficient `1 / (1 - gamma)` in the integer precision model.
+1. Integrate the complete scheduler and the high-rate code with the resource
+   bank and routing pipeline.
+2. Prove the exponential-range parameter estimates and the coefficient
+   `1 / (1 - gamma)` in the integer precision model.
 
 The now-proved batched lookup can include code number, information point,
 and bit selector together in its offline table. This avoids runtime division.
