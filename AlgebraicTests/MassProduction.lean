@@ -756,4 +756,54 @@ example :
         (0 : Fin 8 → BinaryExtension 2) bit) : DeMorgan.Wiring 0)) id
   exact ⟨gates, scheduler, bound, fun input => correct input (fun _ => 0) (fun _ _ => rfl)⟩
 
+/-- Resource indexing charges three actual copies and three actual basis
+bits, without rounding either dimension to a power of two. -/
+example : HighRate.ResourceLayout.count 3 2 3 = 576 := rfl
+
+/-- Exact resource indexing preserves each copy, point, and basis-bit coordinate. -/
+example (copy : Fin 3) (point : Fin 64) (bit : Fin 3) :
+    HighRate.ResourceLayout.atIndex (HighRate.ResourceLayout.index (dimension := 2) copy point bit) =
+      (copy, point, bit) := HighRate.ResourceLayout.atIndex_index (dimension := 2) copy point bit
+
+/-- A masked XOR fold ignores the middle slot for both request rows. -/
+example (input : Fin (2 * 3) → Bool) (request : Fin 2) :
+    (Nonuniform.MaskedXor.circuit (fun slot : Fin 3 => decide (slot.val ≠ 1)) 2).eval
+      DeMorgan.interpretation input request =
+        (input (finProdFinEquiv (request, (0 : Fin 3))) ^^ input (finProdFinEquiv (request, (2 : Fin 3)))) := by
+  rw [Nonuniform.MaskedXor.circuit_eval]
+  simp [Fin.sum_univ_succ, Bool.add_eq_xor]
+
+/-- Shared scatter/evaluate/gather ignores an inactive duplicate key while
+returning the two active incidences' own inputs through the resource bank. -/
+example :
+    ∃ gates, ∃ evaluated : Circuit DeMorgan.signature 2 gates 3,
+      ∀ (input : Fin 2 → Bool) (incidence : Fin 3), incidence.val ≠ 1 →
+        evaluated.eval DeMorgan.interpretation input incidence =
+          input (if incidence.val = 0 then (0 : Fin 2) else 1) := by
+  let keys := fun incidence : Fin 3 => fun _ : Fin 1 =>
+    (DeMorgan.Wiring.constant (decide (incidence.val = 2)) : DeMorgan.Wiring 2)
+  let suffixes := fun incidence : Fin 3 => fun _ : Fin 1 =>
+    (DeMorgan.Wiring.input (if incidence.val = 0 then (0 : Fin 2) else 1) : DeMorgan.Wiring 2)
+  let resourceKeys := fun resource : Fin 2 => fun _ : Fin 1 => decide (resource.val = 1)
+  have distinct : Function.Injective resourceKeys := by
+    intro left right equal
+    have bit := congrFun equal 0
+    fin_cases left <;> fin_cases right <;> first | rfl | cases bit
+  obtain ⟨gates, evaluated, _, correct⟩ := Nonuniform.IncidenceEvaluation.existsCircuit
+    (fun incidence : Fin 3 => decide (incidence.val ≠ 1)) keys suffixes resourceKeys distinct
+    (fun _ : Fin 2 => Circuit.id DeMorgan.signature 1)
+  refine ⟨gates, evaluated, ?_⟩
+  intro input incidence active
+  let resource : Fin 2 := if incidence.val = 0 then 0 else 1
+  have matching : (fun bit => (keys incidence bit).eval input) = resourceKeys resource := by
+    funext bit
+    fin_cases incidence <;> simp_all [keys, resourceKeys, resource]
+  have unique : ∀ other : Fin 3, decide (other.val ≠ 1) = true →
+      (fun bit => (keys other bit).eval input) = (fun bit => (keys incidence bit).eval input) → other = incidence := by
+    intro other otherActive equal
+    have bit := congrFun equal 0
+    fin_cases incidence <;> fin_cases other <;> simp_all [keys]
+  have output := correct input incidence resource (by simpa using active) matching unique
+  simpa only [Circuit.eval_id, suffixes, DeMorgan.Wiring.eval_input] using output
+
 end AlgebraicTests.MassProduction

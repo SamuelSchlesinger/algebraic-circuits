@@ -63,14 +63,23 @@ The added modules prove, without new axioms or proof placeholders:
 - A finite rate bound and packing bound with at most one codeword of
   rounding overhead, plus recovery of the original Boolean bit and
   injectivity of disjoint scheduled resource incidences.
+- The complete scheduler/resource/recovery composition for requests supplied
+  with encoded metadata. `Nonuniform.ScheduledRecovery.existsCircuit` scatters
+  suffixes, evaluates each actual `(copy, point, basis bit)` function once,
+  gathers point values, XORs each punctured line, and restores original
+  request order using only identifiers and one-bit results. Invalid scalar
+  slots contribute false. Its bound is the exact resource-bank cost plus
+  explicit scheduler and routing overheads. Routing padding does not enlarge
+  the leading bank-evaluation cost.
 
 The menu construction, information set, and source-bit placement are
 nonuniform choices made offline. Their existence is proved, not assumed.
 
 Still required for the manuscript's new end-to-end bound:
 
-1. Integrate the complete scheduler and the high-rate code with the resource
-   bank and routing pipeline.
+1. Connect the proved offline prefix lookup to the encoded-metadata interface
+   of the complete scheduler/resource/recovery circuit, and expose the finite
+   Boolean mass-complexity bound with synthesized resource functions.
 2. Prove the exponential-range parameter estimates and the coefficient
    `1 / (1 - gamma)` in the integer precision model.
 

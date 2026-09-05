@@ -9,6 +9,7 @@ import Algebraic.MassProduction.Nonuniform.PaddedLinePoints
 import Algebraic.MassProduction.Nonuniform.PowerLayout
 import Algebraic.MassProduction.Nonuniform.UniversalGeometricPhase
 import Algebraic.MassProduction.Nonuniform.SchedulerCircuit
+import Algebraic.MassProduction.Nonuniform.ScheduledRecovery
 
 /-!
 # Nonuniform scheduling: proved components
@@ -47,6 +48,11 @@ so repeated targets and payloads require no distinctness premise. Its output
 retains all original records and disjoint recovery point lists, and its cost
 is `requests * 2^width` times an explicit fixed polynomial in bit widths and
 the ceiling logarithm of the request count.
-The resource/routing pipeline and the new direct mass-production coefficient
-still need assembly and asymptotic proofs.
+`ScheduledRecovery.existsCircuit` connects the scheduler to an exact
+high-rate resource bank, scatter/gather, padded XOR recovery, and restoration
+of the original request order. It reads encoded copy, point, basis-bit, and
+suffix metadata from supplied wires. Its bound charges each actual resource
+evaluation once and includes all scheduler/routing overheads.
+The offline prefix lookup still needs to be connected to that interface,
+followed by the exponential-range estimates and the new coefficient proof.
 -/
