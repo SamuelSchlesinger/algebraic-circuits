@@ -651,4 +651,42 @@ example (input : Fin 0 → Bool) :
     (Nonuniform.BatchOr.circuit_eval_iff _ _ _ _ input (0 : Fin 1) (0 : Fin 1)).mp isTrue
   exact Fin.elim0 source
 
+/-- Invalid padding slots and equal points from different candidates do not
+create conflicts. Each candidate has only one valid point here. -/
+example (input : Fin 0 → Bool) (index : Fin (Sorting.networkRecords 2)) :
+    (Nonuniform.PointConflicts.circuit
+      (fun point : Fin (Sorting.networkRecords 2) => fun _ : Fin 1 => decide (2 ≤ point.val))
+      (fun point : Fin (Sorting.networkRecords 2) => DeMorgan.Wiring.constant (decide (point.val % 2 = 0)))
+      (fun _ : Fin (Sorting.networkRecords 2) => fun _ : Fin 1 => DeMorgan.Wiring.constant true)
+      (fun source : Fin 0 => Fin.elim0 source : Fin 0 → Fin 1 → DeMorgan.Wiring 0)
+      (fun source : Fin 0 => Fin.elim0 source : Fin 0 → DeMorgan.Wiring 0)
+      (show 0 + Sorting.networkRecords 2 + 0 = Sorting.networkRecords 2 by omega)).eval
+        DeMorgan.interpretation input index = false := by
+  apply Bool.eq_false_iff.mpr
+  intro flagged
+  obtain ⟨validIndex, collision | occupied⟩ :=
+    (Nonuniform.PointConflicts.circuit_eval_iff _ _ _ _ _ _ input index).mp flagged
+  · obtain ⟨other, different, sameGroup, validOther, _⟩ := collision
+    have sameGroupBit := congrFun sameGroup 0
+    fin_cases index <;> fin_cases other
+    all_goals solve | exact different rfl | cases validIndex | cases validOther | cases sameGroupBit
+  · obtain ⟨source, _⟩ := occupied
+    exact Fin.elim0 source
+
+/-- Empty point lists are clean, including when the shared input is empty. -/
+example (input : Fin 0 → Bool) (request : Fin 2) :
+    (Nonuniform.GroupClean.flagsCircuit
+      (fun _ : Fin 2 => fun slot : Fin 0 => Fin.elim0 slot : Fin 2 → Fin 0 → Fin 0)).eval
+      DeMorgan.interpretation input request = true := by
+  exact (Nonuniform.GroupClean.flagsCircuit_eval_iff _ input request).mpr (fun slot => Fin.elim0 slot)
+
+/-- Fixed offsets translate both source bits with at most one gate per bit. -/
+example (input : Fin 2 → Bool) (point : Fin 2) (bit : Fin 2) :
+    (Nonuniform.ConstantTranslations.circuit
+      (fun point : Fin 2 => fun _ : Fin 2 => decide (point.val = 1))
+      (fun _ : Fin 2 => fun bit : Fin 2 => DeMorgan.Wiring.input bit)).eval
+        DeMorgan.interpretation input (finProdFinEquiv (point, bit)) =
+      (input bit ^^ decide (point.val = 1)) :=
+  Nonuniform.ConstantTranslations.circuit_eval _ _ input point bit
+
 end AlgebraicTests.MassProduction

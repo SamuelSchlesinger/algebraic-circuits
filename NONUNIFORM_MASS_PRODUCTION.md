@@ -31,6 +31,14 @@ The added modules prove, without new axioms or proof placeholders:
   queries, and absent keys. Their charged costs are bounded respectively by
   `256 * records * (depth + keyWidth + 1)^5` and
   `256 * (sources + queries + 1) * (depth + keyWidth + valueWidth + 2)^5`.
+- An assembled enumerated-menu evaluator: shared occupancy lookup, point
+  collisions within each candidate, aggregation into exact clean-request
+  flags, and selection of one candidate's clean prefix. Request payloads
+  survive as a permutation, and the complete circuit has an explicit bound
+  linear in point count up to polynomial width and sorting-depth factors.
+- A fixed-direction point generator using precomputed field offsets. Its
+  `2^width` scalar slots represent precisely a punctured line after marking
+  the zero scalar invalid, with at most one gate per output bit.
 - Common-zero-block monomial line parity, independence of reduced monomial
   evaluations, and existence of a systematic information set of exact size
   `A^m - (A-1)^m` over `A^m` points. Here `A = 2^(dimension * blockWidth)`
@@ -45,10 +53,10 @@ nonuniform choices made offline. Their existence is proved, not assumed.
 
 Still required for the manuscript's new end-to-end bound:
 
-1. Assemble candidate point generation, shared occupancy broadcast, collision
-   detection, exact-half selection, compaction, and all halving phases into
-   one circuit with a cost linear in the batch size up to polynomial factors
-   in the bit widths.
+1. Connect fixed-direction point generation and the universal menu theorem
+   to the encoded geometric state, then compose compaction and all halving
+   phases. The enumerated-menu evaluator is complete; this geometric phase
+   and iteration still require correctness and total cost proofs.
 2. Integrate that circuit and the high-rate code with the resource bank and
    routing pipeline, then prove the exponential-range parameter estimates
    and the coefficient `1 / (1 - gamma)` in the integer precision model.

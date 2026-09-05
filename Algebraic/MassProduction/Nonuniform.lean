@@ -4,6 +4,9 @@ import Algebraic.MassProduction.Nonuniform.BatchLookupBound
 import Algebraic.MassProduction.Nonuniform.CandidateSelection
 import Algebraic.MassProduction.Nonuniform.DuplicateFlags
 import Algebraic.MassProduction.Nonuniform.BatchOrCircuit
+import Algebraic.MassProduction.Nonuniform.MenuSelection
+import Algebraic.MassProduction.Nonuniform.PaddedLinePoints
+import Algebraic.MassProduction.Nonuniform.PowerLayout
 
 /-!
 # Nonuniform scheduling: proved components
@@ -25,6 +28,12 @@ circuit-size bounds.
 `DuplicateFlags.circuit_eval_iff` adds the ordering identifiers automatically.
 `BatchOr.existsCircuit` proves shared OR aggregation with repeated or absent
 source keys and a linear record-count bound.
-The complete menu evaluator, its circuit-size bound, and the new direct mass-production theorem have
-not yet been assembled. These component theorems do not assert those costs.
+`MenuSelection.circuit_selects` assembles point-conflict detection, request
+aggregation, and candidate selection for an enumerated menu, preserving
+request payloads and proving an explicit size bound. Its contract requires
+one successful candidate and distinct point slots within each request.
+`PaddedLinePoints` enumerates fixed-direction punctured lines, using at most
+one gate per point bit and marking the zero scalar invalid.
+The encoded geometric phase, all halving iterations, and the new direct
+mass-production theorem still need assembly and cost proofs.
 -/
