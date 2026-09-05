@@ -10,6 +10,7 @@ import Algebraic.MassProduction.Nonuniform.PowerLayout
 import Algebraic.MassProduction.Nonuniform.UniversalGeometricPhase
 import Algebraic.MassProduction.Nonuniform.SchedulerCircuit
 import Algebraic.MassProduction.Nonuniform.ScheduledRecovery
+import Algebraic.MassProduction.Nonuniform.FiniteBound
 
 /-!
 # Nonuniform scheduling: proved components
@@ -53,6 +54,13 @@ high-rate resource bank, scatter/gather, padded XOR recovery, and restoration
 of the original request order. It reads encoded copy, point, basis-bit, and
 suffix metadata from supplied wires. Its bound charges each actual resource
 evaluation once and includes all scheduler/routing overheads.
-The offline prefix lookup still needs to be connected to that interface,
-followed by the exponential-range estimates and the new coefficient proof.
+`FiniteBound.booleanMassComplexity_le_explicit` includes the shared offline
+prefix lookup, proves existence of the high-rate code and complete source
+placement, chooses index widths canonically, and synthesizes every resource
+function. It gives a full Boolean mass-complexity bound on raw inputs under
+finite numerical field/dimension/direction conditions. The corresponding
+parametric bound accepts the proved sharp shorter-function estimate from
+`LupanovRuntime.normalizedResourceBound`.
+The exponential-range parameter estimates and the new coefficient proof
+remain to be completed.
 -/

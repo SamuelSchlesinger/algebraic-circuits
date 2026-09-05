@@ -1,8 +1,9 @@
 # Nonuniform mass production: proof status
 
 The existing explicit recursive theorem remains fully proved as
-`BlockInduction.exponentialMassProduction`. The new nonuniform route is not
-yet a complete circuit-complexity theorem in this checkout.
+`BlockInduction.exponentialMassProduction`. The new nonuniform route now has
+a complete finite circuit-complexity bound. Its sharper asymptotic coefficient
+is not yet proved in this checkout.
 
 The added modules prove, without new axioms or proof placeholders:
 
@@ -71,17 +72,24 @@ The added modules prove, without new axioms or proof placeholders:
   slots contribute false. Its bound is the exact resource-bank cost plus
   explicit scheduler and routing overheads. Routing padding does not enlarge
   the leading bank-evaluation cost.
+- The full finite Boolean mass-complexity theorem on raw prefix/suffix
+  inputs, `Nonuniform.FiniteBound.booleanMassComplexity_le_explicit`. The
+  shared lookup supplies all metadata; code existence, source-bit placement,
+  canonical index widths, and synthesis of every resource function are
+  discharged. Remaining hypotheses are numerical positivity, dimension,
+  and projective-direction conditions. `LupanovRuntime.normalizedResourceBound`
+  also supplies a uniform eventual resource bound of
+  `floor((precision+1)*2^suffixWidth/(precision*suffixWidth))` for the parametric
+  version of the finite theorem.
 
 The menu construction, information set, and source-bit placement are
 nonuniform choices made offline. Their existence is proved, not assumed.
 
 Still required for the manuscript's new end-to-end bound:
 
-1. Connect the proved offline prefix lookup to the encoded-metadata interface
-   of the complete scheduler/resource/recovery circuit, and expose the finite
-   Boolean mass-complexity bound with synthesized resource functions.
-2. Prove the exponential-range parameter estimates and the coefficient
-   `1 / (1 - gamma)` in the integer precision model.
+Choose the field/code/split parameters in the finite theorem, prove the
+exponential-range estimates, and establish the coefficient `1 / (1 - gamma)`
+in the integer precision model for all sufficiently large input lengths.
 
 The now-proved batched lookup can include code number, information point,
 and bit selector together in its offline table. This avoids runtime division.

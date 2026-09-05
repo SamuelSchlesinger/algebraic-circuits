@@ -806,4 +806,19 @@ example :
   have output := correct input incidence resource (by simpa using active) matching unique
   simpa only [Circuit.eval_id, suffixes, DeMorgan.Wiring.eval_input] using output
 
+/-- Positive block counts always give a nonempty retained information space,
+including the one-symbol alphabet boundary. -/
+example : 0 < HighRate.retainedDimension 1 7 :=
+  HighRate.retainedDimension_positive 1 7 (by decide) (by decide)
+
+/-- The full finite theorem needs no supplied code, placement, scheduler, or
+resource circuits. GF(8)^8 supports eight raw two-prefix/two-suffix requests. -/
+example (function : Fin (2 ^ 2) → (Fin 2 → Bool) → Bool) :
+    booleanMassComplexity (RuntimePipeline.requestFunction function) (Sorting.networkRecords 3) ≤
+      (Nonuniform.FiniteBound.costBound 3 2 8 3 1 2 (Nonuniform.LupanovRuntime.resourceCost 2) : Nat) := by
+  apply Nonuniform.FiniteBound.booleanMassComplexity_le_explicit
+    (by decide : 0 < 3) (by decide : 0 < 1) (by decide : 0 < 8) (by decide : 8 ≤ 2 ^ 3)
+  rw [card_projectiveDirections_div, card_binaryExtension (by decide : 0 < 3 * 1)]
+  norm_num [Sorting.networkRecords]
+
 end AlgebraicTests.MassProduction
