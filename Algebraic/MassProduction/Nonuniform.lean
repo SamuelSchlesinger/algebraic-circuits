@@ -11,9 +11,10 @@ import Algebraic.MassProduction.Nonuniform.UniversalGeometricPhase
 import Algebraic.MassProduction.Nonuniform.SchedulerCircuit
 import Algebraic.MassProduction.Nonuniform.ScheduledRecovery
 import Algebraic.MassProduction.Nonuniform.FiniteBound
+import Algebraic.MassProduction.Nonuniform.RealTheorem
 
 /-!
-# Nonuniform scheduling: proved components
+# Nonuniform mass production with the sharp exponential-range coefficient
 
 `existsUniversalPhaseMenu` proves one fixed menu works for every legal
 occupied state and target tuple. `phaseMenuCandidateCount_le` bounds the
@@ -61,6 +62,10 @@ function. It gives a full Boolean mass-complexity bound on raw inputs under
 finite numerical field/dimension/direction conditions. The corresponding
 parametric bound accepts the proved sharp shorter-function estimate from
 `LupanovRuntime.normalizedResourceBound`.
-The exponential-range parameter estimates and the new coefficient proof
-remain to be completed.
+`sharpExponentialMassProduction` proves the coefficient `1/(1-gamma) + o(1)`
+for every rational copy exponent below one in an exact integer precision
+formulation. `realSharpMassProduction` proves the manuscript's full real-rate
+and additive-error statement. Both include the complete finite construction,
+parameter selection, code rate and rounding, resource synthesis, polynomial
+overhead absorption, and restriction to every allowed positive copy count.
 -/

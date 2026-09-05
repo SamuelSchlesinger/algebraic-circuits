@@ -821,4 +821,28 @@ example (function : Fin (2 ^ 2) → (Fin 2 → Bool) → Bool) :
   rw [card_projectiveDirections_div, card_binaryExtension (by decide : 0 < 3 * 1)]
   norm_num [Sorting.networkRecords]
 
+/-- The nonuniform endpoint retains the coefficient two at the half-input
+copy exponent, with arbitrarily small additive error and the full real budget. -/
+example (epsilon : Real) (positive : 0 < epsilon) :
+    ∃ cutoff : Nat, ∀ inputs : Nat, cutoff ≤ inputs →
+      ∀ (function : ScalarFunction Bool inputs) (copies : Nat),
+        0 < copies → (copies : Real) ≤ (2 : Real) ^ ((1 / 2 : Real) * inputs) →
+          ∃ bound : Nat, booleanMassComplexity function copies ≤ (bound : Nat) ∧
+            (bound : Real) ≤ (2 + epsilon) * ((2 : Real) ^ inputs / inputs) := by
+  have result := Nonuniform.realSharpMassProduction (1 / 2) (by norm_num) (by norm_num) epsilon positive
+  norm_num only [show (1 : Real) / (1 - 1 / 2) = 2 by norm_num] at result
+  exact result
+
+/-- The zero-rate boundary gives the sharp one-copy coefficient through the
+same complete nonuniform circuit theorem. -/
+example (epsilon : Real) (positive : 0 < epsilon) :
+    ∃ cutoff : Nat, ∀ inputs : Nat, cutoff ≤ inputs →
+      ∀ function : ScalarFunction Bool inputs,
+        ∃ bound : Nat, booleanMassComplexity function 1 ≤ (bound : Nat) ∧
+          (bound : Real) ≤ (1 + epsilon) * ((2 : Real) ^ inputs / inputs) := by
+  obtain ⟨cutoff, bound⟩ := Nonuniform.realSharpMassProduction 0 (by norm_num) (by norm_num) epsilon positive
+  refine ⟨cutoff, ?_⟩
+  intro inputs large function
+  simpa using bound inputs large function 1 (by decide) (by simp)
+
 end AlgebraicTests.MassProduction

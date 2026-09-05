@@ -1,9 +1,9 @@
 # Nonuniform mass production: proof status
 
-The existing explicit recursive theorem remains fully proved as
-`BlockInduction.exponentialMassProduction`. The new nonuniform route now has
-a complete finite circuit-complexity bound. Its sharper asymptotic coefficient
-is not yet proved in this checkout.
+Both variants are fully proved. The explicit recursive theorem is
+`BlockInduction.exponentialMassProduction`. The nonuniform route culminates in
+`Nonuniform.realSharpMassProduction`, which proves the sharper coefficient
+with the manuscript's real-rate and additive-error quantifiers.
 
 The added modules prove, without new axioms or proof placeholders:
 
@@ -85,18 +85,33 @@ The added modules prove, without new axioms or proof placeholders:
 The menu construction, information set, and source-bit placement are
 nonuniform choices made offline. Their existence is proved, not assumed.
 
-Still required for the manuscript's new end-to-end bound:
+The asymptotic modules choose all field/code/split parameters, bound the
+runtime overhead by `2^prefixWidth` times a fixed degree-seven polynomial,
+and absorb that overhead and the last partial codeword using exponential
+slack. The leading resource bank preserves the rate-one constant.
 
-Choose the field/code/split parameters in the finite theorem, prove the
-exponential-range estimates, and establish the coefficient `1 / (1 - gamma)`
-in the integer precision model for all sufficiently large input lengths.
+`Nonuniform.sharpExponentialMassProduction` proves, for every natural
+`u < v` and positive precision `P`, an eventual bound uniform over all
+functions and positive `t <= 2^floor(u*n/v)`:
+
+```text
+P * (v-u) * n * booleanMassComplexity f t <= (P+1) * v * 2^n.
+```
+
+`Nonuniform.realSharpMassProduction` additionally proves, for every real
+`0 <= gamma < 1` and `epsilon > 0`, a cutoff uniform over all functions and
+positive integer `t <= 2^(gamma*n)`. It supplies a finite natural bound `B`
+with `booleanMassComplexity f t <= B` and
+`B <= (1/(1-gamma) + epsilon) * 2^n/n`. Rational approximation, integer
+precision selection, and upward exponent rounding are machine checked.
 
 The now-proved batched lookup can include code number, information point,
 and bit selector together in its offline table. This avoids runtime division.
 
-Neither the old theorem nor the existence of a short menu alone proves these
-remaining circuit costs. The new coefficient must not be described as fully
-formalized on the basis of this checkpoint.
+The standard De Morgan cost charges NOT, AND, and OR gates; constants,
+structural identity, fan-out, and output designations are free. The formal
+theorems prove circuit existence and gate cost. They make no efficient uniform
+construction claim for the offline menus, information set, or placement.
 
 Validation commands:
 
