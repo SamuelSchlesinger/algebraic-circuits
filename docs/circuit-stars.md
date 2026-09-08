@@ -135,6 +135,108 @@ provide reusable upper bounds against which
 candidate hard supports can be compared. They do not classify all later
 faces or supply a new asymptotic explicit lower bound.
 
+## Higher obstructions and exact finite geometry
+
+`Complex.PairDetermined` says that membership of every support is determined by
+its subsets of cardinality at most two. The library proves this is equivalent
+to every minimal nonface having cardinality at most two. Thus a minimal missing
+triple is a precise obstruction to describing a link by its graph.
+
+The complete three-input experiment finds the first such obstruction at budget
+5, at both constant centers. One support is `{001,010,100}`: all proper exception
+patterns cost at most 5, while the full pattern costs 7. These circuit minima
+are SAT results checked with a second solver, not Lean-certified lower bounds.
+The general obstruction theorems are Lean proofs. The frozen protocol, witnesses,
+all 256 minima, and reproducible checks are in
+[`research/circuit-stars`](../research/circuit-stars/results.md).
+
+## Encoding a whole face
+
+Suppose an injective circuit encoder embeds `m` input bits into `n` input bits
+using `e` native gates. A decoder costs `d` gates, and a circuit recognizing the
+image costs `t` gates. For either constant center the checked bounds are
+
+```text
+M(m) <= H_b(image encoder) + e
+H_b(image encoder) <= M(m) + d + t + 2.
+```
+
+The first bound restricts an arbitrary corner through the encoder. The second
+decodes an arbitrary Boolean pattern and masks it to the image. These theorems
+apply to shared circuits, with free repeated output wires.
+
+For repetition `y -> (y,y)`, encoding and decoding use no gates. The explicit
+membership circuit uses `5*m+1` gates, including its initial constant. Hence
+
+```text
+|repetitionSupport m| = 2^m
+M(m) <= H_b(repetitionSupport m) <= M(m) + 5*m + 3.
+```
+
+Coordinate subcubes also have the converse bound
+`M(d) <= H_b(inputSubcube fixed d) + 2`: two shared constants suffice to prepend
+an arbitrarily long fixed word. Together with the earlier upper bound, this
+locates their full-face births near the worst-case complexity on the free bits.
+
+## Transport and approximation distance
+
+XOR with a fixed function `h` is an exact Hamming isometry, and it sends every
+incident cube to the corresponding cube at the translated center. A four-gate
+shared XOR construction proves
+
+```text
+C(f XOR h) <= C(f) + C(h) + 4
+|H_center(S) - H_zero(S)| <= C(center) + 4.
+```
+
+Consequently the link filtrations at these two centers include one another
+after this budget shift. The two source circuits are evaluated once each.
+
+For `s >= 1`, let `D_s(f)` be Hamming distance to the nonempty family of functions
+with native complexity at most `s`. Lean proves that a nearest function exists,
+that `D_s(f)/2^n` is exactly the optimal uniform-input approximation error, that
+`D_s` is 1-Lipschitz, and that increasing `s` cannot increase this error. Circuit
+Lipschitzness gives `C(f) <= s + 2*n*D_s(f)`.
+
+Writing `N=2^n` and `E_s={f : C(f)<=s}`, the checked neighborhood bound is
+
+```text
+|{f : D_s(f)<=r}| <= |E_s| * sum_(j=0..r) binomial(N,j).
+```
+
+If the right side is strictly less than `2^N`, some function has approximation
+distance greater than `r`. The three-input report measures the gap between this
+counting bound and the actual neighborhood volumes.
+
+## Alexander duality for obstruction complexes
+
+The dual is `L* = {S : complement(S) not in L}`, always on the full set of `N`
+directions. The library proves involution, reversed inclusion, downward closure,
+and the correspondence between minimal nonfaces of `L` and facets of `L*`.
+As the circuit budget grows, the links grow and their duals shrink.
+
+`SimplicialF2.reducedAlexanderDuality` proves the actual linear equivalence
+
+```text
+reduced H_i(L; F2) ~= reduced H^(N-i-3)(L*; F2).
+```
+
+`constantLinkAlexanderDuality` specializes this to circuit links, and
+`constantLink_betti_dual_eq` gives the corresponding dimension equality through
+Mathlib's `LinearEquiv.finrank_eq`. The proof uses the elementary argument of
+[Björner and Tancer](https://arxiv.org/abs/0710.1172): full-simplex contraction and
+complementation identify two genuine cycle/boundary quotients. This formalizes
+a classical theorem; it is not a new Alexander duality result.
+
+These are augmented simplicial chains over F2. Integer cardinality grading
+retains the empty face and out-of-range degrees; the void family and the family
+containing only the empty face are distinct. A ground-set vertex is required
+for the contraction; circuit links always have one, including at input width
+zero. A comparison to singular homology and integral-coefficient duality is
+outside this interface. The earlier graph-incidence cycle-rank formula has
+not yet been identified with this simplicial homology by a Lean comparison
+theorem.
+
 ## Focused API
 
 | Module | Principal endpoints |
@@ -147,6 +249,12 @@ faces or supply a new asymptotic explicit lower bound.
 | `Basis.DeMorgan.StarAsymptotics` | `eventually_constantStarMeeting_bounds`, `exists_constant_path` |
 | `Basis.DeMorgan.StarBirth` | `constantFaceBirth_pair_eq`, `exists_minimal_hard_support`, `constantLink_subset_complement` |
 | `Basis.DeMorgan.StarSubcube` | `card_inputSubcube`, `constantFaceBirth_inputSubcube_le` |
+| `Basis.DeMorgan.StarEncoding`, `StarRepetition` | `maximumComplexity_le_faceBirth_add_encoder`, `constantFaceBirth_encodingSupport_le`, `repetition_birth_le` |
+| `Basis.DeMorgan.StarTranslation` | `complexity_xor_le`, `faceBirth_dist_constant_le`, `constantLink_subset_center` |
+| `BooleanCube.Distance`, `Basis.DeMorgan.ApproximationGeometry` | `card_neighborhood_le`, `approximationError_le_iff`, `exists_function_far_from_easy` |
+| `BooleanCube.AlexanderDual`, `Basis.DeMorgan.StarObstructions` | `not_pairDetermined_iff`, `minimalNonface_iff_facet_dual`, `constantLinkDual_facet_iff` |
+| `BooleanCube.SimplicialF2`, `SimplicialSpacesF2`, `AlexanderHomologyF2` | `boundary_boundary`, `boundary_cone_add_cone_boundary`, `reducedAlexanderDuality` |
+| `Basis.DeMorgan.StarDuality` | `constantLinkAlexanderDuality`, `constantLink_betti_dual_eq` |
 
 Module paths in this table have the prefix `Algebraic.`. The downstream
 regressions are in `AlgebraicTests.CircuitStars`. The geometry axiom audit

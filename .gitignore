@@ -1,3 +1,4 @@
 /.lake
 *.sw?
 /_site
+__pycache__/

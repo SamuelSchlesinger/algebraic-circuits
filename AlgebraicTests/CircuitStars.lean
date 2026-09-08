@@ -1,6 +1,10 @@
 import Algebraic.Basis.DeMorgan.StarAsymptotics
 import Algebraic.Basis.DeMorgan.StarCycles
 import Algebraic.Basis.DeMorgan.StarSubcube
+import Algebraic.Basis.DeMorgan.StarRepetition
+import Algebraic.Basis.DeMorgan.StarTranslation
+import Algebraic.Basis.DeMorgan.ApproximationGeometry
+import Algebraic.Basis.DeMorgan.StarDuality
 
 /-!
 # Downstream checks for circuit-complexity stars
@@ -10,6 +14,8 @@ geometric intersection, and the Mathlib simplicial-complex interface.
 -/
 
 open Algebraic Algebraic.DeMorgan
+
+noncomputable section
 
 example (positive : 0 < n) (center : Bool) :
     constantLinkGraph n n center = BooleanCube.graph :=
@@ -109,3 +115,70 @@ example (n budget : Nat) (center : Bool) (directions : Finset (Fin n → Bool))
       budget < complexity (BooleanCube.corner (fun _ => center) subset) ∧
         ∀ part ⊂ subset, complexity (BooleanCube.corner (fun _ => center) part) ≤ budget :=
   exists_minimal_hard_support n budget center directions missing
+
+example (value : Bool) :
+    maximumComplexity 3 ≤ constantFaceBirth 6 value (repetitionSupport 3) ∧
+      constantFaceBirth 6 value (repetitionSupport 3) ≤ maximumComplexity 3 + 18 :=
+  ⟨maximumComplexity_le_repetition_birth 3 value, repetition_birth_le 3 value⟩
+
+example : (repetitionSupport 3).card = 8 := by rw [card_repetitionSupport]; norm_num
+
+example : (![false, true, false, false, true, false] : Fin 6 → Bool) ∈ repetitionSupport 3 := by
+  rw [mem_repetitionSupport_iff]
+  decide
+
+example : (![false, true, false, false, false, false] : Fin 6 → Bool) ∉ repetitionSupport 3 := by
+  rw [mem_repetitionSupport_iff]
+  decide
+
+example (fixed : Fin 5 → Bool) (value : Bool) :
+    maximumComplexity 3 ≤ constantFaceBirth 8 value (inputSubcube fixed 3) + 2 :=
+  maximumComplexity_le_inputSubcube_birth_add_two fixed 3 value
+
+example (left right : ScalarFunction Bool n) :
+    complexity (fun input => Bool.xor (left input) (right input)) ≤ complexity left + complexity right + 4 :=
+  complexity_xor_le left right
+
+example (function : ScalarFunction Bool n) :
+    approximationDistance function 1 (by omega) = 0 ↔ complexity function ≤ 1 :=
+  approximationDistance_eq_zero function 1 (by omega)
+
+example : (BooleanCube.ball (fun _ : Fin 3 => false) 1).card = 4 := by
+  rw [BooleanCube.card_ball]
+  norm_num [Finset.sum_range_succ]
+
+example (vertices : Finset (Fin 3 → Bool)) :
+    (BooleanCube.neighborhood vertices 1).card ≤ vertices.card * 4 := by
+  simpa [Finset.sum_range_succ] using BooleanCube.card_neighborhood_le vertices 1
+
+example : ¬BooleanCube.Complex.PairDetermined {support : Finset (Fin 3) | support.card ≤ 2} := by
+  rw [BooleanCube.Complex.not_pairDetermined_iff]
+  refine ⟨Finset.univ, ?_, by decide⟩
+  unfold BooleanCube.Complex.MinimalNonface
+  decide
+
+example : BooleanCube.Complex.Facet
+    (BooleanCube.Complex.dual {support : Finset (Fin 3) | support.card ≤ 2}) ∅ := by
+  have missing : BooleanCube.Complex.MinimalNonface
+      {support : Finset (Fin 3) | support.card ≤ 2} Finset.univ := by
+    unfold BooleanCube.Complex.MinimalNonface
+    decide
+  simpa using (BooleanCube.Complex.minimalNonface_iff_facet_dual _ _).mp missing
+
+open BooleanCube.SimplicialF2 in
+example (value : Bool) :
+    ReducedHomology (constantLink 3 5 value) 1 ≃ₗ[ZMod 2]
+      ReducedCohomology (constantLinkDual 3 5 value) 4 :=
+  constantLinkAlexanderDuality 3 5 value 1
+
+open BooleanCube.SimplicialF2 in
+example : ReducedHomology (∅ : Set (Finset (Fin 1))) (-1) ≃ₗ[ZMod 2]
+    ReducedCohomology (BooleanCube.Complex.dual (∅ : Set (Finset (Fin 1)))) (-1) :=
+  reducedAlexanderDuality 0 ∅ (by simp) (-1)
+
+open BooleanCube.SimplicialF2 in
+example (chain : Chains (Fin 3)) : boundary (boundary chain) = 0 := boundary_boundary chain
+
+open BooleanCube.SimplicialF2 in
+example : boundary (fun support : Finset (Fin 3) => if support.card = 2 then (1 : ZMod 2) else 0) = 0 := by
+  decide

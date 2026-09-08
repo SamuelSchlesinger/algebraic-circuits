@@ -128,7 +128,13 @@ run_cmd do
     `Algebraic.Basis.DeMorgan.PairIndicator, `Algebraic.Basis.DeMorgan.Star,
     `Algebraic.Basis.DeMorgan.StarBirth, `Algebraic.Basis.DeMorgan.StarSubcube,
     `Algebraic.Basis.DeMorgan.StarCycles, `Algebraic.Basis.DeMorgan.NativeCost,
-    `Algebraic.Basis.DeMorgan.StarAsymptotics]
+    `Algebraic.Basis.DeMorgan.StarAsymptotics,
+    `Algebraic.BooleanCube.Translation, `Algebraic.BooleanCube.Distance,
+    `Algebraic.BooleanCube.AlexanderDual, `Algebraic.BooleanCube.SimplicialF2,
+    `Algebraic.BooleanCube.SimplicialSpacesF2, `Algebraic.BooleanCube.AlexanderHomologyF2,
+    `Algebraic.Basis.DeMorgan.StarEncoding, `Algebraic.Basis.DeMorgan.StarRepetition,
+    `Algebraic.Basis.DeMorgan.StarTranslation, `Algebraic.Basis.DeMorgan.StarObstructions,
+    `Algebraic.Basis.DeMorgan.ApproximationGeometry, `Algebraic.Basis.DeMorgan.StarDuality]
   let allowed : Array Lean.Name := #[`propext, `Classical.choice, `Quot.sound]
   let mut checked : Nat := 0
   for (name, _) in environment.constants.toList do
