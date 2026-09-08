@@ -1,5 +1,4 @@
 import Algebraic.Applications
-import Algebraic.LowerBound.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant.Rectangular.Cover.Exponential
 import Algebraic.LowerBound.Fusion.Arithmetic.MultiplicativeShadow
 import Algebraic.LowerBound.Fusion.Arithmetic.MultiplicativeShadow.Pairwise
 import Algebraic.LowerBound.Fusion.Arithmetic.MultiplicativeShadow.Polynomial
@@ -12,16 +11,15 @@ import AlgebraicTests.Circuit
 
 These tests apply one public endpoint from each lower-bound branch: bounded
 fan-in support bounds, the sharp Shannon theorem, De Morgan gate elimination,
-exact cyclic Fusion completeness, the middle-layer rectangle-cover tradeoff,
-homomorphic transport, crown-graph collision, and the exponential monotone
-CLIQUE lower bound.
+exact cyclic Fusion completeness, arithmetic addition and multiplication
+bounds, homomorphic transport, crown-graph collision, and the exponential
+monotone CLIQUE lower bound.
 -/
 
 namespace AlgebraicTests.LowerBounds
 
 open Algebraic
 open Algebraic.Fusion
-open Algebraic.Fusion.Arithmetic.Interaction.Polynomial.Catalecticant
 
 example {K C U Q : Type}
     [Field K] [Add U] [Mul U]
@@ -120,26 +118,6 @@ example {Γ : Type}
       andOrCyclicComplexity problem :=
   Applications.pairCoverComplexity_eq_andOrCyclicComplexity
     problem generatorsCover
-
-example {K C : Type}
-    [Field K] [CharZero K]
-    (constant : C → K)
-    (n : Nat)
-    (nBig : 4 ≤ n)
-    (coverBudget : Nat)
-    (circuit : Algebraic.Circuit
-      (Algebraic.Arithmetic.signature C) (2 * n) g 1)
-    (constructs : (Rectangular.problem K (2 * n)).Constructs circuit
-      (Algebraic.Arithmetic.interpretation
-        (fun scalar ↦ MvPolynomial.C (constant scalar))))
-    (covered : Rectangular.Cover.Occurrence.AtOccurrences constant
-      (2 * n) n circuit (fun _ ↦ coverBudget)) :
-    4 ^ n < n *
-      (circuit.cost
-          (Algebraic.Arithmetic.multiplicationCost (K := C)) *
-        coverBudget) :=
-  Rectangular.Cover.Exponential.four_pow_lt_n_mul_cost_mul_coverBudget
-    constant n nBig coverBudget circuit constructs covered
 
 example {σ : Signature} {U₁ U₂ : Type}
     {i₁ : Interpretation σ U₁} {i₂ : Interpretation σ U₂}

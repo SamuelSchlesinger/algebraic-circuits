@@ -18,6 +18,13 @@ fi
 
 # Always regenerate the HTML, even when the documentation database is already
 # up to date (for example after restoring it from a CI cache without the HTML).
+# doc-gen4 merges existing HTML and per-module search data into its output.
+# Clear those generated files so deleted modules disappear from the site,
+# while keeping the database and .doc markers for cached extraction.
+rm -rf "$root/docbuild/.lake/build/doc"
+rm -f "$root"/docbuild/.lake/build/doc-data/declaration-data-*.bmp
+# The bibliography prepass also writes into doc/, so regenerate its output.
+rm -f "$root/docbuild/.lake/build/doc-data/references.json"
 rm -f "$root"/docbuild/.lake/build/doc-data/*.docs_built
 (cd "$root/docbuild" && lake build Algebraic:docs)
 

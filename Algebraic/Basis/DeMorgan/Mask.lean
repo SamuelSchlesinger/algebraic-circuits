@@ -1,4 +1,4 @@
-import Algebraic.Basis.DeMorgan.StarIntersection
+import Algebraic.Basis.DeMorgan.Operations
 
 /-!
 # Sharp native gate bounds for input subcube indicators

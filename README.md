@@ -28,25 +28,31 @@ For a smaller and more intentional dependency boundary, use:
   substitution, and translation;
 - `import Algebraic.Applications` for a curated set of binary-power and
   lower-bound endpoints under `Algebraic.Applications`;
-- `import Algebraic.CircuitGeometry` for truth-table paths, boundaries,
-  cubical sublevels, homology maps, and Betti bounds on complexity shells;
-- `import Algebraic` when the complete research surface is wanted.
+- `import Algebraic.Basis.DeMorgan.Complexity` for minimum native circuit
+  size, point updates, and the Hamming Lipschitz bound;
+- `import Algebraic.Basis.DeMorgan.PairIndicator` for support/read-once
+  arguments and native size bounds for functions with two exceptional inputs;
+- `import Algebraic` for the complete library.
 
 The naming, namespace, simp, and stability conventions are recorded in
 [`STYLE.md`](STYLE.md).
 
-The circuit-complexity filtration and its exact finite guarantees are
-described in [`docs/circuit-geometry.md`](docs/circuit-geometry.md).
-The exact constant links, encoded supports, approximation neighborhoods,
-first-contact bounds, and Alexander duality over F2 are described in
-[`docs/circuit-stars.md`](docs/circuit-stars.md). A reproducible three-input
-circuit and link experiment is in
-[`research/circuit-stars`](research/circuit-stars/results.md).
+The point-update and counting arguments for strict circuit size hierarchies
+are described in [`docs/circuit-hierarchy.md`](docs/circuit-hierarchy.md).
+Basic Boolean operations, input masks, numerical thresholds, and the compiler
+that shares constant gates remain available as focused modules under
+`Algebraic.Basis.DeMorgan`.
 
 ## Lower bounds
 
 `Algebraic.LowerBound` collects several independent methods, including
 bounded-fan-in arguments, counting, gate elimination, and Fusion.
+
+Completed results include Shannon counting, the De Morgan parity lower bound,
+AC0 parity separation, monotone Boolean CLIQUE, monotone arithmetic clique
+support bounds, Hessian rank, and Waring and rectangle bounds. Restricted
+models and their charged operations are explicit in the theorem statements.
+The AC0 development has a detailed [theory map](docs/ac0-theory-map.md).
 
 The Fusion development is parameterized by the circuit signature,
 interpretation, target problem, observation model, and operation costs. This
@@ -57,6 +63,12 @@ circuits without weakening the acyclic invariant of `Program`.
 This README deliberately does not inventory individual definitions or
 theorems. Module docstrings and the generated API reference are the source of
 truth for the results currently available and their precise hypotheses.
+
+The [library stocktake](research/library-stocktake-2026-09-08.md) records the
+retained results and the removal of the later star/topology research branch.
+The preparatory noncommutative recurrence is kept in
+[`research/noncommutative`](research/noncommutative/README.md), outside the
+public library and regression suite.
 
 ## Build
 

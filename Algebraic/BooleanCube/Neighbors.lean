@@ -1,4 +1,5 @@
-import Algebraic.BooleanCube.Sweep
+import Algebraic.BooleanCube
+import Mathlib.Combinatorics.SimpleGraph.Basic
 
 /-!
 # Neighbors and cliques in the Boolean input cube
@@ -9,7 +10,15 @@ two apart, so every clique has at most two vertices.
 
 namespace Algebraic.BooleanCube
 
-variable {ι : Type*} [Fintype ι] [DecidableEq ι]
+variable {ι : Type*}
+
+/-- The graph whose edges change exactly one Boolean coordinate. -/
+def graph [Fintype ι] : SimpleGraph (ι → Bool) where
+  Adj left right := hammingDist left right = 1
+  symm := ⟨by intro left right h; simpa only [hammingDist_comm] using h⟩
+  loopless := ⟨by intro vector; simp⟩
+
+variable [Fintype ι] [DecidableEq ι]
 
 /-- Flip one coordinate of a Boolean vertex. -/
 def flip (vertex : ι → Bool) (i : ι) : ι → Bool := Function.update vertex i (!(vertex i))

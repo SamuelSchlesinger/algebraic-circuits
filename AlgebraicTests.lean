@@ -51,12 +51,8 @@ import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds
 import AlgebraicTests.Hierarchy
-import AlgebraicTests.CircuitGeometry
-import AlgebraicTests.CircuitStars
-import AlgebraicTests.SimplicialDuality
-import AlgebraicTests.CubicalBetti
+import AlgebraicTests.NativeDeMorgan
 import AlgebraicTests.MassProduction
-import AlgebraicTests.NoncommutativeDescendingChain
 
 /-!
 # Algebraic public API regression suite

@@ -10,7 +10,8 @@ rate tends to one in an integer precision formulation with an explicit
 cutoff. Packing loses at most one extra codeword; Boolean resource recovery
 and uniqueness of scheduled resource incidences are proved separately.
 
-The stronger mass-production leading coefficient is not an endpoint of
-this module. Its runtime lookup, scheduling, routing, and asymptotic circuit
-composition still require integration.
+These coding estimates feed the completed runtime lookup, scheduling,
+routing, and circuit composition in `Algebraic.MassProduction.Nonuniform`.
+The real-rate leading coefficient is stated by
+`Algebraic.MassProduction.Nonuniform.realSharpMassProduction`.
 -/

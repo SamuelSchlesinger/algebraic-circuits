@@ -1,7 +1,7 @@
 import Algebraic.Basis.DeMorgan.Complexity
 
 /-!
-# Threshold circuits for ordered truth-table sweeps
+# Circuits for comparison with a fixed numerical threshold
 
 The first input bit is the most significant bit. An interior threshold on
 `n` bits has a constant-free AND/OR expression with at most `n - 1` gates.
