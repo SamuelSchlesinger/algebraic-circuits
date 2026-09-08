@@ -14,6 +14,7 @@ import Algebraic.Translation.Block
 import Algebraic.Translation.Contextual
 import Algebraic.Simulation
 import Algebraic.Complexity
+import Algebraic.CircuitGeometry
 import Algebraic.CircuitFamily
 import Algebraic.CircuitFamily.Growth
 import Algebraic.Analysis

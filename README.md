@@ -28,10 +28,15 @@ For a smaller and more intentional dependency boundary, use:
   substitution, and translation;
 - `import Algebraic.Applications` for a curated set of binary-power and
   lower-bound endpoints under `Algebraic.Applications`;
+- `import Algebraic.CircuitGeometry` for truth-table paths, boundaries,
+  cubical sublevels, homology maps, and Betti bounds on complexity shells;
 - `import Algebraic` when the complete research surface is wanted.
 
 The naming, namespace, simp, and stability conventions are recorded in
 [`STYLE.md`](STYLE.md).
+
+The circuit-complexity filtration and its exact finite guarantees are
+described in [`docs/circuit-geometry.md`](docs/circuit-geometry.md).
 
 ## Lower bounds
 
