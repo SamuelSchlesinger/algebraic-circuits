@@ -9,6 +9,11 @@ paths, `Algebraic.Basis.DeMorgan.Topology` for the continuous contraction,
 or `Algebraic.Basis.DeMorgan.Boundary` for coarea and perimeter bounds.
 Use `Algebraic.Basis.DeMorgan.Betti` for finite cubical homology and the
 complexity-shell counting bound.
+`Algebraic.Basis.DeMorgan.Witness` adds localized witnesses and target
+reductions; `Algebraic.Basis.DeMorgan.Locality` bounds certificates whose
+boundary evaluations ignore fixed truth-table coordinates outside a chosen set.
+For exact constant links, their cycle ranks, face birth profiles, and the
+exponential first-contact theorem, see [constant stars](circuit-stars.md).
 
 ## Model
 
@@ -192,6 +197,77 @@ rationals, and thereby certifies a positive first Betti number. It also
 checks positive-degree vanishing for full cubes, zero-coordinate behavior,
 and the generic-field shell theorem.
 
+## Localized witnesses and the explicitness gap
+
+For a chain `z`, `Chains.vertices` lists the vertices of its nonzero faces.
+`Chains.erasureVertices` lists their prefix erasures, with thresholds between
+zero and the ambient cube dimension `N`. The list has at most
+`(N+1) * |vertices(z)|` entries before removing duplicates.
+
+For a positive-degree cycle in `K_s` which does not bound there, the theorem
+`DeMorgan.exists_shell_function_of_cycle` proves
+
+```text
+some g in erasureFunctions(z) satisfies s < C(g) <= s+n.
+```
+
+The list is determined by the cycle, rather than by a search through all
+Boolean functions. Its hard member need not be efficiently identifiable.
+The cycle's nonbounding property is an explicit premise.
+
+`DeMorgan.complexity_add_overhead_gt_of_cycle` transfers the witness to a
+specified function `f`: if every candidate `g` either has a certified
+`C(g) <= s` or satisfies `C(g) <= C(f)+r`, then `s < C(f)+r`. Reductions
+and nonbounding are still required; this theorem does not construct them.
+
+A reusable way to certify nonbounding is
+`Chains.not_mem_boundaries_of_cochain`. It accepts a linear cochain `phi`
+which detects the proposed cycle and vanishes on the boundaries of every
+admitted face in the next degree. The existing six-cycle regression checks
+this interface and the extraction of a missing vertex together.
+
+## A restriction on local cochain certificates
+
+Let `Q` be a set of truth-table coordinates, and let `q = |Q|`.
+`Face.truncate Q F` preserves the free coordinates of `F`, preserves its
+fixed coordinates in `Q`, and sets all other fixed coordinates to false.
+It has the same dimension as `F`. Each vertex of a truncated `(k+1)`-face
+has at most `q+k+1` true truth-table entries.
+
+The existing point-update circuits therefore give the exact bound
+
+```text
+C(v) <= 1 + 2*n*(q+k+1)
+```
+
+for every vertex `v` of such a truncated face. Now suppose a degree-`k`
+cochain `phi`, with `k > 0`, satisfies both of the following conditions:
+
+1. `phi(boundary F) = 0` for every `(k+1)`-face admitted at budget `s`.
+2. `phi(boundary (truncate Q F)) = phi(boundary F)` for every `(k+1)`-face.
+
+If `s >= 1 + 2*n*(q+k+1)`, every truncated face is admitted. Condition 2
+then forces `phi` to vanish on every face boundary in the entire cube.
+The full-cube contraction implies that it detects no positive-degree cycle.
+Equivalently, `DeMorgan.budget_lt_of_local_cochain` proves that a detecting
+certificate satisfying these conditions must have
+
+```text
+s < 1 + 2*n*(q+k+1).
+```
+
+This applies to the precise truncation invariance in condition 2. It is not
+a limitation on arbitrary cochains, on all locally described algorithms, or
+on all topological lower-bound methods. The coordinate set is a set of
+truth-table entries, not a set of the function's input variables. For fixed
+`q` and `k`, this class of certificates only reaches linear thresholds in `n`.
+
+The current attempt establishes witness extraction, target transfer, and
+this locality restriction. It has not produced a new explicit circuit
+lower bound or a nonbounding certificate that scales to unrestricted
+circuits. Exhaustively excluding small circuits would already prove the
+corresponding finite lower bound and would not resolve that missing step.
+
 ## Boundaries and coarea
 
 Every unoriented cube edge is stored once, by its endpoint whose changing
@@ -236,6 +312,10 @@ with the boundary.
 | Finite cubical chain contraction | `Chains.boundary_prism_add_prism_boundary` |
 | Betti bound by new faces | `CubicalHomology.betti_le_card_new_faces` |
 | Betti bound by new functions | `DeMorgan.cubicalBetti_le_choose_mul_shell` |
+| Localized shell function | `DeMorgan.exists_shell_function_of_cycle` |
+| Transfer to an explicit target | `DeMorgan.complexity_add_overhead_gt_of_cycle` |
+| Nonbounding cochain certificate | `Chains.not_mem_boundaries_of_cochain` |
+| Limit for truncation-invariant certificates | `DeMorgan.budget_lt_of_local_cochain` |
 
 The public regression suite is `AlgebraicTests.CircuitGeometry`. It checks
 the cost conventions, exact path lengths, zero-coordinate cases, and the

@@ -52,6 +52,7 @@ import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds
 import AlgebraicTests.Hierarchy
 import AlgebraicTests.CircuitGeometry
+import AlgebraicTests.CircuitStars
 import AlgebraicTests.CubicalBetti
 import AlgebraicTests.MassProduction
 import AlgebraicTests.NoncommutativeDescendingChain

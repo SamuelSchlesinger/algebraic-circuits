@@ -37,6 +37,8 @@ The naming, namespace, simp, and stability conventions are recorded in
 
 The circuit-complexity filtration and its exact finite guarantees are
 described in [`docs/circuit-geometry.md`](docs/circuit-geometry.md).
+The exact constant links, face birth profiles, and first-contact bounds are
+described in [`docs/circuit-stars.md`](docs/circuit-stars.md).
 
 ## Lower bounds
 

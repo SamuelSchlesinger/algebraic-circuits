@@ -72,6 +72,22 @@ private theorem hexagon_boundaries_zero : Chains.boundaries ℚ hexagon 1 = ⊥ 
     exact hexagon_no_squares face allowed.2 allowed.1
   simp [Chains.boundaries, empty]
 
+private noncomputable def hexCochain : Chains ℚ 3 →ₗ[ℚ] ℚ :=
+  Finsupp.lapply ![some true, none, some false]
+
+private theorem hexCycle_detected : hexCochain hexCycle ≠ 0 := by
+  norm_num [hexCochain, hexCycle, Finsupp.lapply_apply, Finsupp.single_apply]
+  split_ifs <;> simp_all
+
+/-- The cochain interface certifies the existing hexagon and localizes a missing vertex. -/
+example : ∃ vertex ∈ Chains.erasureVertices ℚ hexCycle,
+    vertex = (fun _ => false) ∨ vertex = (fun _ => true) := by
+  have nonboundary := Chains.not_mem_boundaries_of_cochain ℚ hexagon 1 hexCochain
+    (fun face allowed dim => (hexagon_no_squares face dim allowed).elim) hexCycle_detected
+  obtain ⟨vertex, candidate, missing⟩ := Chains.exists_erasure_vertex_not_mem ℚ hexagon hexagon
+    1 (by decide) hexCycle ⟨hexCycle_mem, hexCycle_closed⟩ nonboundary
+  exact ⟨vertex, candidate, by simpa only [hexagon, Set.mem_ofPred_eq, not_and_or, not_not] using missing⟩
+
 /-- The six-cycle has nonzero first homology over the rationals. -/
 example : 0 < CubicalHomology.betti ℚ hexagon 1 := by
   apply CubicalHomology.betti_pos_of_cycle ℚ hexagon 1 hexCycle
@@ -107,5 +123,23 @@ example (K : Type*) [Field K] (budget degree : Nat) (positive : 0 < degree) :
 example (vertices : Set (Fin 3 → Bool)) (point : Fin 3 → Real) :
     point ∈ cubical vertices ↔ ∃ face : Face 3, face.Allowed vertices ∧ point ∈ face.realization :=
   Face.mem_cubical_iff_exists_face vertices point
+
+/-- Truncation keeps the free coordinate and the selected fixed coordinate. -/
+example : (Face.truncate {0} ![some true, none, some true] : Face 3) =
+    ![some true, none, some false] := by decide
+
+/-- A first-homology certificate ignoring every fixed coordinate cannot work at budget 13
+for three-input circuits. -/
+example (R : Type*) [CommRing R] (cochain : Chains R (2 ^ 3) →ₗ[R] R)
+    (vanishes : ∀ face : Face (2 ^ 3),
+      face.Allowed {vector | DeMorgan.orderedComplexity 3 vector ≤ 13} → face.dimension = 2 →
+      cochain (Chains.boundary R _ (Finsupp.single face 1)) = 0)
+    (locality : ∀ face : Face (2 ^ 3), face.dimension = 2 →
+      cochain (Chains.boundary R _ (Finsupp.single (face.truncate ∅) 1)) =
+        cochain (Chains.boundary R _ (Finsupp.single face 1)))
+    (chain : Chains R (2 ^ 3)) (closed : chain ∈ Chains.cycles R Set.univ 1) :
+    cochain chain = 0 := by
+  apply DeMorgan.cochain_eq_zero_of_truncate_invariant R 13 1 (by decide) ∅ (by decide)
+    cochain vanishes locality closed
 
 end AlgebraicTests.CubicalBetti

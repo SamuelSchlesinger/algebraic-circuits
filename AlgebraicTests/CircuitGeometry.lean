@@ -116,7 +116,19 @@ run_cmd do
     `Algebraic.BooleanCube.Face, `Algebraic.BooleanCube.Chains,
     `Algebraic.BooleanCube.ChainSupport, `Algebraic.BooleanCube.Betti,
     `Algebraic.BooleanCube.RelativeRank, `Algebraic.BooleanCube.FaceRealization,
-    `Algebraic.Basis.DeMorgan.Betti]
+    `Algebraic.Basis.DeMorgan.Betti,
+    `Algebraic.BooleanCube.Witness, `Algebraic.BooleanCube.Locality,
+    `Algebraic.Basis.DeMorgan.Witness, `Algebraic.Basis.DeMorgan.Locality,
+    `Algebraic.Analysis.Frontier,
+    `Algebraic.BooleanCube.Star, `Algebraic.BooleanCube.Link,
+    `Algebraic.BooleanCube.StarRealization, `Algebraic.BooleanCube.Neighbors,
+    `Algebraic.BooleanCube.GraphCycles, `Algebraic.BooleanCube.EdgeFaces,
+    `Algebraic.Basis.DeMorgan.ReadOnce, `Algebraic.Basis.DeMorgan.TightCircuit,
+    `Algebraic.Basis.DeMorgan.StarIntersection, `Algebraic.Basis.DeMorgan.Mask,
+    `Algebraic.Basis.DeMorgan.PairIndicator, `Algebraic.Basis.DeMorgan.Star,
+    `Algebraic.Basis.DeMorgan.StarBirth, `Algebraic.Basis.DeMorgan.StarSubcube,
+    `Algebraic.Basis.DeMorgan.StarCycles, `Algebraic.Basis.DeMorgan.NativeCost,
+    `Algebraic.Basis.DeMorgan.StarAsymptotics]
   let allowed : Array Lean.Name := #[`propext, `Classical.choice, `Quot.sound]
   let mut checked : Nat := 0
   for (name, _) in environment.constants.toList do
