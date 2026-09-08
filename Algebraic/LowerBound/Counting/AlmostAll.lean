@@ -169,6 +169,26 @@ theorem Circuit.asymptoticallyAlmostAllHard_of_finalTerm
 
 /-! ## The full target space and conventional density -/
 
+/-- An asymptotically negligible easy subset leaves a hard target at every
+sufficiently large width, provided the ambient families are nonempty. -/
+theorem Circuit.AsymptoticallyAlmostAllHard.eventually_exists_hard
+    [Fintype σ.Op] [Fintype U]
+    {interpretation : Interpretation σ U}
+    {m : Nat} {family : (n : Nat) → Finset (Target U n m)}
+    {gateBudget : Nat → Nat}
+    (hard : Circuit.AsymptoticallyAlmostAllHard interpretation m family gateBudget)
+    (nonempty : ∀ᶠ n in Filter.atTop, 0 < (family n).card) :
+    ∀ᶠ n in Filter.atTop, ∃ target ∈ family n,
+      Circuit.GateHard interpretation (gateBudget n) target := by
+  classical
+  filter_upwards [hard 2, nonempty] with n bounded positive
+  have smaller : (Circuit.easyInFamily interpretation (family n) (gateBudget n)).card <
+      (family n).card := by omega
+  obtain ⟨target, present, notEasy⟩ := Finset.exists_mem_notMem_of_card_lt_card smaller
+  refine ⟨target, present, Circuit.not_mem_functionsAtMost_iff.mp ?_⟩
+  intro easy
+  exact notEasy (Finset.mem_filter.mpr ⟨present, easy⟩)
+
 /-- The complete family of `m`-output functions on `n` inputs. -/
 noncomputable def Circuit.fullFamily
     (U : Type*) [Fintype U] (m n : Nat) : Finset (Target U n m) := by

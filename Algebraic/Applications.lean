@@ -1,6 +1,7 @@
 import Algebraic.Basis.Arithmetic.Power
 import Algebraic.LowerBound.AC0.ParitySeparation
 import Algebraic.LowerBound.Counting.Shannon
+import Algebraic.LowerBound.Hierarchy
 import Algebraic.LowerBound.FanIn
 import Algebraic.LowerBound.GateElimination.DeMorganXor
 import Algebraic.LowerBound.Monotone.Clique.Exponential
@@ -37,7 +38,11 @@ export Circuit
 
 export Shannon (gateBudget)
 
-export DeMorgan (xor_lowerBound)
+export DeMorgan
+  (xor_lowerBound
+   eventually_exists_complexity_between
+   polynomialSize_ssubset
+   sizeClass_pow_ssubset)
 
 export Fusion
   (pairCoverComplexity_eq_joinMeetCyclicComplexity

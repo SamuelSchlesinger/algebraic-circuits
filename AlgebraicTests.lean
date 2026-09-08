@@ -50,6 +50,7 @@ import AlgebraicTests.AC0SwitchingFamily
 import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds
+import AlgebraicTests.Hierarchy
 import AlgebraicTests.MassProduction
 import AlgebraicTests.NoncommutativeDescendingChain
 
