@@ -1,4 +1,5 @@
 import AlgebraicTests.Core
+import AlgebraicTests.FusionCanonicalGraph
 import AlgebraicTests.Circuit
 import AlgebraicTests.CircuitFamily
 import AlgebraicTests.CircuitFamilyGrowth

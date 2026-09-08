@@ -111,6 +111,7 @@ import Algebraic.LowerBound.Fusion.Cyclic.Neq
 import Algebraic.LowerBound.Fusion.Comap
 import Algebraic.LowerBound.Fusion.Neq.Preimage
 import Algebraic.LowerBound.Fusion.CrownCollision
+import Algebraic.LowerBound.Fusion.Graph.Canonical
 
 /-!
 # Fusion lower bounds
