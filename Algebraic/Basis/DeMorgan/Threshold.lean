@@ -88,7 +88,7 @@ theorem thresholdExpression_gateCount_le (threshold : Nat) (positive : 0 < thres
   induction n generalizing threshold with
   | zero => simp at interior; omega
   | succ n ih =>
-      simp only [thresholdExpression, ne_of_gt positive, if_false,
+      simp only [thresholdExpression, ne_of_gt positive, ite_false,
         not_le_of_gt interior]
       split_ifs with middle below
       · simp [Expression.gateCount]

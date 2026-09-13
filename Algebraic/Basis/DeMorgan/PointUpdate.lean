@@ -59,7 +59,7 @@ private theorem pointTest_gateCount_le (point : Fin (n + 1) → Bool) (value : B
       have head := literal_gateCount_le (0 : Fin (n + 2)) (point 0 == value)
       have tail := ih (Fin.tail point)
       cases value <;>
-        simp only [pointTest, Bool.false_eq_true, if_false, if_true,
+        simp only [pointTest, Bool.false_eq_true, ite_false, ite_true,
           Expression.gateCount, Expression.mapInputs_gateCount] <;> omega
 
 private def correction (value : Bool) : Expression 2 :=
@@ -106,7 +106,7 @@ theorem exists_update_circuit (circuit : Circuit signature n g 1)
             (test.circuit.eval interpretation input) (1 : Fin 2) = test.eval input :=
           Expression.circuit_eval test input
         cases value <;>
-          simp only [correction, Bool.false_eq_true, if_false, if_true, Expression.eval, left, right]
+          simp only [correction, Bool.false_eq_true, ite_false, ite_true, Expression.eval, left, right]
         all_goals
           dsimp only [test]
           rw [testValue]
@@ -114,6 +114,6 @@ theorem exists_update_circuit (circuit : Circuit signature n g 1)
       · have bound := pointTest_gateCount_le point value
         change g + test.gateCount + (correction value).gateCount ≤ g + 2 * (n + 1)
         cases value <;> simp only [correction, Expression.gateCount, Bool.false_eq_true,
-          if_false, if_true] <;> dsimp [test] at * <;> omega
+          ite_false, ite_true] <;> dsimp [test] at * <;> omega
 
 end Algebraic.DeMorgan

@@ -274,7 +274,7 @@ theorem probability_exists_mem_le_sum
   apply Finset.sum_le_sum
   intro rho _
   by_cases anyEvent : ∃ index ∈ indices, events index rho
-  · simp only [if_pos anyEvent]
+  · simp only [ite_eq_left anyEvent]
     obtain ⟨index, present, holds⟩ := anyEvent
     calc
       distribution n p atMostOne rho =

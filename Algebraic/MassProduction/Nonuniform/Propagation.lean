@@ -70,7 +70,7 @@ theorem program_eval
           Wire.input, Wire.gate, Fin.addCases_left, Fin.addCases_right,
           Program.eval_gate_last, Line.eval, DeMorgan.interpretation]
         rw [ih (by omega) processed (by omega)]
-        simp only [value, sourceInput, linkInput, dif_pos (by omega : processed < count)]
+        simp only [value, sourceInput, linkInput, dite_eq_left (by omega : processed < count)]
       · have prefixEarlier : prefixCount ≤ processed := by omega
         have oldIndex : (⟨2 * prefixCount, by omega⟩ : Fin (1 + 2 * (processed + 1))) =
             (⟨2 * prefixCount, by omega⟩ : Fin (1 + 2 * processed)).castSucc.castSucc := rfl

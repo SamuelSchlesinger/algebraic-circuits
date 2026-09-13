@@ -119,7 +119,7 @@ theorem isPath_of_length_eq_hammingDist {left right : ι → Bool}
     walk.IsPath := by
   classical
   have equal : walk.bypass = walk :=
-    walk.bypass_eq_self_of_length_le_length_bypass
+    walk.length_le_bypass_length_iff.mp
       (length ▸ hammingDist_le_length walk.bypass)
   rw [← equal]
   exact walk.bypass_isPath

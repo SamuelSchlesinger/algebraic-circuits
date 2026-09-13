@@ -16,13 +16,15 @@ abbrev ScalarFunction (U : Type u) (n : Nat) := (Fin n → U) → U
 abbrev Target (U : Type u) (n m : Nat) := (Fin n → U) → Fin m → U
 
 /-- The scalar function carried by one designated output wire. -/
-def Circuit.outputFunction
+def _root_.Cslib.Circuits.Circuit.outputFunction
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U)
     (output : Fin m) : ScalarFunction U n :=
   fun input => circuit.eval interpretation input output
 
-@[simp] theorem Circuit.outputFunction_apply
+export Cslib.Circuits (Circuit.outputFunction)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.outputFunction_apply
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U)
     (output : Fin m)
@@ -30,15 +32,19 @@ def Circuit.outputFunction
     circuit.outputFunction interpretation output input =
       circuit.eval interpretation input output := rfl
 
+export Cslib.Circuits (Circuit.outputFunction_apply)
+
 /-- Exact pointwise computation of a function by a circuit. -/
-def Circuit.Computes
+def _root_.Cslib.Circuits.Circuit.Computes
     (c : Circuit σ n g m)
     (interpretation : Interpretation σ U)
     (target : Target U n m) : Prop :=
   ∀ input, c.eval interpretation input = target input
 
+export Cslib.Circuits (Circuit.Computes)
+
 /-- Pointwise computation gives equality of the computed and target functions. -/
-theorem Circuit.Computes.eval_eq
+theorem _root_.Cslib.Circuits.Circuit.Computes.eval_eq
     {circuit : Circuit σ n g m}
     {interpretation : Interpretation σ U}
     {target : Target U n m}
@@ -46,31 +52,39 @@ theorem Circuit.Computes.eval_eq
     circuit.eval interpretation = target :=
   funext computes
 
+export Cslib.Circuits (Circuit.Computes.eval_eq)
+
 /-- A target is gate-hard at budget `G` when no circuit with at most `G`
 internal gates computes it. -/
-def Circuit.GateHard
+def _root_.Cslib.Circuits.Circuit.GateHard
     (interpretation : Interpretation σ U)
     (G : Nat)
     (target : Target U n m) : Prop :=
   ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
     ¬circuit.Computes interpretation target
 
+export Cslib.Circuits (Circuit.GateHard)
+
 /-- A target is depth-hard at `depth` when every circuit computing it has
 strictly greater depth. -/
-def Circuit.DepthHard
+def _root_.Cslib.Circuits.Circuit.DepthHard
     (interpretation : Interpretation σ U)
     (depth : Nat)
     (target : Target U n m) : Prop :=
   ∀ g, ∀ circuit : Circuit σ n g m,
     circuit.Computes interpretation target → depth < circuit.depth
 
+export Cslib.Circuits (Circuit.DepthHard)
+
 /-- An interpretation is functionally complete if every finite-arity,
 finite-output target has some circuit. -/
-def Interpretation.FunctionallyComplete
+def _root_.Cslib.Circuits.Interpretation.FunctionallyComplete
     (interpretation : Interpretation σ U) : Prop :=
   ∀ n m, ∀ target : Target U n m,
     ∃ g, ∃ circuit : Circuit σ n g m,
       circuit.Computes interpretation target
+
+export Cslib.Circuits (Interpretation.FunctionallyComplete)
 
 /-- A function depends only on the input coordinates in `support`. -/
 def DependsOnlyOn

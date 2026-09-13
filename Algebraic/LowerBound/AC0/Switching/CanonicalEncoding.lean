@@ -1021,7 +1021,7 @@ theorem CanonicalBlockTrace.replayIndices_satisfyingAssignment
         CanonicalBlockTrace.adviceList_takeMore]
       simp only [Switching.replayIndices, Switching.selectTerm]
       rw [decoded]
-      simp only [Bool.false_eq_true, if_false]
+      simp only [Bool.false_eq_true, ite_false]
       rw [Switching.QueryAdvice.decodeValue_mk_xor]
       rw [stateEqual]
       simpa [DecisionTree.PathStep.indices] using
@@ -1040,7 +1040,7 @@ theorem CanonicalBlockTrace.replayIndices_satisfyingAssignment
         CanonicalBlockTrace.adviceList_takeLast]
       simp only [Switching.replayIndices, Switching.selectTerm]
       rw [decoded]
-      simp only [if_true]
+      simp only [ite_true]
       rw [Switching.QueryAdvice.decodeValue_mk_xor]
       rw [stateEqual]
       simpa [DecisionTree.PathStep.indices] using

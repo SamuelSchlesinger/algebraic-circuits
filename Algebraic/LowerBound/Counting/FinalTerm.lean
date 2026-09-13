@@ -3,7 +3,7 @@ import Algebraic.LowerBound.Counting.Sharp
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Data.Nat.Cast.Order.Field
-import Mathlib.Data.Real.Basic
+import Mathlib.Basic.Real.Basic
 import Mathlib.Tactic.Ring
 
 /-!
@@ -17,12 +17,14 @@ namespace Algebraic
 
 /-- Real-valued envelope obtained by replacing every summand of the sharp
 budget by its final factorial-divided term. -/
-noncomputable def Signature.finalTerm
+noncomputable def _root_.Cslib.Circuits.Signature.finalTerm
     (σ : Signature) [Fintype σ.Op]
     (n m G : Nat) : Real :=
   (G + 1) *
     (σ.lineCount (n + G) : Real) ^ G * (n + G : Real) ^ m /
       (G.factorial : Real)
+
+export Cslib.Circuits (Signature.finalTerm)
 
 /-- The tail of a factorial is bounded by replacing every factor by the final
 index. -/
@@ -55,7 +57,7 @@ theorem Nat.factorial_le_factorial_mul_pow
 
 /-- Real-valued global form of the factorial-improved count. It bounds every
 summand by the final one whenever the final line count is at least `G`. -/
-theorem Signature.sharpBudget_cast_le_finalTerm
+theorem _root_.Cslib.Circuits.Signature.sharpBudget_cast_le_finalTerm
     (σ : Signature) [Fintype σ.Op]
     {n m G : Nat}
     (enoughLines : G ≤ σ.lineCount (n + G)) :
@@ -130,9 +132,11 @@ theorem Signature.sharpBudget_cast_le_finalTerm
       simp
       ring
 
+export Cslib.Circuits (Signature.sharpBudget_cast_le_finalTerm)
+
 /-- Real-valued final-term bound on the number of functions computed with at
 most `G` gates. -/
-theorem Circuit.card_functionsAtMost_cast_le_finalTerm
+theorem _root_.Cslib.Circuits.Circuit.card_functionsAtMost_cast_le_finalTerm
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     {n m G : Nat}
@@ -146,9 +150,11 @@ theorem Circuit.card_functionsAtMost_cast_le_finalTerm
         interpretation n m G
     _ ≤ _ := σ.sharpBudget_cast_le_finalTerm enoughLines
 
+export Cslib.Circuits (Circuit.card_functionsAtMost_cast_le_finalTerm)
+
 /-- A finite family exceeding the real-valued final-term envelope contains a
 function requiring more than `G` gates. -/
-theorem Circuit.exists_hard_in_family_of_finalTerm
+theorem _root_.Cslib.Circuits.Circuit.exists_hard_in_family_of_finalTerm
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -161,9 +167,11 @@ theorem Circuit.exists_hard_in_family_of_finalTerm
     (σ.sharpBudget_cast_le_finalTerm enoughLines).trans_lt large
   exact_mod_cast castBound
 
+export Cslib.Circuits (Circuit.exists_hard_in_family_of_finalTerm)
+
 /-- Full-function-space Shannon theorem using the real-valued final-term
 envelope. -/
-theorem Circuit.exists_hard_of_finalTerm
+theorem _root_.Cslib.Circuits.Circuit.exists_hard_of_finalTerm
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (enoughLines : G ≤ σ.lineCount (n + G))
@@ -175,5 +183,7 @@ theorem Circuit.exists_hard_of_finalTerm
       (Target.count U n m : Real) :=
     (σ.sharpBudget_cast_le_finalTerm enoughLines).trans_lt large
   exact_mod_cast castBound
+
+export Cslib.Circuits (Circuit.exists_hard_of_finalTerm)
 
 end Algebraic

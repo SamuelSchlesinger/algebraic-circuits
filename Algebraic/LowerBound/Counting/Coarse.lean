@@ -12,14 +12,16 @@ using only the number of primitive operations and their maximum arity.
 namespace Algebraic
 
 /-- A simple closed budget depending only on signature size and maximum arity. -/
-def Signature.coarseBudget
+def _root_.Cslib.Circuits.Signature.coarseBudget
     (σ : Signature) [Fintype σ.Op]
     (r n m G : Nat) : Nat :=
   (G + 1) *
     (1 + (n + G) + Fintype.card σ.Op *
       (n + G + 1) ^ r) ^ (G + m)
 
-theorem Signature.sharpCount_le_coarseTerm
+export Cslib.Circuits (Signature.coarseBudget)
+
+theorem _root_.Cslib.Circuits.Signature.sharpCount_le_coarseTerm
     (σ : Signature) [Fintype σ.Op]
     {r n m g G : Nat}
     (arity : σ.ArityAtMost r)
@@ -54,7 +56,9 @@ theorem Signature.sharpCount_le_coarseTerm
     _ = base ^ (g + m) := (Nat.pow_add base g m).symm
     _ ≤ base ^ (G + m) := pow_le_pow_right' basePositive exponentBound
 
-theorem Signature.sharpBudget_le_coarseBudget
+export Cslib.Circuits (Signature.sharpCount_le_coarseTerm)
+
+theorem _root_.Cslib.Circuits.Signature.sharpBudget_le_coarseBudget
     (σ : Signature) [Fintype σ.Op]
     {r n m G : Nat}
     (arity : σ.ArityAtMost r) :
@@ -73,7 +77,9 @@ theorem Signature.sharpBudget_le_coarseBudget
           (n + G + 1) ^ r) ^ (G + m) := by
       simp
 
-theorem Circuit.card_functionsAtMost_le_coarseBudget
+export Cslib.Circuits (Signature.sharpBudget_le_coarseBudget)
+
+theorem _root_.Cslib.Circuits.Circuit.card_functionsAtMost_le_coarseBudget
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     {r : Nat}
@@ -84,7 +90,9 @@ theorem Circuit.card_functionsAtMost_le_coarseBudget
   (Circuit.card_functionsAtMost_le_sharpBudget interpretation n m G).trans
     (σ.sharpBudget_le_coarseBudget arity)
 
-theorem Circuit.exists_hard_in_family_coarse
+export Cslib.Circuits (Circuit.card_functionsAtMost_le_coarseBudget)
+
+theorem _root_.Cslib.Circuits.Circuit.exists_hard_in_family_coarse
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -95,5 +103,7 @@ theorem Circuit.exists_hard_in_family_coarse
       Circuit.GateHard interpretation G target :=
   Circuit.exists_hard_in_family_sharp interpretation family <|
     (σ.sharpBudget_le_coarseBudget arity).trans_lt large
+
+export Cslib.Circuits (Circuit.exists_hard_in_family_coarse)
 
 end Algebraic

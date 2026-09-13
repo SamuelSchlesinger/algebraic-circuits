@@ -31,7 +31,7 @@ def ofSupport
   classical
   rw [ofSupport, Expansion.support_finset_sum]
   simp_rw [MvPolynomial.support_monomial,
-    if_neg (one_ne_zero : (1 : ℕ) ≠ 0)]
+    ite_eq_right (one_ne_zero : (1 : ℕ) ≠ 0)]
   exact Finset.biUnion_singleton_eq_self
 
 /-- Coefficients of `ofSupport` are the characteristic function of the
@@ -40,7 +40,7 @@ specified support. -/
     [DecidableEq Variable]
     (support : Finset (Variable →₀ ℕ))
     (exponent : Variable →₀ ℕ) :
-    MvPolynomial.coeff exponent (ofSupport support) =
+    AddMonoidAlgebra.coeff (ofSupport support) exponent =
       if exponent ∈ support then 1 else 0 := by
   classical
   rw [ofSupport, MvPolynomial.coeff_sum]
@@ -52,7 +52,7 @@ theorem coeff_ofSupport_of_mem
     {support : Finset (Variable →₀ ℕ)}
     {exponent : Variable →₀ ℕ}
     (present : exponent ∈ support) :
-    MvPolynomial.coeff exponent (ofSupport support) = 1 := by
+    AddMonoidAlgebra.coeff (ofSupport support) exponent = 1 := by
   simp [present]
 
 /-- A separated finite family yields its cardinality-minus-one addition
@@ -75,7 +75,7 @@ theorem circuit_addition_lowerBound
       (ofSupport support).support (ofSupport support).support := by
     simpa using separated
   have coefficientsOne : ∀ exponent ∈ (ofSupport support).support,
-      MvPolynomial.coeff exponent (ofSupport support) = 1 := by
+      AddMonoidAlgebra.coeff (ofSupport support) exponent = 1 := by
     intro exponent present
     simp at present ⊢
     exact present

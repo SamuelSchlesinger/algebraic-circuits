@@ -204,7 +204,7 @@ theorem firstNonzeroFlag_vectorBits_eq_true_iff
           pivotFlag
     · intro previous previousLt
       have priorFalse := priorFlags previous
-      simp only [if_pos previousLt, Bool.not_eq_true'] at priorFalse
+      simp only [ite_eq_left previousLt, Bool.not_eq_true'] at priorFalse
       by_contra previousNonzero
       have priorTrue :=
         (vectorCoordinateNonzeroFlags_eq_true_iff widthPositive

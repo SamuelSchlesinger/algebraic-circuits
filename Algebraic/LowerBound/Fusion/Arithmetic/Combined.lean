@@ -20,7 +20,7 @@ section CostAlgebra
 variable {sigma : Signature}
 
 /-- Program cost is additive in the operation-cost function. -/
-theorem Program.cost_add
+theorem _root_.Cslib.Circuits.Program.cost_add
     (program : Program sigma n g)
     (left right : OperationCost sigma) :
     program.cost (fun op => left op + right op) =
@@ -31,17 +31,21 @@ theorem Program.cost_add
       simp only [Program.cost_gate, inductionHypothesis]
       omega
 
+export Cslib.Circuits (Program.cost_add)
+
 /-- Circuit cost is additive in the operation-cost function. -/
-theorem Circuit.cost_add
+theorem _root_.Cslib.Circuits.Circuit.cost_add
     (circuit : Circuit sigma n g m)
     (left right : OperationCost sigma) :
     circuit.cost (fun op => left op + right op) =
       circuit.cost left + circuit.cost right := by
   exact circuit.program.cost_add left right
 
+export Cslib.Circuits (Circuit.cost_add)
+
 /-- Pointwise domination of operation costs implies domination of program
 costs. -/
-theorem Program.cost_mono
+theorem _root_.Cslib.Circuits.Program.cost_mono
     (program : Program sigma n g)
     (left right : OperationCost sigma)
     (bounded : ∀ op, left op ≤ right op) :
@@ -51,14 +55,18 @@ theorem Program.cost_mono
   | gate program line inductionHypothesis =>
       exact Nat.add_le_add inductionHypothesis (bounded line.op)
 
+export Cslib.Circuits (Program.cost_mono)
+
 /-- Pointwise domination of operation costs implies domination of circuit
 costs. -/
-theorem Circuit.cost_mono
+theorem _root_.Cslib.Circuits.Circuit.cost_mono
     (circuit : Circuit sigma n g m)
     (left right : OperationCost sigma)
     (bounded : ∀ op, left op ≤ right op) :
     circuit.cost left ≤ circuit.cost right := by
   exact circuit.program.cost_mono left right bounded
+
+export Cslib.Circuits (Circuit.cost_mono)
 
 end CostAlgebra
 

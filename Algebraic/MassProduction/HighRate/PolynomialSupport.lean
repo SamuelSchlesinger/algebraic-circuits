@@ -25,7 +25,7 @@ theorem dvdOfMemSupportPowTwo
   rw [← Polynomial.map_iterateFrobenius_expand 2 polynomial width,
     Polynomial.coeff_map, Polynomial.coeff_expand (by positivity)] at nonzero
   by_contra notDivisible
-  simp only [if_neg notDivisible, map_zero, ne_eq, not_true_eq_false] at nonzero
+  simp only [ite_eq_right notDivisible, map_zero, ne_eq, not_true_eq_false] at nonzero
 
 /-- A low-degree factor bounds the residue of every supported exponent
 after multiplication by a Frobenius power. -/

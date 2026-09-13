@@ -19,6 +19,11 @@ surface navigable without forcing breaking renames on existing users.
 
 ## Names and namespaces
 
+- The foundational circuit types belong to `Cslib.Circuits`. Define methods
+  extending those types in their canonical CSLib namespaces so field notation
+  also works on values constructed upstream. Re-export existing public method
+  names from `Algebraic` for source compatibility. Gate bases and research
+  developments continue to live in their existing `Algebraic` namespaces.
 - Types and namespaces use `UpperCamelCase`; declarations use `lowerCamelCase`.
   Existing public names follow this convention and should not be mass-renamed.
 - A theorem name should state its conclusion or principal inequality. Use a

@@ -49,14 +49,14 @@ theorem probability_coordinate_live
       apply Finset.sum_congr rfl
       intro rho _
       by_cases live : rho selected = none
-      · rw [if_pos live]
+      · rw [ite_eq_left live]
         apply Finset.prod_congr rfl
         intro index _
         by_cases equal : index = selected
         · subst index
           simp [selectedWeight, live]
         · simp [selectedWeight, equal]
-      · rw [if_neg live]
+      · rw [ite_eq_right live]
         symm
         apply Finset.prod_eq_zero (Finset.mem_univ selected)
         simp [selectedWeight, live]

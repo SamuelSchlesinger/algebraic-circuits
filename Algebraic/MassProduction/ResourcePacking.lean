@@ -81,7 +81,7 @@ theorem packedBit_at_placement
     packedBit placement values (placement source) = values source := by
   classical
   unfold packedBit
-  rw [dif_pos ⟨source, rfl⟩]
+  rw [dite_eq_left ⟨source, rfl⟩]
   apply congrArg values
   apply placement.injective
   exact Classical.choose_spec (show ∃ candidate,

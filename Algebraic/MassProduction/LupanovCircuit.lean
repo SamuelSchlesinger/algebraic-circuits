@@ -187,7 +187,7 @@ theorem leftExpression_eval_minterms_true_iff
   · rintro ⟨offset, rowValid, rowSelected, patternTrue⟩
     refine ⟨offset, ?_⟩
     rw [leftTerm_eval]
-    simp only [dif_pos rowValid, Bool.and_eq_true]
+    simp only [dite_eq_left rowValid, Bool.and_eq_true]
     constructor
     · rw [mintermCircuit_eval]
       exact decide_eq_true rowSelected.symm
@@ -268,7 +268,7 @@ theorem circuit_eval
       of_decide_eq_true rightTrue
     rw [← selectedPattern, assignmentBits_blockPattern] at patternTrue
     unfold blockColumn at patternTrue
-    simp only [dif_pos rowValid] at patternTrue
+    simp only [dite_eq_left rowValid] at patternTrue
     rw [rowSelected, assignmentBits_bitVectorEquiv,
       assignmentBits_bitVectorEquiv] at patternTrue
     rw [append_addressInput_dataInput] at patternTrue
@@ -299,7 +299,7 @@ theorem circuit_eval
       rw [show pattern = blockPattern function block data by rfl,
         assignmentBits_blockPattern]
       unfold blockColumn
-      simp only [dif_pos rowValid]
+      simp only [dite_eq_left rowValid]
       rw [rowSelected]
       have addressDecoded : assignmentBits addressWidth address =
           addressInput dataWidth input := by

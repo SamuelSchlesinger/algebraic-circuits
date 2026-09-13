@@ -68,7 +68,7 @@ theorem boundary_support (face : Face n) {result : Face n}
           · intro vertex contained
             rw [Face.contains_iff_head_tail] at contained ⊢
             exact ⟨contained.1, subface _ contained.2⟩
-          · simp only [Face.dimension_cons, reduceCtorEq, if_false, Nat.add_zero]
+          · simp only [Face.dimension_cons, reduceCtorEq, ite_false, Nat.add_zero]
             exact dim
       | none =>
           rw [bit, boundary_push_free] at member
@@ -90,7 +90,7 @@ theorem boundary_support (face : Face n) {result : Face n}
             · intro vertex contained
               rw [Face.contains_iff_head_tail] at contained ⊢
               exact ⟨Or.inl rfl, subface _ contained.2⟩
-            · simp only [Face.dimension_cons, if_true]
+            · simp only [Face.dimension_cons, ite_true]
               omega
 
 /-- Every prism face is one dimension higher and has only erased original vertices. -/

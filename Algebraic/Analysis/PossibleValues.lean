@@ -14,7 +14,7 @@ forget correlations between wires.
 namespace Algebraic
 
 /-- Pointwise possible-value lifting of a concrete interpretation. -/
-noncomputable def Interpretation.possibleValues
+noncomputable def _root_.Cslib.Circuits.Interpretation.possibleValues
     [Fintype U]
     (interpretation : Interpretation σ U) :
     Interpretation σ (Finset U) := by
@@ -24,7 +24,9 @@ noncomputable def Interpretation.possibleValues
       (∀ argument, concrete argument ∈ input argument) ∧
         interpretation op concrete = output
 
-@[simp] theorem Interpretation.mem_possibleValues
+export Cslib.Circuits (Interpretation.possibleValues)
+
+@[simp] theorem _root_.Cslib.Circuits.Interpretation.mem_possibleValues
     [Fintype U]
     (interpretation : Interpretation σ U)
     (op : σ.Op)
@@ -37,9 +39,11 @@ noncomputable def Interpretation.possibleValues
   classical
   simp [Interpretation.possibleValues]
 
+export Cslib.Circuits (Interpretation.mem_possibleValues)
+
 /-- Sending a value to its singleton set is a homomorphism into the
 possible-value interpretation. -/
-noncomputable def Interpretation.singletonHomomorphism
+noncomputable def _root_.Cslib.Circuits.Interpretation.singletonHomomorphism
     [Fintype U]
     (interpretation : Interpretation σ U) :
     Homomorphism interpretation interpretation.possibleValues := by
@@ -64,9 +68,11 @@ noncomputable def Interpretation.singletonHomomorphism
           rw [concrete_eq] at result
           exact result.symm }
 
+export Cslib.Circuits (Interpretation.singletonHomomorphism)
+
 /-- Possible-value evaluation agrees exactly with concrete evaluation on
 singleton input sets. -/
-theorem Circuit.eval_possibleValues_singleton
+theorem _root_.Cslib.Circuits.Circuit.eval_possibleValues_singleton
     [Fintype U]
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U)
@@ -76,9 +82,11 @@ theorem Circuit.eval_possibleValues_singleton
         ((fun value => {value}) ∘ input) := by
   exact circuit.map_eval interpretation.singletonHomomorphism input
 
+export Cslib.Circuits (Circuit.eval_possibleValues_singleton)
+
 /-- Every concrete gate value belongs to the possible-value analysis whenever
 each concrete input belongs to its supplied abstract input set. -/
-theorem Program.eval_mem_possibleValues
+theorem _root_.Cslib.Circuits.Program.eval_mem_possibleValues
     [Fintype U]
     (program : Program σ n g)
     (interpretation : Interpretation σ U)
@@ -115,8 +123,10 @@ theorem Program.eval_mem_possibleValues
           wireContained (line.wires argument)
       · simpa only [Program.eval_gate_castSucc] using ih priorGate
 
+export Cslib.Circuits (Program.eval_mem_possibleValues)
+
 /-- Every concrete wire value belongs to its possible-value abstraction. -/
-theorem Program.trace_mem_possibleValues
+theorem _root_.Cslib.Circuits.Program.trace_mem_possibleValues
     [Fintype U]
     (program : Program σ n g)
     (interpretation : Interpretation σ U)
@@ -133,9 +143,11 @@ theorem Program.trace_mem_possibleValues
     simpa [Program.trace] using program.eval_mem_possibleValues interpretation
       concreteInput abstractInput contained gate
 
+export Cslib.Circuits (Program.trace_mem_possibleValues)
+
 /-- Every concrete circuit output belongs to the corresponding possible-value
 output set. -/
-theorem Circuit.eval_mem_possibleValues
+theorem _root_.Cslib.Circuits.Circuit.eval_mem_possibleValues
     [Fintype U]
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U)
@@ -147,6 +159,8 @@ theorem Circuit.eval_mem_possibleValues
       circuit.eval interpretation.possibleValues abstractInput output :=
   circuit.program.trace_mem_possibleValues interpretation concreteInput
     abstractInput contained (circuit.outputs output)
+
+export Cslib.Circuits (Circuit.eval_mem_possibleValues)
 
 /-- Translation preserves possible-value propagation exactly at the abstract
 level. -/

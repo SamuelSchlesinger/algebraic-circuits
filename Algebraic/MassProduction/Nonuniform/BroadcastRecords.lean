@@ -57,7 +57,7 @@ theorem recordsCircuit_eval_preserved
       input (finProdFinEquiv (record, bit)) := by
   rw [recordsCircuit, Circuit.eval_mapOutputs, Circuit.eval_parallel, Circuit.eval_id]
   simp only [Function.comp_apply, outputWire, Equiv.symm_apply_apply,
-    dif_neg (not_le.mpr preserved), Fin.append_left]
+    dite_eq_right (not_le.mpr preserved), Fin.append_left]
 
 /-- The copied-value field consists exactly of the shared broadcast outputs. -/
 theorem recordsCircuit_eval_value
@@ -72,7 +72,7 @@ theorem recordsCircuit_eval_value
   rw [recordsCircuit, Circuit.eval_mapOutputs, Circuit.eval_parallel, Circuit.eval_id]
   simp only [Function.comp_apply, outputWire, Routing.recordBitIndex,
     Equiv.symm_apply_apply, valueBit, Routing.payloadBit, Fin.val_natAdd]
-  rw [dif_pos (by omega)]
+  rw [dite_eq_left (by omega)]
   rw [Fin.append_right, valuesCircuit, Circuit.eval_parallelFinVector]
   apply congrArg (fun selected : Fin valueWidth =>
     (payloadCircuit depth keyWidth (metadataWidth + valueWidth)

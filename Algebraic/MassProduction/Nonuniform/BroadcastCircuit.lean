@@ -92,7 +92,7 @@ theorem linkExpression_eval_eq_true_iff
     (record : Fin (networkRecords depth)) (positive : 0 < record.val) :
     (linkExpression depth keyWidth payloadWidth record).eval input = true ↔
       recordKey input (predecessor record positive) = recordKey input record := by
-  rw [linkExpression, dif_pos positive, recordKeysEqualExpression_eval_eq_true_iff]
+  rw [linkExpression, dite_eq_left positive, recordKeysEqualExpression_eval_eq_true_iff]
 
 /-- Broadcasting one payload bit costs at most `6 * keyWidth + 4` gates
 per record, independently of equal-key run lengths. -/

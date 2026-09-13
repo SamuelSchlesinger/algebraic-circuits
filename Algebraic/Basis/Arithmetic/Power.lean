@@ -218,14 +218,14 @@ theorem binaryCircuit_eval
       rw [binaryCircuit_bit bit exponent nonzero]
       cases bit with
       | false =>
-          rw [if_neg (by decide),
+          rw [ite_eq_right (by decide),
             squareCircuit_eval, inductionHypothesis]
           rw [← pow_add]
           congr 1
           simp only [Nat.bit_false_apply]
           omega
       | true =>
-          rw [if_pos rfl, multiplyInputCircuit_eval,
+          rw [ite_eq_left rfl, multiplyInputCircuit_eval,
             squareCircuit_eval, inductionHypothesis]
           rw [← pow_add, ← pow_succ]
           congr 1

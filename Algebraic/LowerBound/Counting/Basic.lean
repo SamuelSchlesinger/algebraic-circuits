@@ -21,7 +21,7 @@ def BoundedCircuit.eval
   circuit.2.eval interpretation
 
 /-- Functions computed by circuits with at most `G` internal gates. -/
-noncomputable def Circuit.functionsAtMost
+noncomputable def _root_.Cslib.Circuits.Circuit.functionsAtMost
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (n m G : Nat) : Finset (Target U n m) := by
@@ -29,16 +29,20 @@ noncomputable def Circuit.functionsAtMost
   exact Finset.univ.image fun circuit : BoundedCircuit σ n m G =>
     circuit.eval interpretation
 
+export Cslib.Circuits (Circuit.functionsAtMost)
+
 /-- Number of topologically ordered circuit descriptions with at most `G`
 internal gates. -/
-def Signature.orderedBudget
+def _root_.Cslib.Circuits.Signature.orderedBudget
     (σ : Signature) [Fintype σ.Op]
     (n m G : Nat) : Nat :=
   ∑ g ∈ Finset.range (G + 1),
     (∏ j ∈ Finset.range g, σ.lineCount (n + j)) *
       (n + g) ^ m
 
-theorem Circuit.mem_functionsAtMost_iff
+export Cslib.Circuits (Signature.orderedBudget)
+
+theorem _root_.Cslib.Circuits.Circuit.mem_functionsAtMost_iff
     [Fintype σ.Op] [Fintype U]
     {interpretation : Interpretation σ U}
     {target : Target U n m} :
@@ -59,9 +63,11 @@ theorem Circuit.mem_functionsAtMost_iff
     refine ⟨⟨index, circuit⟩, Finset.mem_univ _, ?_⟩
     simpa [BoundedCircuit.eval] using computes.eval_eq
 
+export Cslib.Circuits (Circuit.mem_functionsAtMost_iff)
+
 /-- Being absent from the easy-function set is exactly gate hardness at the
 corresponding budget. -/
-theorem Circuit.not_mem_functionsAtMost_iff
+theorem _root_.Cslib.Circuits.Circuit.not_mem_functionsAtMost_iff
     [Fintype σ.Op] [Fintype U]
     {interpretation : Interpretation σ U}
     {target : Target U n m} :
@@ -70,6 +76,8 @@ theorem Circuit.not_mem_functionsAtMost_iff
   simpa [Circuit.GateHard] using not_congr
     (Circuit.mem_functionsAtMost_iff
       (interpretation := interpretation) (target := target) (G := G))
+
+export Cslib.Circuits (Circuit.not_mem_functionsAtMost_iff)
 
 /-- Exact number of ordered circuits with at most `G` internal gates. -/
 theorem BoundedCircuit.card [Fintype σ.Op] :
@@ -86,7 +94,7 @@ theorem BoundedCircuit.card [Fintype σ.Op] :
     (G + 1)
 
 /-- Semantic functions are no more numerous than their ordered descriptions. -/
-theorem Circuit.card_functionsAtMost_le
+theorem _root_.Cslib.Circuits.Circuit.card_functionsAtMost_le
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U) :
     (Circuit.functionsAtMost interpretation n m G).card ≤
@@ -94,9 +102,11 @@ theorem Circuit.card_functionsAtMost_le
   classical
   exact Finset.card_image_le.trans_eq BoundedCircuit.card
 
+export Cslib.Circuits (Circuit.card_functionsAtMost_le)
+
 /-- Any family larger than the set of functions available within budget contains
 a target outside that budget. -/
-theorem Circuit.exists_hard_in_family_of_card_lt
+theorem _root_.Cslib.Circuits.Circuit.exists_hard_in_family_of_card_lt
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -110,9 +120,11 @@ theorem Circuit.exists_hard_in_family_of_card_lt
   exact ⟨target, inFamily,
     Circuit.not_mem_functionsAtMost_iff.mp notComputable⟩
 
+export Cslib.Circuits (Circuit.exists_hard_in_family_of_card_lt)
+
 /-- If the easy functions do not fill the whole target space, some target lies
 outside the gate budget. -/
-theorem Circuit.exists_hard_of_card_lt
+theorem _root_.Cslib.Circuits.Circuit.exists_hard_of_card_lt
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (small :
@@ -129,8 +141,10 @@ theorem Circuit.exists_hard_of_card_lt
     (by simpa only [Finset.card_univ, targetCard] using small)
   exact ⟨target, hard⟩
 
+export Cslib.Circuits (Circuit.exists_hard_of_card_lt)
+
 /-- A family larger than the ordered-syntax budget contains a hard target. -/
-theorem Circuit.exists_hard_in_family
+theorem _root_.Cslib.Circuits.Circuit.exists_hard_in_family
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -139,5 +153,7 @@ theorem Circuit.exists_hard_in_family
       Circuit.GateHard interpretation G target := by
   apply Circuit.exists_hard_in_family_of_card_lt interpretation family
   exact (Circuit.card_functionsAtMost_le interpretation).trans_lt large
+
+export Cslib.Circuits (Circuit.exists_hard_in_family)
 
 end Algebraic

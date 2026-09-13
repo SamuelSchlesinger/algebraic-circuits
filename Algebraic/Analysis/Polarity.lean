@@ -52,7 +52,7 @@ abbrev PolarityPolicy (σ : Signature) :=
   (op : σ.Op) → Fin (σ.Arity op) → Polarity
 
 /-- Polarity interpretation induced by a local argument policy. -/
-def Signature.polarityInterpretation
+def _root_.Cslib.Circuits.Signature.polarityInterpretation
     (σ : Signature)
     (policy : PolarityPolicy σ)
     (n : Nat) : Interpretation σ (Fin n → Polarity) :=
@@ -62,11 +62,15 @@ def Signature.polarityInterpretation
         result.join ((policy op argument).comp (input argument coordinate)))
       .none
 
+export Cslib.Circuits (Signature.polarityInterpretation)
+
 /-- Per-output, per-input polarity profile of a circuit. -/
-def Circuit.polarityProfile
+def _root_.Cslib.Circuits.Circuit.polarityProfile
     (circuit : Circuit σ n g m)
     (policy : PolarityPolicy σ) : Fin m → Fin n → Polarity :=
   circuit.eval (σ.polarityInterpretation policy n) Polarity.inputProfile
+
+export Cslib.Circuits (Circuit.polarityProfile)
 
 /-- Translation preserves the exact abstract polarity propagation induced by
 its target operation gadgets. -/

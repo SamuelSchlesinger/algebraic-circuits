@@ -97,7 +97,7 @@ theorem polynomial_support_add
     (left right : MvPolynomial σ ℕ) :
     (left + right).support = left.support ∪ right.support := by
   ext exponent
-  simp only [MvPolynomial.mem_support_iff, MvPolynomial.coeff_add,
+  simp only [MvPolynomial.mem_support_iff, AddMonoidAlgebra.coeff_add, Finsupp.add_apply,
     Finset.mem_union]
   omega
 

@@ -155,7 +155,7 @@ theorem support_transform_eq_surviving_image
     rw [Finset.mem_biUnion]
     refine ⟨source, sourcePresent.1, ?_⟩
     rw [support_monomialExpansion_eq_if,
-      if_neg sourcePresent.2, Finset.mem_singleton]
+      ite_eq_right sourcePresent.2, Finset.mem_singleton]
     exact sourceEqual.symm
 
 /-- Exact support of a positive weighted monomial substitution. -/

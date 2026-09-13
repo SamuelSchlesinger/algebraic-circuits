@@ -13,13 +13,15 @@ that circuit evaluation depends only on those inputs.
 namespace Algebraic
 
 /-- The original inputs supporting a line, given the support of each wire. -/
-def Line.inputSupport
+def _root_.Cslib.Circuits.Line.inputSupport
     (line : Line σ n g)
     (wireSupport : Wire n g → Finset (Fin n)) : Finset (Fin n) :=
   Finset.univ.biUnion fun k => wireSupport (line.wires k)
 
+export Cslib.Circuits (Line.inputSupport)
+
 /-- Membership in a line's input support comes from one of its arguments. -/
-@[simp] theorem Line.mem_inputSupport
+@[simp] theorem _root_.Cslib.Circuits.Line.mem_inputSupport
     {line : Line σ n g}
     {wireSupport : Wire n g → Finset (Fin n)}
     {input : Fin n} :
@@ -27,8 +29,10 @@ def Line.inputSupport
       ∃ argument, input ∈ wireSupport (line.wires argument) := by
   simp [Line.inputSupport]
 
+export Cslib.Circuits (Line.mem_inputSupport)
+
 /-- The input support of every gate in a program. -/
-def Program.gateSupport :
+def _root_.Cslib.Circuits.Program.gateSupport :
     (program : Program σ n g) → Fin g → Finset (Fin n)
   | .empty => Fin.elim0
   | .gate program line =>
@@ -36,28 +40,36 @@ def Program.gateSupport :
       let wireSupport := Fin.addCases (fun k => {k}) prior
       Fin.lastCases (line.inputSupport wireSupport) prior
 
+export Cslib.Circuits (Program.gateSupport)
+
 /-- The input support of every input or gate wire in a program. -/
-def Program.wireSupport
+def _root_.Cslib.Circuits.Program.wireSupport
     (program : Program σ n g) : Wire n g → Finset (Fin n) :=
   Fin.addCases (fun k => {k}) program.gateSupport
 
+export Cslib.Circuits (Program.wireSupport)
+
 /-- An input wire is supported only by that input. -/
-@[simp] theorem Program.wireSupport_input
+@[simp] theorem _root_.Cslib.Circuits.Program.wireSupport_input
     (program : Program σ n g)
     (input : Fin n) :
     program.wireSupport (Wire.input (g := g) input) = {input} := by
   simp [Program.wireSupport, Wire.input]
 
+export Cslib.Circuits (Program.wireSupport_input)
+
 /-- A gate-output wire has the support of that gate. -/
-@[simp] theorem Program.wireSupport_gate
+@[simp] theorem _root_.Cslib.Circuits.Program.wireSupport_gate
     (program : Program σ n g)
     (gate : Fin g) :
     program.wireSupport (Wire.gate (n := n) gate) =
       program.gateSupport gate := by
   simp [Program.wireSupport, Wire.gate]
 
+export Cslib.Circuits (Program.wireSupport_gate)
+
 /-- Adding a gate preserves the support of every earlier wire. -/
-@[simp] theorem Program.wireSupport_gate_castSucc
+@[simp] theorem _root_.Cslib.Circuits.Program.wireSupport_gate_castSucc
     (program : Program σ n g)
     (line : Line σ n g)
     (wire : Wire n g) :
@@ -66,8 +78,10 @@ def Program.wireSupport
   · simp [Program.wireSupport, Program.gateSupport, Fin.castSucc_castAdd]
   · simp [Program.wireSupport, Program.gateSupport]
 
+export Cslib.Circuits (Program.wireSupport_gate_castSucc)
+
 /-- The new wire is supported by precisely the inputs supporting the new line. -/
-@[simp] theorem Program.wireSupport_gate_last
+@[simp] theorem _root_.Cslib.Circuits.Program.wireSupport_gate_last
     (program : Program σ n g)
     (line : Line σ n g) :
     (program.gate line).wireSupport (Fin.last (n + g)) =
@@ -77,25 +91,33 @@ def Program.wireSupport
     Fin.addCases_right, Fin.lastCases_last]
   rfl
 
+export Cslib.Circuits (Program.wireSupport_gate_last)
+
 /-- The input support of every designated output wire in a circuit. -/
-def Circuit.outputSupport
+def _root_.Cslib.Circuits.Circuit.outputSupport
     (c : Circuit σ n g m) : Fin m → Finset (Fin n) :=
   c.program.wireSupport ∘ c.outputs
 
+export Cslib.Circuits (Circuit.outputSupport)
+
 /-- The union of the input supports of a circuit's outputs. -/
-def Circuit.inputSupport (c : Circuit σ n g m) : Finset (Fin n) :=
+def _root_.Cslib.Circuits.Circuit.inputSupport (c : Circuit σ n g m) : Finset (Fin n) :=
   Finset.univ.biUnion c.outputSupport
 
+export Cslib.Circuits (Circuit.inputSupport)
+
 /-- An input supports a circuit exactly when it supports a designated output wire. -/
-@[simp] theorem Circuit.mem_inputSupport
+@[simp] theorem _root_.Cslib.Circuits.Circuit.mem_inputSupport
     {c : Circuit σ n g m}
     {input : Fin n} :
     input ∈ c.inputSupport ↔
       ∃ output, input ∈ c.program.wireSupport (c.outputs output) := by
   simp [Circuit.inputSupport, Circuit.outputSupport]
 
+export Cslib.Circuits (Circuit.mem_inputSupport)
+
 /-- Program gates agree whenever their supporting inputs agree. -/
-theorem Program.eval_congr
+theorem _root_.Cslib.Circuits.Program.eval_congr
     (program : Program σ n g)
     (interpretation : Interpretation σ U)
     (left right : Fin n → U)
@@ -135,8 +157,10 @@ theorem Program.eval_congr
         apply ih j
         simpa [Program.gateSupport] using agree
 
+export Cslib.Circuits (Program.eval_congr)
+
 /-- Program traces agree on any wire whose supporting inputs agree. -/
-theorem Program.trace_congr
+theorem _root_.Cslib.Circuits.Program.trace_congr
     (program : Program σ n g)
     (interpretation : Interpretation σ U)
     (left right : Fin n → U)
@@ -155,8 +179,10 @@ theorem Program.trace_congr
     intro input present
     exact agree input (by simpa [Program.wireSupport] using present)
 
+export Cslib.Circuits (Program.trace_congr)
+
 /-- Circuit evaluation depends only on the circuit's structural input support. -/
-theorem Circuit.eval_dependsOnlyOn
+theorem _root_.Cslib.Circuits.Circuit.eval_dependsOnlyOn
     (c : Circuit σ n g m)
     (interpretation : Interpretation σ U) :
     DependsOnlyOn (c.eval interpretation) c.inputSupport := by
@@ -166,8 +192,10 @@ theorem Circuit.eval_dependsOnlyOn
   intro input present
   exact agree input (Circuit.mem_inputSupport.mpr ⟨output, present⟩)
 
+export Cslib.Circuits (Circuit.eval_dependsOnlyOn)
+
 /-- A computed function depends only on the circuit's structural input support. -/
-theorem Circuit.Computes.dependsOnlyOn
+theorem _root_.Cslib.Circuits.Circuit.Computes.dependsOnlyOn
     {c : Circuit σ n g m}
     {interpretation : Interpretation σ U}
     {target : (Fin n → U) → Fin m → U}
@@ -176,5 +204,7 @@ theorem Circuit.Computes.dependsOnlyOn
   intro left right agree
   rw [← computes left, ← computes right]
   exact c.eval_dependsOnlyOn interpretation left right agree
+
+export Cslib.Circuits (Circuit.Computes.dependsOnlyOn)
 
 end Algebraic

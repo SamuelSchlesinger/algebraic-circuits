@@ -22,13 +22,15 @@ namespace Algebraic
 
 /-- Logarithmic exponent obtained from the factorial-improved final term after
 retaining the leading part of Stirling's lower bound. -/
-noncomputable def Signature.stirlingExponent
+noncomputable def _root_.Cslib.Circuits.Signature.stirlingExponent
     (σ : Signature) [Fintype σ.Op]
     (n m G : Nat) : Real :=
   Real.log (G + 1) +
     G * Real.log (σ.lineCount (n + G)) +
       m * Real.log (n + G) -
       ((G : Real) * Real.log G - G)
+
+export Cslib.Circuits (Signature.stirlingExponent)
 
 namespace Shannon
 
@@ -56,7 +58,7 @@ theorem Nat.cast_mul_log_sub_le_log_factorial
 
 /-- Exponential envelope obtained by inserting the leading part of Stirling's
 lower bound into the factorial-improved final term. -/
-theorem Signature.finalTerm_le_exp_stirling
+theorem _root_.Cslib.Circuits.Signature.finalTerm_le_exp_stirling
     (σ : Signature) [Fintype σ.Op]
     {n m G : Nat}
     (positive : 0 < G)
@@ -72,10 +74,12 @@ theorem Signature.finalTerm_le_exp_stirling
   have stirling := Nat.cast_mul_log_sub_le_log_factorial positive
   linarith
 
+export Cslib.Circuits (Signature.finalTerm_le_exp_stirling)
+
 /-- Logarithmic finite form of the sharp Shannon criterion. Its left side has
 leading contribution `(r - 1) * G * n * log q` for an `r`-ary signature over
 a `q`-element universe. -/
-theorem Circuit.exists_hard_of_stirlingLog
+theorem _root_.Cslib.Circuits.Circuit.exists_hard_of_stirlingLog
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (universeNontrivial : 1 < Fintype.card U)
@@ -100,6 +104,8 @@ theorem Circuit.exists_hard_of_stirlingLog
       norm_cast
 
 /-! ## Gate-budget estimates -/
+
+export Cslib.Circuits (Circuit.exists_hard_of_stirlingLog)
 
 namespace Shannon
 
@@ -215,7 +221,7 @@ end Shannon
 
 /-! ## Bounding the Stirling exponent -/
 
-private theorem Signature.log_lineCount_le_maximumArity
+private theorem _root_.Cslib.Circuits.Signature.log_lineCount_le_maximumArity
     {σ : Signature} [Fintype σ.Op]
     {r n G : Nat}
     (maximum : σ.HasMaximumArity r)
@@ -295,7 +301,7 @@ private theorem stirlingExponent_le
       Real.log (σ.lineCount (n + G)) ≤
           Real.log (Fintype.card σ.Op) +
             r * (Real.log 2 + Real.log G) :=
-        Signature.log_lineCount_le_maximumArity
+        Cslib.Circuits.Signature.log_lineCount_le_maximumArity
           maximum hr gatePositive inputsSmall
       _ = c + r * Real.log G := by
         dsimp [c]
@@ -516,7 +522,7 @@ end Shannon
 /-- Closed-form Shannon theorem for an arbitrary fixed finite basis. At the
 exact budget `⌊m |U|ⁿ / ((r - 1) n)⌋`, the easy functions form an
 asymptotically negligible fraction of the full function space. -/
-theorem Circuit.asymptoticallyAlmostAllHard_shannon
+theorem _root_.Cslib.Circuits.Circuit.asymptoticallyAlmostAllHard_shannon
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     {r m : Nat}
@@ -547,8 +553,10 @@ theorem Circuit.asymptoticallyAlmostAllHard_shannon
           Nat.card_eq_fintype_card]
         norm_cast
 
+export Cslib.Circuits (Circuit.asymptoticallyAlmostAllHard_shannon)
+
 /-- Conventional density form of the closed Shannon theorem. -/
-theorem Circuit.tendsto_easyDensity_zero_shannon
+theorem _root_.Cslib.Circuits.Circuit.tendsto_easyDensity_zero_shannon
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     {r m : Nat}
@@ -569,10 +577,12 @@ theorem Circuit.tendsto_easyDensity_zero_shannon
       Nat.card_eq_fintype_card]
     positivity
 
+export Cslib.Circuits (Circuit.tendsto_easyDensity_zero_shannon)
+
 /-- Boolean specialization of the closed Shannon theorem. For a binary basis
 and one output, `Shannon.gateBudget_two_two_one` identifies the budget with
 `2 ^ n / n`. -/
-theorem Circuit.tendsto_boolean_easyDensity_zero_shannon
+theorem _root_.Cslib.Circuits.Circuit.tendsto_boolean_easyDensity_zero_shannon
     [Fintype σ.Op]
     (interpretation : Interpretation σ Bool)
     {r m : Nat}
@@ -589,8 +599,10 @@ theorem Circuit.tendsto_boolean_easyDensity_zero_shannon
     Circuit.tendsto_easyDensity_zero_shannon interpretation maximum
       (by simp) arityAtLeastTwo outputsPositive
 
+export Cslib.Circuits (Circuit.tendsto_boolean_easyDensity_zero_shannon)
+
 /-- Finite-field specialization of the closed Shannon theorem. -/
-theorem Circuit.tendsto_finiteField_easyDensity_zero_shannon
+theorem _root_.Cslib.Circuits.Circuit.tendsto_finiteField_easyDensity_zero_shannon
     {K : Type u} [Field K] [Fintype K]
     [Fintype σ.Op]
     (interpretation : Interpretation σ K)
@@ -606,5 +618,7 @@ theorem Circuit.tendsto_finiteField_easyDensity_zero_shannon
       Filter.atTop (nhds 0) :=
   Circuit.tendsto_easyDensity_zero_shannon interpretation maximum
     Fintype.one_lt_card arityAtLeastTwo outputsPositive
+
+export Cslib.Circuits (Circuit.tendsto_finiteField_easyDensity_zero_shannon)
 
 end Algebraic

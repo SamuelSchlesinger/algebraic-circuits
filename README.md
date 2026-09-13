@@ -1,11 +1,18 @@
 # Algebraic
 
 Algebraic is a Lean 4 library for finite-arity universal algebra and shared
-circuit computation. It provides reusable syntax, semantics, translations,
+circuit computation built on [CSLib](https://github.com/leanprover/cslib).
+It extends CSLib's circuit model with semantics, costs, translations,
 analyses, and lower-bound frameworks without fixing a particular carrier or
 gate basis.
 
 ## Design
+
+The signatures, interpretations, homomorphisms, wires, programs, and circuits
+come from `Cslib.Computability.Circuit`. The `Algebraic` core imports re-export
+these types and their operations, so native CSLib circuits work directly with
+the library's constructions and lower bounds. Lake pins CSLib to the commit
+that introduced this model and uses its matching Lean and Mathlib versions.
 
 - A `Signature` describes operation symbols and their arities, while an
   `Interpretation` assigns them concrete meaning.
@@ -61,7 +68,7 @@ truth for the results currently available and their precise hypotheses.
 lake build --wfail
 ```
 
-Run all default declaration linters over the public `Algebraic` namespace:
+Run all default declaration linters over the `Algebraic` modules:
 
 ```sh
 lake lint

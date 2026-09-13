@@ -78,10 +78,10 @@ theorem polynomial_support_add
     (left + right).support = left.support ∪ right.support := by
   ext exponent
   simp only [MvPolynomial.mem_support_iff,
-    MvPolynomial.coeff_add, Finset.mem_union]
+    AddMonoidAlgebra.coeff_add, Finset.mem_union]
   constructor
   · intro sumNonzero
-    by_cases leftNonzero : MvPolynomial.coeff exponent left ≠ 0
+    by_cases leftNonzero : AddMonoidAlgebra.coeff left exponent ≠ 0
     · exact Or.inl leftNonzero
     · right
       intro rightZero
@@ -112,8 +112,8 @@ theorem polynomial_support_mul
     have everyTermZero :=
       (finset_sum_eq_zero_iff
         (Finset.antidiagonal (leftExponent + rightExponent))
-        (fun pair => MvPolynomial.coeff pair.1 left *
-          MvPolynomial.coeff pair.2 right)).mp sumZero
+        (fun pair => AddMonoidAlgebra.coeff left pair.1 *
+          AddMonoidAlgebra.coeff right pair.2)).mp sumZero
     have selectedZero := everyTermZero
       (leftExponent, rightExponent)
       (Finset.mem_antidiagonal.mpr rfl)
@@ -148,7 +148,7 @@ theorem support_C_mul_of_ne_zero
       polynomial.support := by
   classical
   rw [polynomial_support_mul, MvPolynomial.support_C,
-    if_neg nonzero]
+    ite_eq_right nonzero]
   ext exponent
   constructor
   · intro present
@@ -180,21 +180,21 @@ theorem support_bind₁_monomial_coeff
     (present : exponent ∈ polynomial.support) :
     (MvPolynomial.bind₁ substitution
       (MvPolynomial.monomial exponent
-        (MvPolynomial.coeff exponent polynomial))).support =
+        (AddMonoidAlgebra.coeff polynomial exponent))).support =
       (monomialExpansion substitution exponent).support := by
   have coefficientNonzero :
-      MvPolynomial.coeff exponent polynomial ≠ 0 :=
+      AddMonoidAlgebra.coeff polynomial exponent ≠ 0 :=
     MvPolynomial.mem_support_iff.mp present
   have monomialFactorization :
       MvPolynomial.monomial exponent
-          (MvPolynomial.coeff exponent polynomial) =
-          MvPolynomial.C (MvPolynomial.coeff exponent polynomial) *
+          (AddMonoidAlgebra.coeff polynomial exponent) =
+          MvPolynomial.C (AddMonoidAlgebra.coeff polynomial exponent) *
           MvPolynomial.monomial exponent 1 := by
     symm
     simpa using
       (MvPolynomial.C_mul_monomial
         (σ := SourceVar) (R := R)
-        (a := MvPolynomial.coeff exponent polynomial)
+        (a := AddMonoidAlgebra.coeff polynomial exponent)
         (s := exponent) (a' := 1))
   rw [monomialFactorization, map_mul]
   simp only [MvPolynomial.bind₁_C_right]

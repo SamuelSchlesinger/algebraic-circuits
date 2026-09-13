@@ -316,11 +316,11 @@ private theorem normalizedContribution_plus_first_le
       oneNotFinal, Nat.choose_one_right]
     field_simp [ne_of_gt basePositive]
     norm_num
-  · simp only [indexZero, if_false, add_zero]
+  · simp only [indexZero, ite_false, add_zero]
     by_cases final : index.val + 1 = total
-    · simp only [normalizedContribution, final, if_true]
+    · simp only [normalizedContribution, final, ite_true]
       rfl
-    · simp only [normalizedContribution, final, if_false]
+    · simp only [normalizedContribution, final, ite_false]
       gcongr
       norm_num
 
@@ -581,13 +581,13 @@ theorem natCard_combinedAdvice_cast_le
                 dsimp [total] at belowTotal
                 omega
               by_cases final : index.val = remaining
-              · simp only [final, if_true]
+              · simp only [final, ite_true]
                 have lengthEq : index.val + 1 = total := by
                   simp [total, final]
-                simp only [normalizedContribution, lengthEq, if_true]
+                simp only [normalizedContribution, lengthEq, ite_true]
                 exact (div_mul_cancel₀ _
                   (pow_ne_zero _ (ne_of_gt basePositive))).symm.le
-              · simp only [final, if_false]
+              · simp only [final, ite_false]
                 have indexLt : index.val < remaining := by omega
                 have tailLt : remaining - index.val < total := by
                   simp only [total]
@@ -603,7 +603,7 @@ theorem natCard_combinedAdvice_cast_le
                 have lengthNotTotal : index.val + 1 ≠ total := by
                   simp only [total]
                   omega
-                simp only [normalizedContribution, lengthNotTotal, if_false]
+                simp only [normalizedContribution, lengthNotTotal, ite_false]
                 calc
                   ((width.choose (index.val + 1) *
                       (2 ^ (index.val + 1) - 1) : Nat) : Real) *

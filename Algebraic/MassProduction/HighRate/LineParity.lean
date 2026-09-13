@@ -118,7 +118,7 @@ private theorem sumPowEqZero [Fintype K] (exponent : Nat)
         Finset.sum_singleton, zero_pow zero, add_zero]
     _ = ∑ value : Kˣ, (value ^ exponent : K) := by
       simp [embedding, ← image, Finset.univ.sum_map embedding]
-    _ = 0 := by rw [FiniteField.sum_pow_units K exponent, if_neg (notMultiple zero)]
+    _ = 0 := by rw [FiniteField.sum_pow_units K exponent, ite_eq_right (notMultiple zero)]
 
 omit [Fintype Coordinate] in
 /-- A polynomial with no positive `q - 1` multiples in its support has

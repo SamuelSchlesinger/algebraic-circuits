@@ -464,11 +464,11 @@ theorem build_computes_of_dependsOnlyOn
       cases inputValue : input index with
       | false =>
           simp only [build, eval_query, inputValue, Bool.false_eq_true,
-            if_false]
+            ite_false]
           rw [falseComputes input, ScalarFunction.restrict_apply,
             PartialAssignment.apply_fix_eq_self input index false inputValue]
       | true =>
-          simp only [build, eval_query, inputValue, if_true]
+          simp only [build, eval_query, inputValue, ite_true]
           rw [trueComputes input, ScalarFunction.restrict_apply,
             PartialAssignment.apply_fix_eq_self input index true inputValue]
 

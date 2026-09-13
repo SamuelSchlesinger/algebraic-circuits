@@ -92,7 +92,7 @@ end Simulation
 
 /-- Every ordinary homomorphism is a simulation through the identity
 translation. -/
-def Homomorphism.toSimulation
+def _root_.Cslib.Circuits.Homomorphism.toSimulation
     {source : Interpretation σ U}
     {target : Interpretation σ V}
     (homomorphism : Homomorphism source target) :
@@ -102,6 +102,8 @@ def Homomorphism.toSimulation
     intro op input
     rw [Translation.pull_id]
     exact homomorphism.homomorphic op input
+
+export Cslib.Circuits (Homomorphism.toSimulation)
 
 /-- Every same-carrier realization is a simulation with the identity carrier
 map. -/

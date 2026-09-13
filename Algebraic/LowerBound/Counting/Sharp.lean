@@ -61,7 +61,7 @@ def LooseCircuit.evalOutputs
     (values : Fin g → U) : Fin m → U :=
   fun output => Fin.addCases input values (circuit.outputs output)
 
-theorem Wire.value_permutation
+theorem _root_.Cslib.Circuits.Wire.value_permutation
     (permutation : Equiv.Perm (Fin g))
     (inputs : Fin n → U)
     (values : Fin g → U)
@@ -69,12 +69,13 @@ theorem Wire.value_permutation
     (Fin.addCases inputs (values ∘ permutation.symm) : Wire n g → U)
         (Wire.Renaming.ofPermutation permutation wire) =
       (Fin.addCases inputs values : Wire n g → U) wire := by
-  apply Wire.Renaming.value_apply
-  intro gate
-  simp [Wire.Renaming.ofPermutation, Function.comp_apply]
+  refine Fin.addCases (fun input => ?_) (fun gate => ?_) wire <;>
+    simp [Wire.Renaming.ofPermutation, Function.comp_apply]
+
+export Cslib.Circuits (Wire.value_permutation)
 
 /-- Forget topological order, then rename every internal gate. -/
-def Circuit.relabel
+def _root_.Cslib.Circuits.Circuit.relabel
     (circuit : Circuit σ n g m)
     (permutation : Equiv.Perm (Fin g)) : LooseCircuit σ n g m where
   internal := fun gate =>
@@ -83,7 +84,9 @@ def Circuit.relabel
   outputs := fun output =>
     Wire.Renaming.ofPermutation permutation (circuit.outputs output)
 
-theorem Circuit.relabel_satisfies
+export Cslib.Circuits (Circuit.relabel)
+
+theorem _root_.Cslib.Circuits.Circuit.relabel_satisfies
     (circuit : Circuit σ n g m)
     (permutation : Equiv.Perm (Fin g))
     (interpretation : Interpretation σ U)
@@ -100,7 +103,9 @@ theorem Circuit.relabel_satisfies
     exact Wire.value_permutation permutation input
       (circuit.program.eval interpretation input) wire
 
-theorem Circuit.relabel_evalOutputs
+export Cslib.Circuits (Circuit.relabel_satisfies)
+
+theorem _root_.Cslib.Circuits.Circuit.relabel_evalOutputs
     (circuit : Circuit σ n g m)
     (permutation : Equiv.Perm (Fin g))
     (interpretation : Interpretation σ U)
@@ -115,14 +120,18 @@ theorem Circuit.relabel_evalOutputs
 
 /-! ## Acyclicity and unique valuations -/
 
+export Cslib.Circuits (Circuit.relabel_evalOutputs)
+
 /-- Inputs are always available; a gate wire is below a numeric rank bound. -/
-def Wire.Below
+def _root_.Cslib.Circuits.Wire.Below
     (rank : Fin g → Nat)
     (bound : Nat)
     (wire : Wire n g) : Prop :=
   Fin.addCases (fun _ => True) (fun gate => rank gate < bound) wire
 
-theorem Wire.below_castSucc
+export Cslib.Circuits (Wire.Below)
+
+theorem _root_.Cslib.Circuits.Wire.below_castSucc
     (wire : Wire n g)
     (gate : Fin g) :
     Wire.Below (fun gate : Fin (g + 1) => gate.val) gate.castSucc.val
@@ -132,7 +141,9 @@ theorem Wire.below_castSucc
   · simp [Wire.Below, Fin.castSucc_castAdd]
   · simp [Wire.Below]
 
-theorem Wire.below_last
+export Cslib.Circuits (Wire.below_castSucc)
+
+theorem _root_.Cslib.Circuits.Wire.below_last
     (wire : Wire n g) :
     Wire.Below (fun gate : Fin (g + 1) => gate.val) (Fin.last g).val
       wire.castSucc := by
@@ -140,7 +151,9 @@ theorem Wire.below_last
   · simp [Wire.Below, Fin.castSucc_castAdd]
   · simp [Wire.Below]
 
-theorem Program.lines_below
+export Cslib.Circuits (Wire.below_last)
+
+theorem _root_.Cslib.Circuits.Program.lines_below
     (program : Program σ n g)
     (gate : Fin g)
     (argument : Fin (σ.Arity (program.lines gate).op)) :
@@ -167,6 +180,8 @@ theorem Program.lines_below
         rw [Wire.Renaming.castSucc_apply, Wire.below_castSucc]
         exact ih priorGate argument
 
+export Cslib.Circuits (Program.lines_below)
+
 /-- A rank strictly decreases along every internal gate dependency. -/
 def LooseCircuit.AcyclicUnder
     (circuit : LooseCircuit σ n g m)
@@ -174,7 +189,7 @@ def LooseCircuit.AcyclicUnder
   ∀ gate argument,
     Wire.Below rank (rank gate) ((circuit.internal gate).wires argument)
 
-theorem Wire.below_permutation
+theorem _root_.Cslib.Circuits.Wire.below_permutation
     (permutation : Equiv.Perm (Fin g))
     (gate : Fin g)
     (wire : Wire n g) :
@@ -189,7 +204,9 @@ theorem Wire.below_permutation
   · simp [Wire.Below, Wire.Renaming.ofPermutation,
       Wire.Renaming.apply]
 
-theorem Circuit.relabel_acyclic
+export Cslib.Circuits (Wire.below_permutation)
+
+theorem _root_.Cslib.Circuits.Circuit.relabel_acyclic
     (circuit : Circuit σ n g m)
     (permutation : Equiv.Perm (Fin g)) :
     (circuit.relabel permutation).AcyclicUnder
@@ -205,7 +222,9 @@ theorem Circuit.relabel_acyclic
   rw [Wire.below_permutation]
   exact circuit.program.lines_below (permutation.symm gate) argument
 
-theorem Wire.values_eq_of_below
+export Cslib.Circuits (Circuit.relabel_acyclic)
+
+theorem _root_.Cslib.Circuits.Wire.values_eq_of_below
     (rank : Fin g → Nat)
     (bound : Nat)
     (wire : Wire n g)
@@ -220,6 +239,8 @@ theorem Wire.values_eq_of_below
     (fun dependency below => ?_) wire
   · simp
   · simpa using agree dependency (by simpa [Wire.Below] using below)
+
+export Cslib.Circuits (Wire.values_eq_of_below)
 
 /-- An acyclic loose presentation has at most one solution to its gate equations. -/
 theorem LooseCircuit.satisfies_unique
@@ -263,15 +284,17 @@ theorem LooseCircuit.satisfies_unique
 
 /-- A target together with evidence that an irredundant `g`-gate circuit
 computes it. -/
-abbrev Circuit.IrredundantTarget
+abbrev _root_.Cslib.Circuits.Circuit.IrredundantTarget
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (n g m : Nat) :=
   { target : Target U n m //
     target ∈ Circuit.irredundantFunctions interpretation n g m }
 
+export Cslib.Circuits (Circuit.IrredundantTarget)
+
 /-- Choose one irredundant representative circuit for a target. -/
-noncomputable def Circuit.irredundantRepresentative
+noncomputable def _root_.Cslib.Circuits.Circuit.irredundantRepresentative
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (target : Circuit.IrredundantTarget interpretation n g m) :
@@ -279,7 +302,9 @@ noncomputable def Circuit.irredundantRepresentative
   Classical.choose
     (Circuit.mem_irredundantFunctions_iff.mp target.property)
 
-theorem Circuit.irredundantRepresentative_irredundant
+export Cslib.Circuits (Circuit.irredundantRepresentative)
+
+theorem _root_.Cslib.Circuits.Circuit.irredundantRepresentative_irredundant
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (target : Circuit.IrredundantTarget interpretation n g m) :
@@ -288,7 +313,9 @@ theorem Circuit.irredundantRepresentative_irredundant
   (Classical.choose_spec
     (Circuit.mem_irredundantFunctions_iff.mp target.property)).1
 
-theorem Circuit.irredundantRepresentative_eval
+export Cslib.Circuits (Circuit.irredundantRepresentative_irredundant)
+
+theorem _root_.Cslib.Circuits.Circuit.irredundantRepresentative_eval
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (target : Circuit.IrredundantTarget interpretation n g m) :
@@ -297,8 +324,10 @@ theorem Circuit.irredundantRepresentative_eval
   (Classical.choose_spec
     (Circuit.mem_irredundantFunctions_iff.mp target.property)).2
 
+export Cslib.Circuits (Circuit.irredundantRepresentative_eval)
+
 /-- Encode one chosen irredundant circuit for a function under a gate renaming. -/
-noncomputable def Circuit.sharpEncoding
+noncomputable def _root_.Cslib.Circuits.Circuit.sharpEncoding
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U) :
     Circuit.IrredundantTarget interpretation n g m × Equiv.Perm (Fin g) →
@@ -306,9 +335,11 @@ noncomputable def Circuit.sharpEncoding
     fun pair =>
       (Circuit.irredundantRepresentative interpretation pair.1).relabel pair.2
 
+export Cslib.Circuits (Circuit.sharpEncoding)
+
 /-- The target fixes the unique acyclic valuation of an encoded presentation;
 irredundancy then makes its gate permutation recoverable. -/
-theorem Circuit.sharpEncoding_injective
+theorem _root_.Cslib.Circuits.Circuit.sharpEncoding_injective
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U) :
     Function.Injective (Circuit.sharpEncoding (n := n) (g := g) (m := m)
@@ -367,8 +398,10 @@ theorem Circuit.sharpEncoding_injective
 
 /-! ## Counting consequences -/
 
+export Cslib.Circuits (Circuit.sharpEncoding_injective)
+
 /-- Sharp fixed-size Shannon count, including the full `g!` relabeling gain. -/
-theorem Circuit.card_irredundantFunctions_mul_factorial_le
+theorem _root_.Cslib.Circuits.Circuit.card_irredundantFunctions_mul_factorial_le
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (n g m : Nat) :
@@ -383,13 +416,17 @@ theorem Circuit.card_irredundantFunctions_mul_factorial_le
     card_looseCircuit] at encoded
   simpa only [Fintype.card_coe] using encoded
 
+export Cslib.Circuits (Circuit.card_irredundantFunctions_mul_factorial_le)
+
 /-- Sharp number of possible functions at exactly `g` internal gates. -/
-def Signature.sharpCount
+def _root_.Cslib.Circuits.Signature.sharpCount
     (σ : Signature) [Fintype σ.Op]
     (n g m : Nat) : Nat :=
   (σ.lineCount (n + g) ^ g * (n + g) ^ m) / g.factorial
 
-theorem Circuit.card_irredundantFunctions_le_sharpCount
+export Cslib.Circuits (Signature.sharpCount)
+
+theorem _root_.Cslib.Circuits.Circuit.card_irredundantFunctions_le_sharpCount
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (n g m : Nat) :
@@ -399,13 +436,17 @@ theorem Circuit.card_irredundantFunctions_le_sharpCount
   exact Circuit.card_irredundantFunctions_mul_factorial_le
     interpretation n g m
 
+export Cslib.Circuits (Circuit.card_irredundantFunctions_le_sharpCount)
+
 /-- Sharp Shannon budget for all circuits with at most `G` internal gates. -/
-def Signature.sharpBudget
+def _root_.Cslib.Circuits.Signature.sharpBudget
     (σ : Signature) [Fintype σ.Op]
     (n m G : Nat) : Nat :=
   ∑ g ∈ Finset.range (G + 1), σ.sharpCount n g m
 
-theorem Circuit.card_functionsAtMost_le_sharpBudget
+export Cslib.Circuits (Signature.sharpBudget)
+
+theorem _root_.Cslib.Circuits.Circuit.card_functionsAtMost_le_sharpBudget
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (n m G : Nat) :
@@ -417,8 +458,10 @@ theorem Circuit.card_functionsAtMost_le_sharpBudget
   exact Finset.sum_le_sum fun g _ =>
     Circuit.card_irredundantFunctions_le_sharpCount interpretation n g m
 
+export Cslib.Circuits (Circuit.card_functionsAtMost_le_sharpBudget)
+
 /-- A family larger than the sharp budget contains a size-hard function. -/
-theorem Circuit.exists_hard_in_family_sharp
+theorem _root_.Cslib.Circuits.Circuit.exists_hard_in_family_sharp
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -429,8 +472,10 @@ theorem Circuit.exists_hard_in_family_sharp
   exact (Circuit.card_functionsAtMost_le_sharpBudget
     interpretation n m G).trans_lt large
 
+export Cslib.Circuits (Circuit.exists_hard_in_family_sharp)
+
 /-- Full-universe sharp Shannon lower bound. -/
-theorem Circuit.exists_hard_sharp
+theorem _root_.Cslib.Circuits.Circuit.exists_hard_sharp
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (large : σ.sharpBudget n m G < Target.count U n m) :
@@ -440,9 +485,11 @@ theorem Circuit.exists_hard_sharp
   exact (Circuit.card_functionsAtMost_le_sharpBudget
     interpretation n m G).trans_lt large
 
+export Cslib.Circuits (Circuit.exists_hard_sharp)
+
 /-- Under functional completeness, a target outside the sharp budget is both
 hard below `G` and computable at some finite size. -/
-theorem Circuit.exists_hard_sharp_of_complete
+theorem _root_.Cslib.Circuits.Circuit.exists_hard_sharp_of_complete
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (complete : interpretation.FunctionallyComplete)
@@ -454,13 +501,17 @@ theorem Circuit.exists_hard_sharp_of_complete
   obtain ⟨target, hard⟩ := Circuit.exists_hard_sharp interpretation large
   exact ⟨target, hard, complete n m target⟩
 
+export Cslib.Circuits (Circuit.exists_hard_sharp_of_complete)
+
 /-- Boolean specialization of the sharp Shannon theorem. -/
-theorem Circuit.exists_boolean_hard_sharp
+theorem _root_.Cslib.Circuits.Circuit.exists_boolean_hard_sharp
     [Fintype σ.Op]
     (interpretation : Interpretation σ Bool)
     (large : σ.sharpBudget n m G < Target.count Bool n m) :
     ∃ target : Target Bool n m,
       Circuit.GateHard interpretation G target :=
   Circuit.exists_hard_sharp interpretation large
+
+export Cslib.Circuits (Circuit.exists_boolean_hard_sharp)
 
 end Algebraic

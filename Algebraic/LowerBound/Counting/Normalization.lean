@@ -15,7 +15,7 @@ namespace Algebraic
 
 /-- The result and semantic invariant produced by hash-consing a program's gate
 functions. -/
-structure Program.Normalization
+structure _root_.Cslib.Circuits.Program.Normalization
     (program : Program σ n g)
     (interpretation : Interpretation σ U) where
   /-- Number of gates after semantic hash-consing. -/
@@ -36,8 +36,10 @@ structure Program.Normalization
   cost_le : ∀ operationCost : OperationCost σ,
     result.cost operationCost ≤ program.cost operationCost
 
+export Cslib.Circuits (Program.Normalization)
+
 /-- Hash-cons a program by semantic gate function, preserving every wire value. -/
-noncomputable def Program.normalize
+noncomputable def _root_.Cslib.Circuits.Program.normalize
     [Fintype U]
     (interpretation : Interpretation σ U) :
     (program : Program σ n g) → Program.Normalization program interpretation
@@ -119,9 +121,11 @@ noncomputable def Program.normalize
 
 /-! ## Circuit normalization -/
 
+export Cslib.Circuits (Program.normalize)
+
 /-- A semantics-preserving circuit normalization with pairwise distinct internal
 gate functions. -/
-structure Circuit.Normalization
+structure _root_.Cslib.Circuits.Circuit.Normalization
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U) where
   /-- Number of internal gates after normalization. -/
@@ -136,8 +140,10 @@ structure Circuit.Normalization
   cost_le : ∀ operationCost : OperationCost σ,
     result.cost operationCost ≤ circuit.cost operationCost
 
+export Cslib.Circuits (Circuit.Normalization)
+
 /-- Normalize the program and rename the designated output wires. -/
-noncomputable def Circuit.normalize
+noncomputable def _root_.Cslib.Circuits.Circuit.normalize
     [Fintype U]
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U) :
@@ -166,14 +172,18 @@ noncomputable def Circuit.normalize
 
 /-! ## Irredundant function families -/
 
+export Cslib.Circuits (Circuit.normalize)
+
 /-- A circuit whose internal gates compute pairwise distinct scalar functions. -/
-def Circuit.Irredundant
+def _root_.Cslib.Circuits.Circuit.Irredundant
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U) : Prop :=
   Function.Injective (circuit.program.gateFunction interpretation)
 
+export Cslib.Circuits (Circuit.Irredundant)
+
 /-- Functions computed by irredundant circuits with exactly `g` internal gates. -/
-noncomputable def Circuit.irredundantFunctions
+noncomputable def _root_.Cslib.Circuits.Circuit.irredundantFunctions
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (n g m : Nat) : Finset (Target U n m) := by
@@ -183,7 +193,9 @@ noncomputable def Circuit.irredundantFunctions
       circuit.Irredundant interpretation).image fun circuit =>
         circuit.eval interpretation
 
-theorem Circuit.mem_irredundantFunctions_iff
+export Cslib.Circuits (Circuit.irredundantFunctions)
+
+theorem _root_.Cslib.Circuits.Circuit.mem_irredundantFunctions_iff
     [Fintype σ.Op] [Fintype U]
     {interpretation : Interpretation σ U}
     {target : Target U n m} :
@@ -194,8 +206,10 @@ theorem Circuit.mem_irredundantFunctions_iff
   classical
   simp [Circuit.irredundantFunctions]
 
+export Cslib.Circuits (Circuit.mem_irredundantFunctions_iff)
+
 /-- Functions computed by irredundant circuits with at most `G` internal gates. -/
-noncomputable def Circuit.irredundantFunctionsAtMost
+noncomputable def _root_.Cslib.Circuits.Circuit.irredundantFunctionsAtMost
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (n m G : Nat) : Finset (Target U n m) := by
@@ -203,7 +217,9 @@ noncomputable def Circuit.irredundantFunctionsAtMost
   exact (Finset.range (G + 1)).biUnion fun g =>
     Circuit.irredundantFunctions interpretation n g m
 
-theorem Circuit.functionsAtMost_subset_irredundantFunctionsAtMost
+export Cslib.Circuits (Circuit.irredundantFunctionsAtMost)
+
+theorem _root_.Cslib.Circuits.Circuit.functionsAtMost_subset_irredundantFunctionsAtMost
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (n m G : Nat) :
@@ -222,7 +238,9 @@ theorem Circuit.functionsAtMost_subset_irredundantFunctionsAtMost
   rw [normalized.eval_eq]
   exact computes.eval_eq
 
-theorem Circuit.card_functionsAtMost_le_sum_irredundant
+export Cslib.Circuits (Circuit.functionsAtMost_subset_irredundantFunctionsAtMost)
+
+theorem _root_.Cslib.Circuits.Circuit.card_functionsAtMost_le_sum_irredundant
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (n m G : Nat) :
@@ -238,5 +256,7 @@ theorem Circuit.card_functionsAtMost_le_sum_irredundant
         (Finset.card_biUnion_le
           (s := Finset.range (G + 1))
           (t := fun g => Circuit.irredundantFunctions interpretation n g m)))
+
+export Cslib.Circuits (Circuit.card_functionsAtMost_le_sum_irredundant)
 
 end Algebraic

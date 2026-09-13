@@ -227,12 +227,12 @@ theorem conjunction_eval
       interpretation (.and literalCount) (fun argument =>
         (literals argument).eval input) := by
   by_cases compatible : Compatible literals
-  · rw [conjunction, if_pos compatible]
+  · rw [conjunction, ite_eq_left compatible]
     apply Bool.eq_iff_iff.mpr
     simp only [DNF.eval_eq_true, List.mem_singleton,
       interpretation_and_eq_true, Literal.eval_eq_true]
     simp [term_satisfiedBy_toLiteralSet_iff literals compatible input]
-  · rw [conjunction, if_neg compatible, DNF.eval_bottom]
+  · rw [conjunction, ite_eq_right compatible, DNF.eval_bottom]
     symm
     apply Bool.eq_false_iff.mpr
     intro allTrue
@@ -251,12 +251,12 @@ theorem disjunction_eval
       interpretation (.or literalCount) (fun argument =>
         (literals argument).eval input) := by
   by_cases compatible : Compatible literals
-  · rw [disjunction, if_pos compatible]
+  · rw [disjunction, ite_eq_left compatible]
     apply Bool.eq_iff_iff.mpr
     simp only [CNF.eval_eq_true, List.mem_singleton,
       interpretation_or_eq_true, Literal.eval_eq_true]
     simp [clause_satisfiedBy_toLiteralSet_iff literals compatible input]
-  · rw [disjunction, if_neg compatible, CNF.eval_top]
+  · rw [disjunction, ite_eq_right compatible, CNF.eval_top]
     symm
     apply (interpretation_or_eq_true _).2
     obtain ⟨argument, satisfied⟩ :=
@@ -268,12 +268,12 @@ theorem conjunction_widthAtMost
     (literals : Fin literalCount -> Literal n) :
     (conjunction literals).WidthAtMost literalCount := by
   by_cases compatible : Compatible literals
-  · rw [conjunction, if_pos compatible]
+  · rw [conjunction, ite_eq_left compatible]
     intro term present
     simp only [List.mem_singleton] at present
     subst term
     exact width_toLiteralSet_le literals
-  · rw [conjunction, if_neg compatible]
+  · rw [conjunction, ite_eq_right compatible]
     intro term present
     simp [DNF.bottom] at present
 
@@ -282,12 +282,12 @@ theorem disjunction_widthAtMost
     (literals : Fin literalCount -> Literal n) :
     (disjunction literals).WidthAtMost literalCount := by
   by_cases compatible : Compatible literals
-  · rw [disjunction, if_pos compatible]
+  · rw [disjunction, ite_eq_left compatible]
     intro clause present
     simp only [List.mem_singleton] at present
     subst clause
     exact width_toLiteralSet_le literals
-  · rw [disjunction, if_neg compatible]
+  · rw [disjunction, ite_eq_right compatible]
     intro clause present
     simp [CNF.top] at present
 

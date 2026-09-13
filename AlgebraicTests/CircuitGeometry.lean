@@ -130,10 +130,11 @@ run_cmd do
     `Algebraic.Basis.DeMorgan.StarCycles, `Algebraic.Basis.DeMorgan.NativeCost,
     `Algebraic.Basis.DeMorgan.StarAsymptotics]
   let allowed : Array Lean.Name := #[`propext, `Classical.choice, `Quot.sound]
+  let auditedModules := environment.header.moduleNames.map modules.contains
   let mut checked : Nat := 0
   for (name, _) in environment.constants.toList do
     if let some index := environment.getModuleIdxFor? name then
-      if modules.contains environment.header.moduleNames[index]! then
+      if auditedModules[index]! then
         checked := checked + 1
         for dependency in ← Lean.collectAxioms name do
           unless allowed.contains dependency do

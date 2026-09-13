@@ -63,7 +63,7 @@ theorem priorExpressionBitsEqual_eval_eq_true_iff
   constructor
   · intro all previous previousBefore
     have atPrevious := all previous
-    simp only [if_pos previousBefore] at atPrevious
+    simp only [ite_eq_left previousBefore] at atPrevious
     exact (expressionBitEqual_eval_eq_true_iff _ _ input).mp atPrevious
   · intro equalBefore previous
     split_ifs with previousBefore
@@ -212,7 +212,7 @@ theorem binaryCarry_eq_true_iff
   constructor
   · intro all lessSignificant later
     have atBit := all lessSignificant
-    simpa only [if_pos later] using atBit
+    simpa only [ite_eq_left later] using atBit
   · intro all lessSignificant
     split_ifs with later
     · exact all lessSignificant later
@@ -792,13 +792,13 @@ theorem zeroCandidateExpression_eval_eq_true_iff
           toLex (rankAt input record) ∧
         toLex (fun _ : Fin rankWidth => false) < toLex upperBound := by
   by_cases atStart : record = firstRecord depth
-  · rw [zeroCandidateExpression, dif_pos atStart,
+  · rw [zeroCandidateExpression, dite_eq_left atStart,
       DeMorgan.Expression.eval, Bool.and_eq_true,
       expressionBitsLess_eval_eq_true_iff,
       expressionBitsLess_eval_eq_true_iff]
     simp only [constantRankExpressions_eval, rankInputExpression_eval,
       atStart, true_and]
-  · rw [zeroCandidateExpression, dif_neg atStart]
+  · rw [zeroCandidateExpression, dite_eq_right atStart]
     simp [DeMorgan.Expression.eval, atStart]
 
 theorem successorCandidateExpression_eval_eq_true_iff
@@ -819,7 +819,7 @@ theorem successorCandidateExpression_eval_eq_true_iff
   simp only [rankInputExpression_eval, incrementRankBitExpression_eval,
     constantRankExpressions_eval]
   by_cases hasNext : record.val + 1 < networkRecords depth
-  · rw [dif_pos hasNext, expressionBitsLess_eval_eq_true_iff]
+  · rw [dite_eq_left hasNext, expressionBitsLess_eval_eq_true_iff]
     simp only [incrementRankBitExpression_eval, rankInputExpression_eval]
     constructor
     · rintro ⟨increases, below, beforeNext⟩
@@ -827,7 +827,7 @@ theorem successorCandidateExpression_eval_eq_true_iff
         simpa only [Subsingleton.elim otherProof hasNext] using beforeNext⟩
     · rintro ⟨increases, below, beforeEveryNext⟩
       exact ⟨increases, below, beforeEveryNext hasNext⟩
-  · rw [dif_neg hasNext]
+  · rw [dite_eq_right hasNext]
     simp only [DeMorgan.Expression.eval, and_true]
     constructor
     · rintro ⟨increases, below⟩
@@ -871,7 +871,7 @@ private theorem rankAt_mono_of_sorted
     change SequenceIncreasing
       (fun record => flatRecordKey (le_refl rankWidth)
         (flatRecords input record))
-    simpa only [FlatKeysSorted, SequenceSorted, if_true] using sorted
+    simpa only [FlatKeysSorted, SequenceSorted, ite_true] using sorted
   rcases ordered.eq_or_lt with equal | less
   · subst right
     exact le_rfl
@@ -1289,7 +1289,7 @@ theorem leastMissingBits_sound_of_exists_candidate
           (fun record => flatRecordKey (candidateFlagFits rankWidth)
             (flatRecords selected record)) := by
         simpa only [FlatKeysSorted, SequenceSorted,
-          Bool.false_eq_true, if_false]
+          Bool.false_eq_true, ite_false]
           using selectedSorted
       have keyOrder := decreasing (firstRecord depth) selectedIndex firstBefore
       have flagOrder := Pi.apply_le_of_toLex keyOrder

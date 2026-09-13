@@ -11,7 +11,7 @@ Essential inputs therefore give a lower bound on circuit depth.
 
 namespace Algebraic
 
-private theorem Line.card_inputSupport_le_depth
+private theorem _root_.Cslib.Circuits.Line.card_inputSupport_le_depth
     (line : Line σ n g)
     (wireSupport : Wire n g → Finset (Fin n))
     (wireDepths : Wire n g → Nat)
@@ -45,7 +45,7 @@ private theorem Line.card_inputSupport_le_depth
     _ = (max 1 r) ^ line.depth wireDepths := by
       simp [Line.depth, maxDepth, Nat.pow_succ, Nat.mul_comm]
 
-private theorem Program.card_gateSupport_le_depth
+private theorem _root_.Cslib.Circuits.Program.card_gateSupport_le_depth
     (program : Program σ n g)
     (r : Nat)
     (bounded : program.FanInAtMost r)
@@ -72,7 +72,7 @@ private theorem Program.card_gateSupport_le_depth
       · simp only [Program.gateSupport, Program.depths, Fin.lastCases_castSucc]
         exact ih programBounded j
 
-private theorem Circuit.card_inputSupport_le_depth_aux
+private theorem _root_.Cslib.Circuits.Circuit.card_inputSupport_le_depth_aux
     (c : Circuit σ n g m)
     (r : Nat)
     (bounded : c.FanInAtMost r) :
@@ -99,17 +99,19 @@ private theorem Circuit.card_inputSupport_le_depth_aux
 
 /-- A fan-in-`r` circuit has at most `m * (max 1 r) ^ c.depth` supporting
 inputs. The maximum accounts for direct output wires when `r = 0`. -/
-theorem Circuit.card_inputSupport_le_depth
+theorem _root_.Cslib.Circuits.Circuit.card_inputSupport_le_depth
     (c : Circuit σ n g m)
     {r : Nat}
     (bounded : c.FanInAtMost r) :
     c.inputSupport.card ≤ m * (max 1 r) ^ c.depth := by
   exact c.card_inputSupport_le_depth_aux r bounded
 
+export Cslib.Circuits (Circuit.card_inputSupport_le_depth)
+
 /-- If a circuit has fan-in at most `r`, computes `target`, and every input in
 `selected` is essential to `target`, then `selected` has at most
 `m * (max 1 r) ^ c.depth` elements. -/
-theorem Circuit.essential_le_depth
+theorem _root_.Cslib.Circuits.Circuit.essential_le_depth
     (c : Circuit σ n g m)
     {interpretation : Interpretation σ U}
     {target : (Fin n → U) → Fin m → U}
@@ -123,5 +125,7 @@ theorem Circuit.essential_le_depth
   exact (Finset.card_le_card fun k hk =>
     (essential k hk).mem_support targetDepends).trans
       (c.card_inputSupport_le_depth bounded)
+
+export Cslib.Circuits (Circuit.essential_le_depth)
 
 end Algebraic

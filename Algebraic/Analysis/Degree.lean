@@ -32,16 +32,20 @@ def DegreeMode.eval
   | .sum => ∑ argument, input argument
 
 /-- Degree interpretation induced by a local rule for every operation. -/
-def Signature.degreeInterpretation
+def _root_.Cslib.Circuits.Signature.degreeInterpretation
     (σ : Signature)
     (mode : σ.Op → DegreeMode) : Interpretation σ Nat :=
   fun op input => (mode op).eval input
 
+export Cslib.Circuits (Signature.degreeInterpretation)
+
 /-- Degree profile of a circuit when every original input has degree one. -/
-def Circuit.degreeProfile
+def _root_.Cslib.Circuits.Circuit.degreeProfile
     (circuit : Circuit σ n g m)
     (mode : σ.Op → DegreeMode) : Fin m → Nat :=
   circuit.eval (σ.degreeInterpretation mode) (fun _ => 1)
+
+export Cslib.Circuits (Circuit.degreeProfile)
 
 /-- Translation gives exact degree propagation using the derived source
 operation rules implemented by the target gadgets. -/

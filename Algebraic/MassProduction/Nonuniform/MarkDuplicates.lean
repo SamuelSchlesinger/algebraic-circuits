@@ -112,7 +112,7 @@ theorem circuit_correct
     change Semantics.SequenceIncreasing (fun index => toLex
       (identifierCircuit.eval DeMorgan.interpretation
         (fun bit => flatRecords output index (Fin.natAdd 1 bit))))
-    simpa only [Semantics.SequenceSorted, if_true, Circuit.eval_mapInputs,
+    simpa only [Semantics.SequenceSorted, ite_true, Circuit.eval_mapInputs,
       Function.comp_def, output] using ordered
   obtain ⟨first, last, firstRecords, lastRecords, inverse⟩ := restoredIndexPermutations
     body (fun record => toLex (identifierCircuit.eval DeMorgan.interpretation record))

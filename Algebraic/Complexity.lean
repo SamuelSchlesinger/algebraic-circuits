@@ -15,7 +15,7 @@ namespace Algebraic
 
 /-- Minimum weighted cost of a target. The value is `⊤` when no circuit
 computes the target. -/
-noncomputable def Circuit.costComplexity
+noncomputable def _root_.Cslib.Circuits.Circuit.costComplexity
     (interpretation : Interpretation σ U)
     (operationCost : OperationCost σ)
     (target : Target U n m) : ℕ∞ :=
@@ -23,16 +23,20 @@ noncomputable def Circuit.costComplexity
     ⨅ _ : circuit.Computes interpretation target,
       (circuit.cost operationCost : ℕ∞)
 
+export Cslib.Circuits (Circuit.costComplexity)
+
 /-- Minimum gate count of a target. -/
-noncomputable def Circuit.gateComplexity
+noncomputable def _root_.Cslib.Circuits.Circuit.gateComplexity
     (interpretation : Interpretation σ U)
     (target : Target U n m) : ℕ∞ :=
   Circuit.costComplexity interpretation OperationCost.unit target
 
+export Cslib.Circuits (Circuit.gateComplexity)
+
 namespace Circuit
 
 /-- Any concrete implementation upper-bounds minimum weighted complexity. -/
-theorem costComplexity_le
+theorem _root_.Cslib.Circuits.Circuit.costComplexity_le
     {circuit : Circuit σ n g m}
     {interpretation : Interpretation σ U}
     {target : Target U n m}
@@ -44,9 +48,11 @@ theorem costComplexity_le
   exact iInf_le_of_le g <| iInf_le_of_le circuit <|
     iInf_le_of_le computes le_rfl
 
+export Cslib.Circuits.Circuit (costComplexity_le)
+
 /-- A uniform lower bound on all implementations lower-bounds minimum
 weighted complexity. -/
-theorem le_costComplexity
+theorem _root_.Cslib.Circuits.Circuit.le_costComplexity
     {interpretation : Interpretation σ U}
     {target : Target U n m}
     (operationCost : OperationCost σ)
@@ -59,9 +65,11 @@ theorem le_costComplexity
   refine le_iInf fun g => le_iInf fun circuit => le_iInf fun computes => ?_
   exact lowerBound circuit computes
 
+export Cslib.Circuits.Circuit (le_costComplexity)
+
 /-- Characterization of a weighted complexity lower bound by all concrete
 implementations. -/
-theorem le_costComplexity_iff
+theorem _root_.Cslib.Circuits.Circuit.le_costComplexity_iff
     {interpretation : Interpretation σ U}
     {target : Target U n m}
     (operationCost : OperationCost σ)
@@ -75,8 +83,10 @@ theorem le_costComplexity_iff
     exact bounded.trans (circuit.costComplexity_le operationCost computes)
   · exact Circuit.le_costComplexity operationCost bound
 
+export Cslib.Circuits.Circuit (le_costComplexity_iff)
+
 /-- Weighted complexity is finite exactly when the target is representable. -/
-theorem costComplexity_lt_top_iff
+theorem _root_.Cslib.Circuits.Circuit.costComplexity_lt_top_iff
     {interpretation : Interpretation σ U}
     {target : Target U n m}
     (operationCost : OperationCost σ) :
@@ -97,7 +107,9 @@ theorem costComplexity_lt_top_iff
     exact (circuit.costComplexity_le operationCost computes).trans_lt
       (ENat.natCast_lt_top _)
 
-@[simp] theorem costComplexity_eq_top_iff
+export Cslib.Circuits.Circuit (costComplexity_lt_top_iff)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.costComplexity_eq_top_iff
     {interpretation : Interpretation σ U}
     {target : Target U n m}
     (operationCost : OperationCost σ) :
@@ -106,8 +118,10 @@ theorem costComplexity_lt_top_iff
         circuit.Computes interpretation target := by
   rw [eq_top_iff, ← not_lt, Circuit.costComplexity_lt_top_iff]
 
+export Cslib.Circuits.Circuit (costComplexity_eq_top_iff)
+
 /-- A minimum-cost concrete circuit realizes the extended-natural complexity. -/
-theorem costComplexity_eq
+theorem _root_.Cslib.Circuits.Circuit.costComplexity_eq
     {circuit : Circuit σ n g m}
     {interpretation : Interpretation σ U}
     {target : Target U n m}
@@ -121,8 +135,10 @@ theorem costComplexity_eq
   intro h competitor competitorComputes
   exact_mod_cast minimal competitor competitorComputes
 
+export Cslib.Circuits.Circuit (costComplexity_eq)
+
 /-- Any concrete implementation upper-bounds minimum gate complexity. -/
-theorem gateComplexity_le
+theorem _root_.Cslib.Circuits.Circuit.gateComplexity_le
     {circuit : Circuit σ n g m}
     {interpretation : Interpretation σ U}
     {target : Target U n m}
@@ -130,6 +146,8 @@ theorem gateComplexity_le
     Circuit.gateComplexity interpretation target ≤ circuit.size := by
   simpa [Circuit.gateComplexity] using
     circuit.costComplexity_le OperationCost.unit computes
+
+export Cslib.Circuits.Circuit (gateComplexity_le)
 
 end Circuit
 
@@ -381,7 +399,7 @@ namespace Interpretation
 /-- Two finite, functionally complete interpreted signatures have linearly
 equivalent gate complexities, with explicit constants supplied by realizations
 of their operation sets. -/
-theorem gateComplexity_linearlyEquivalent_of_functionallyComplete
+theorem _root_.Cslib.Circuits.Interpretation.gateComplexity_linearlyEquivalent_of_functionallyComplete
     [Fintype σ.Op] [Fintype τ.Op]
     (first : Interpretation σ U)
     (second : Interpretation τ U)
@@ -403,6 +421,8 @@ theorem gateComplexity_linearlyEquivalent_of_functionallyComplete
     toSecond.one_le_overhead, toFirst.one_le_overhead,
     fun target => toSecond.gateComplexity_le_mul_overhead target,
     fun target => toFirst.gateComplexity_le_mul_overhead target⟩
+
+export Cslib.Circuits.Interpretation (gateComplexity_linearlyEquivalent_of_functionallyComplete)
 
 end Interpretation
 

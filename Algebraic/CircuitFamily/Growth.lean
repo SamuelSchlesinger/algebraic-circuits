@@ -19,7 +19,7 @@ open scoped Topology
 
 /-- Every fixed natural polynomial monomial, including a fixed coefficient,
 is eventually bounded by the matching binary exponential. -/
-theorem eventually_const_mul_pow_le_two_pow
+theorem _root_.Cslib.Circuits.Circuit.Resource.eventually_const_mul_pow_le_two_pow
     (constant degree : Nat) :
     ∀ᶠ n in atTop, constant * n ^ degree <= 2 ^ n := by
   have little :=
@@ -45,6 +45,8 @@ theorem eventually_const_mul_pow_le_two_pow
       _ = (2 : Real) ^ n := by
         field_simp
   exact_mod_cast castBound
+
+export Cslib.Circuits.Circuit.Resource (eventually_const_mul_pow_le_two_pow)
 
 end Resource
 end Circuit

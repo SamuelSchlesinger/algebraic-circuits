@@ -19,7 +19,7 @@ def lineEquiv (σ : Signature) (n g : Nat) :
   left_inv _ := rfl
   right_inv _ := rfl
 
-noncomputable instance [Fintype σ.Op] : Fintype (Line σ n g) :=
+noncomputable instance instFintypeLine [Fintype σ.Op] : Fintype (Line σ n g) :=
   Fintype.ofEquiv (Σ op : σ.Op, Fin (σ.Arity op) → Wire n g)
     (lineEquiv σ n g).symm
 
@@ -47,15 +47,17 @@ def programSuccEquiv (σ : Signature) (n g : Nat) :
 
 /-- Recursive finite enumeration of straight-line programs. -/
 @[instance_reducible]
-noncomputable def Program.fintype [Fintype σ.Op] (n : Nat) :
+noncomputable def _root_.Cslib.Circuits.Program.fintype [Fintype σ.Op] (n : Nat) :
     (g : Nat) → Fintype (Program σ n g)
   | 0 => Fintype.ofEquiv Unit (programZeroEquiv σ n).symm
   | g + 1 =>
-      letI := Program.fintype (σ := σ) n g
+      letI := Cslib.Circuits.Program.fintype (σ := σ) n g
       Fintype.ofEquiv (Program σ n g × Line σ n g)
         (programSuccEquiv σ n g).symm
 
-noncomputable instance [Fintype σ.Op] : Fintype (Program σ n g) :=
+export Cslib.Circuits (Program.fintype)
+
+noncomputable instance instFintypeProgram [Fintype σ.Op] : Fintype (Program σ n g) :=
   Program.fintype n g
 
 /-- Exact number of topologically ordered programs. -/
@@ -80,7 +82,7 @@ def circuitEquiv (σ : Signature) (n g m : Nat) :
   left_inv _ := rfl
   right_inv _ := rfl
 
-noncomputable instance [Fintype σ.Op] : Fintype (Circuit σ n g m) :=
+noncomputable instance instFintypeCircuit [Fintype σ.Op] : Fintype (Circuit σ n g m) :=
   Fintype.ofEquiv (Program σ n g × (Fin m → Wire n g))
     (circuitEquiv σ n g m).symm
 
@@ -109,8 +111,10 @@ theorem card_target [Finite U] :
   Target.count_eq
 
 /-- Number of possible lines when `w` wires are available. -/
-def Signature.lineCount (σ : Signature) [Fintype σ.Op] (w : Nat) : Nat :=
+def _root_.Cslib.Circuits.Signature.lineCount (σ : Signature) [Fintype σ.Op] (w : Nat) : Nat :=
   ∑ op : σ.Op, w ^ σ.Arity op
+
+export Cslib.Circuits (Signature.lineCount)
 
 theorem card_line_eq_lineCount [Fintype σ.Op] :
     Fintype.card (Line σ n g) = σ.lineCount (n + g) :=

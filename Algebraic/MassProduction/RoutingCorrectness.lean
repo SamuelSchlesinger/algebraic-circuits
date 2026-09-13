@@ -316,7 +316,7 @@ theorem predecessor_eq_of_sorted_covBy
     change SequenceIncreasing (fun record =>
       flatRecordKey (keyAndTagFitsRecord keyWidth payloadWidth)
         (flatRecords input record))
-    simpa only [FlatKeysSorted, SequenceSorted, if_true] using sorted
+    simpa only [FlatKeysSorted, SequenceSorted, ite_true] using sorted
   have adjacent := adjacent_indices_of_increasing_covBy
     (recordKeyAndTag input) increasing source destination covered
       sourceUnique destinationUnique

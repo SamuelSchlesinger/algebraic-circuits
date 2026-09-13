@@ -13,10 +13,12 @@ of an arbitrary selected gadget.
 namespace Algebraic
 
 /-- The scalar target associated with one interpreted operation. -/
-def Interpretation.operationTarget
+def _root_.Cslib.Circuits.Interpretation.operationTarget
     (interpretation : Interpretation σ U)
     (op : σ.Op) : Target U (σ.Arity op) 1 :=
   fun input _ => interpretation op input
+
+export Cslib.Circuits (Interpretation.operationTarget)
 
 namespace Realization
 

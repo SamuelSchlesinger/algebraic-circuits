@@ -45,7 +45,7 @@ theorem value_sorted_eq_true_iff
     have lastLe : key index ≤ key (count - 1) := sorted (by omega) (by omega)
     have equal : key (index - 1) = key index :=
       le_antisymm previousLe (lastLe.trans (sameKey.symm.le.trans firstLe))
-    simp only [keyLinks, if_neg (by omega : index ≠ 0), decide_eq_true_eq]
+    simp only [keyLinks, ite_eq_right (by omega : index ≠ 0), decide_eq_true_eq]
     exact equal
 
 end Algebraic.MassProduction.Nonuniform.Propagation

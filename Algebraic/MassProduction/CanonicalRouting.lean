@@ -102,7 +102,7 @@ def complementRoutingTagsCircuit
     have values := congrArg Fin.val equal
     change bit.val = keyWidth at values
     exact (Nat.ne_of_lt bit.isLt) values
-  rw [if_neg different]
+  rw [ite_eq_right different]
   rfl
 
 @[simp] theorem complementRoutingTagsBits_recordTag
@@ -115,7 +115,7 @@ def complementRoutingTagsCircuit
   unfold Routing.recordTag complementRoutingTagsBits
   unfold complementTagOutputExpression
   simp only [Routing.finProdFinEquiv_symm_recordBitIndex]
-  simp only [if_pos, DeMorgan.Expression.eval]
+  simp only [ite_eq_left, DeMorgan.Expression.eval]
 
 @[simp] theorem complementRoutingTagsBits_recordPayload
     (input : Fin (networkBits depth
@@ -135,7 +135,7 @@ def complementRoutingTagsCircuit
     have values := congrArg Fin.val equal
     change keyWidth + 1 + bit.val = keyWidth at values
     omega
-  rw [if_neg different]
+  rw [ite_eq_right different]
   rfl
 
 theorem complementTagOutputExpression_standardCost_le
@@ -815,7 +815,7 @@ theorem matchedCanonicalRoutingBits_fullDest_fixed_header
           (Routing.keyAndTagFitsRecord (baseWidth + 1) payloadWidth)
           depth true input))
     unfold FlatKeysSortedBy FlatKeysSorted Semantics.SequenceSorted at sorted
-    simp only [if_true] at sorted
+    simp only [ite_true] at sorted
     intro left right before
     have ordered := sorted left right before
     change

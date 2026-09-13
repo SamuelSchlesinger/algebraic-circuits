@@ -147,7 +147,7 @@ private theorem sweep_lift (rank : ι → Nat) (injective : Function.Injective r
       · simp [original, liftVertex, before]
         intro zero
         simp [zero]
-      · simp only [original, liftVertex, before, if_false]
+      · simp only [original, liftVertex, before, ite_false]
         constructor
         · intro zero
           exact (compatible i).1 (by simp [sweepPoint, before, zero])

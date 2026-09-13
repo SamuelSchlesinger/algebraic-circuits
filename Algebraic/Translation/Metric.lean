@@ -2,7 +2,7 @@ import Algebraic.Translation.Optimal
 import Mathlib.Analysis.SpecialFunctions.Log.ENNRealLog
 import Mathlib.Data.ENat.Lattice
 import Mathlib.Data.Finset.Max
-import Mathlib.Data.Real.ENatENNReal
+import Mathlib.Basic.Real.ENatENNReal
 
 /-!
 # Directed simulation overhead
@@ -85,14 +85,16 @@ namespace Interpretation
 
 /-- Optimal normalized local overhead for realizing `source` in `target`.
 The value is `⊤` if no realization exists. -/
-noncomputable def simulationOverhead
+noncomputable def _root_.Cslib.Circuits.Interpretation.simulationOverhead
     [Fintype σ.Op]
     (source : Interpretation σ U)
     (target : Interpretation τ U) : ℕ∞ :=
   ⨅ realization : Realization σ τ source target,
     (realization.overhead : ℕ∞)
 
-theorem simulationOverhead_le
+export Cslib.Circuits.Interpretation (simulationOverhead)
+
+theorem _root_.Cslib.Circuits.Interpretation.simulationOverhead_le
     [Fintype σ.Op]
     {source : Interpretation σ U}
     {target : Interpretation τ U}
@@ -100,7 +102,9 @@ theorem simulationOverhead_le
     source.simulationOverhead target ≤ realization.overhead :=
   iInf_le _ realization
 
-theorem one_le_simulationOverhead
+export Cslib.Circuits.Interpretation (simulationOverhead_le)
+
+theorem _root_.Cslib.Circuits.Interpretation.one_le_simulationOverhead
     [Fintype σ.Op]
     (source : Interpretation σ U)
     (target : Interpretation τ U) :
@@ -109,7 +113,9 @@ theorem one_le_simulationOverhead
   intro realization
   exact_mod_cast realization.one_le_overhead
 
-@[simp] theorem simulationOverhead_self
+export Cslib.Circuits.Interpretation (one_le_simulationOverhead)
+
+@[simp] theorem _root_.Cslib.Circuits.Interpretation.simulationOverhead_self
     [Fintype σ.Op]
     (interpretation : Interpretation σ U) :
     interpretation.simulationOverhead interpretation = 1 := by
@@ -119,8 +125,10 @@ theorem one_le_simulationOverhead
         (Realization.id interpretation))
   · exact interpretation.one_le_simulationOverhead interpretation
 
+export Cslib.Circuits.Interpretation (simulationOverhead_self)
+
 /-- A directed overhead is finite exactly when a realization exists. -/
-theorem simulationOverhead_lt_top_iff
+theorem _root_.Cslib.Circuits.Interpretation.simulationOverhead_lt_top_iff
     [Fintype σ.Op]
     (source : Interpretation σ U)
     (target : Interpretation τ U) :
@@ -129,9 +137,11 @@ theorem simulationOverhead_lt_top_iff
   unfold Interpretation.simulationOverhead
   exact ENat.iInf_natCast_lt_top
 
+export Cslib.Circuits.Interpretation (simulationOverhead_lt_top_iff)
+
 /-- Every interpretation has finite directed overhead into a functionally
 complete target interpretation. -/
-theorem simulationOverhead_lt_top_of_functionallyComplete
+theorem _root_.Cslib.Circuits.Interpretation.simulationOverhead_lt_top_of_functionallyComplete
     [Fintype σ.Op]
     (source : Interpretation σ U)
     (target : Interpretation τ U)
@@ -140,8 +150,10 @@ theorem simulationOverhead_lt_top_of_functionallyComplete
   rw [source.simulationOverhead_lt_top_iff target]
   exact ⟨Realization.ofFunctionalCompleteness source target complete⟩
 
+export Cslib.Circuits.Interpretation (simulationOverhead_lt_top_of_functionallyComplete)
+
 /-- Multiplicative triangle inequality for optimal local overhead. -/
-theorem simulationOverhead_triangle
+theorem _root_.Cslib.Circuits.Interpretation.simulationOverhead_triangle
     [Fintype σ.Op] [Fintype τ.Op]
     (source : Interpretation σ U)
     (middle : Interpretation τ U)
@@ -180,20 +192,26 @@ theorem simulationOverhead_triangle
     _ = source.simulationOverhead middle *
         middle.simulationOverhead target := rfl
 
+export Cslib.Circuits.Interpretation (simulationOverhead_triangle)
+
 /-- Logarithmic directed distance associated with optimal local overhead. -/
-noncomputable def simulationDistance
+noncomputable def _root_.Cslib.Circuits.Interpretation.simulationDistance
     [Fintype σ.Op]
     (source : Interpretation σ U)
     (target : Interpretation τ U) : EReal :=
   ENNReal.log (ENat.toENNReal (source.simulationOverhead target))
 
-@[simp] theorem simulationDistance_self
+export Cslib.Circuits.Interpretation (simulationDistance)
+
+@[simp] theorem _root_.Cslib.Circuits.Interpretation.simulationDistance_self
     [Fintype σ.Op]
     (interpretation : Interpretation σ U) :
     interpretation.simulationDistance interpretation = 0 := by
   simp [Interpretation.simulationDistance]
 
-theorem simulationDistance_nonnegative
+export Cslib.Circuits.Interpretation (simulationDistance_self)
+
+theorem _root_.Cslib.Circuits.Interpretation.simulationDistance_nonnegative
     [Fintype σ.Op]
     (source : Interpretation σ U)
     (target : Interpretation τ U) :
@@ -201,8 +219,10 @@ theorem simulationDistance_nonnegative
   rw [Interpretation.simulationDistance, ENNReal.zero_le_log_iff]
   exact_mod_cast source.one_le_simulationOverhead target
 
+export Cslib.Circuits.Interpretation (simulationDistance_nonnegative)
+
 /-- Additive triangle inequality for logarithmic directed distance. -/
-theorem simulationDistance_triangle
+theorem _root_.Cslib.Circuits.Interpretation.simulationDistance_triangle
     [Fintype σ.Op] [Fintype τ.Op]
     (source : Interpretation σ U)
     (middle : Interpretation τ U)
@@ -224,6 +244,8 @@ theorem simulationDistance_triangle
         ENNReal.log
           (ENat.toENNReal (middle.simulationOverhead target)) := by
       rw [ENat.toENNReal_mul, ENNReal.log_mul_add]
+
+export Cslib.Circuits.Interpretation (simulationDistance_triangle)
 
 end Interpretation
 

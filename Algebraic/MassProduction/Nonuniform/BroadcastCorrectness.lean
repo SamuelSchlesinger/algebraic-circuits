@@ -30,24 +30,24 @@ theorem payloadCircuit_eq_true_iff
     have startFits : start < networkRecords depth := by omega
     have source : recordTag input ⟨start, startFits⟩ = false ∧
         recordPayload input ⟨start, startFits⟩ bit = true := by
-      simpa only [Propagation.sourceInput, dif_pos startFits, inputExpression,
+      simpa only [Propagation.sourceInput, dite_eq_left startFits, inputExpression,
         Fin.addCases_left, sourceExpression_eval, Bool.and_eq_true, Bool.not_eq_true']
         using starts
     refine ⟨⟨start, startFits⟩, by exact Nat.le_of_lt_succ startsBefore,
       source.1, source.2, ?_⟩
     intro index after before
     have linked := links index.val after (Nat.lt_succ_of_le before)
-    simpa only [Propagation.linkInput, dif_pos index.isLt, inputExpression,
+    simpa only [Propagation.linkInput, dite_eq_left index.isLt, inputExpression,
       Fin.addCases_right] using linked
   · rintro ⟨start, startsBefore, sourceTag, sourcePayload, links⟩
     refine ⟨start.val, Nat.lt_succ_of_le startsBefore, ?_, ?_⟩
-    · simpa only [Propagation.sourceInput, dif_pos start.isLt, inputExpression,
+    · simpa only [Propagation.sourceInput, dite_eq_left start.isLt, inputExpression,
         Fin.addCases_left, sourceExpression_eval, Bool.and_eq_true, Bool.not_eq_true']
         using And.intro sourceTag sourcePayload
     · intro index after before
       have indexFits : index < networkRecords depth := by omega
       have linked := links ⟨index, indexFits⟩ after (Nat.le_of_lt_succ before)
-      simpa only [Propagation.linkInput, dif_pos indexFits, inputExpression,
+      simpa only [Propagation.linkInput, dite_eq_left indexFits, inputExpression,
         Fin.addCases_right] using linked
 
 /-- Adjacent links force the key at the source and destination to agree. -/
