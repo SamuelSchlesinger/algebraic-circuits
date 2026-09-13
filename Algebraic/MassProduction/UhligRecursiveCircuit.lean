@@ -99,7 +99,7 @@ theorem recursiveCircuit_computes
     (depth : Nat)
     (function : ScalarFunction Bool
       (recursiveWidth prefixWidth baseWidth depth)) :
-    (recursiveCircuit prefixWidth baseWidth base depth function).Computes
+    (recursiveCircuit prefixWidth baseWidth base depth function).ComputesWith
       DeMorgan.interpretation
       (directProduct function (recursiveCopies depth)) := by
   induction depth with

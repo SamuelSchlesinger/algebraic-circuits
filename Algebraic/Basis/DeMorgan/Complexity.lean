@@ -1,6 +1,8 @@
 import Algebraic.Basis.DeMorgan.PointUpdate
+import Algebraic.Basis.DeMorgan.CSLib
 import Algebraic.BooleanCube
 import Algebraic.Complexity
+import Cslib.Computability.Circuit.Boolean.LupanovConstruction
 
 /-!
 # Boolean circuit complexity on the truth-table cube
@@ -17,22 +19,15 @@ crosses every attainable threshold with overshoot at most `2 * n`.
 
 namespace Algebraic.DeMorgan
 
-/-- Every scalar Boolean function has a circuit, by successive point updates. -/
+/-- Every scalar Boolean function has a circuit, using CSLib's finite
+Lupanov construction and the De Morgan realization. -/
 theorem exists_circuit (function : ScalarFunction Bool n) :
     ∃ gates, ∃ circuit : Circuit signature n gates 1,
-      circuit.Computes interpretation (fun input _ => function input) := by
-  classical
-  apply BooleanCube.update_induction (fun _ => false) function
-    (fun function => ∃ gates, ∃ circuit : Circuit signature n gates 1,
-      circuit.Computes interpretation (fun input _ => function input))
-  · refine ⟨1, (Expression.constant false : Expression n).circuit, ?_⟩
-    intro input
-    funext output
-    have equal : output = 0 := Subsingleton.elim _ _
-    simp [equal, Expression.circuit_eval, Expression.eval]
-  · rintro current point value ⟨gates, circuit, computes⟩
-    obtain ⟨gates, result, correct, _⟩ := exists_update_circuit circuit current computes point value
-    exact ⟨gates, result, correct⟩
+      circuit.ComputesWith interpretation (fun input _ => function input) := by
+  obtain ⟨gates, _, circuit, computes⟩ :=
+    (Cslib.Circuits.Boolean.Lupanov.synthesis (k := n) (d := 0)
+      function (s := 1) (by decide)).exists_circuit
+  exact ⟨_, fromBoolean.compile circuit, (fromBoolean_computes circuit function).2 computes⟩
 
 /-- A minimum-size circuit chosen by well-ordering. This is a classical proof
 witness, not an executable circuit optimizer. -/
@@ -59,7 +54,7 @@ theorem complexity_eq_gateComplexity (function : ScalarFunction Bool n) :
 /-- Any concrete circuit upper-bounds minimum internal gate count. -/
 theorem complexity_le (circuit : Circuit signature n gates 1)
     {function : ScalarFunction Bool n}
-    (computes : circuit.Computes interpretation (fun input _ => function input)) :
+    (computes : circuit.ComputesWith interpretation (fun input _ => function input)) :
     complexity function ≤ gates := by
   simpa [complexity, Circuit.size] using (minimumCircuit function).minimal.cost circuit computes
 

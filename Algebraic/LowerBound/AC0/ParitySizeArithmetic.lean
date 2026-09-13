@@ -116,7 +116,7 @@ theorem not_computes_parity_of_integral_bounds_raw
       20 * t * circuit.program.cost andOrCost < 2 ^ (t + 1))
     (survivors :
       t < n / (20 * (20 * t) ^ (depth - 2))) :
-    ¬circuit.Computes interpretation (Parity.target n) := by
+    ¬circuit.ComputesWith interpretation (Parity.target n) := by
   exact not_computes_parity_of_concrete_depth_reduction_raw
     circuit depth t twoLeDepth circuitDepth oneLe
     (ParityParameters.switchingFailure_lt_minimum_of_nat
@@ -135,7 +135,7 @@ theorem not_computes_parity_of_integral_bounds
       20 * t * circuit.program.cost andOrCost < 2 ^ (t + 1))
     (survivors :
       t < n / (20 * (20 * t) ^ (depth - 2))) :
-    ¬circuit.Computes interpretation (Parity.target n) :=
+    ¬circuit.ComputesWith interpretation (Parity.target n) :=
   not_computes_parity_of_integral_bounds_raw circuit depth t twoLeDepth
     circuitDepth oneLe small survivors
 

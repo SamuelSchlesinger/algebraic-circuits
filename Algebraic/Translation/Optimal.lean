@@ -28,7 +28,7 @@ theorem operation_computes
     {target : Interpretation τ U}
     (realization : Realization σ τ source target)
     (op : σ.Op) :
-    (realization.operation op).Computes target
+    (realization.operation op).ComputesWith target
       (source.operationTarget op) := by
   intro input
   funext output
@@ -49,7 +49,7 @@ noncomputable def ofFunctionalCompleteness
   let operation (op : σ.Op) : Circuit τ (σ.Arity op) (gateCount op) 1 :=
     Classical.choose (Classical.choose_spec (witness op))
   have computes (op : σ.Op) :
-      (operation op).Computes target (source.operationTarget op) :=
+      (operation op).ComputesWith target (source.operationTarget op) :=
     Classical.choose_spec (Classical.choose_spec (witness op))
   exact
     { gateCount := gateCount

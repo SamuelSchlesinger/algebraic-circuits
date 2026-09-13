@@ -1,5 +1,6 @@
 import Algebraic.LowerBound.Counting.Basic
 import Algebraic.Compaction
+import Cslib.Computability.Circuit.Normalization
 
 /-!
 # Semantic circuit normalization
@@ -229,13 +230,14 @@ theorem _root_.Cslib.Circuits.Circuit.functionsAtMost_subset_irredundantFunction
   intro target present
   obtain ⟨g, bounded, circuit, computes⟩ :=
     Circuit.mem_functionsAtMost_iff.mp present
-  let normalized := circuit.normalize interpretation
+  obtain ⟨k, gateCountLe, normalized, evalEq, injective⟩ :=
+    circuit.exists_injective_gateFunction interpretation
   rw [Circuit.irredundantFunctionsAtMost, Finset.mem_biUnion]
-  refine ⟨normalized.gateCount, Finset.mem_range.mpr ?_, ?_⟩
-  · exact Nat.lt_succ_of_le (normalized.gateCount_le.trans bounded)
+  refine ⟨k, Finset.mem_range.mpr ?_, ?_⟩
+  · exact Nat.lt_succ_of_le (gateCountLe.trans bounded)
   rw [Circuit.mem_irredundantFunctions_iff]
-  refine ⟨normalized.result, normalized.injective_gateFunction, ?_⟩
-  rw [normalized.eval_eq]
+  refine ⟨normalized, injective, ?_⟩
+  rw [evalEq]
   exact computes.eval_eq
 
 export Cslib.Circuits (Circuit.functionsAtMost_subset_irredundantFunctionsAtMost)

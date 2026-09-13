@@ -203,7 +203,7 @@ theorem booleanMassComplexity_le
         (gateCounts member) groups)
     (resourcesCompute : forall
       (point : Fin (pointCount dimension width)) (bit : Fin width),
-      (resourceCircuits (resourceMemberIndex point bit)).Computes
+      (resourceCircuits (resourceMemberIndex point bit)).ComputesWith
         DeMorgan.interpretation
         (directProduct
           (packedResourceFunction
@@ -231,7 +231,7 @@ theorem booleanMassComplexity_le
     schedulerDepth suffixWidth groupBitWidth orderWidth allFit incidenceFits
     dummyTarget scatterRecordCount gateCounts resourceCircuits
     gatherRecordCount
-  have computesAll : runtimeCircuit.Computes DeMorgan.interpretation
+  have computesAll : runtimeCircuit.ComputesWith DeMorgan.interpretation
       (directProduct (RuntimePipeline.requestFunction function)
         totalRequests) :=
     RuntimePipeline.circuit_computes widthPositive widthAtLeastTwo
@@ -348,7 +348,7 @@ theorem booleanMassComplexity_le_of_resource_complexity
     (resourceMinimum member).circuit
   have resourcesCompute : forall
       (point : Fin (pointCount dimension width)) (bit : Fin width),
-      (resourceCircuits (resourceMemberIndex point bit)).Computes
+      (resourceCircuits (resourceMemberIndex point bit)).ComputesWith
         DeMorgan.interpretation
         (directProduct
           (packedResourceFunction
@@ -360,7 +360,7 @@ theorem booleanMassComplexity_le_of_resource_complexity
             function point bit)
           groups) := by
     intro point bit
-    change (resourceMinimum (resourceMemberIndex point bit)).circuit.Computes
+    change (resourceMinimum (resourceMemberIndex point bit)).circuit.ComputesWith
       DeMorgan.interpretation _
     simpa only [canonicalResourceFunction_index] using
       (resourceMinimum (resourceMemberIndex point bit)).computes

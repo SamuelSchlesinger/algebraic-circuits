@@ -164,7 +164,7 @@ structure ThreeGateEliminator
   /-- Produce a three-unit reduction for every minimum-cost non-base circuit. -/
   eliminate : ∀ (n : Nat), 0 < n → ∀ (phase : Bool),
     ∀ {g : Nat} (circuit : Circuit σ (n + 1) g 1),
-      circuit.Computes interpretation (target ⟨n + 1, phase⟩) →
+      circuit.ComputesWith interpretation (target ⟨n + 1, phase⟩) →
       circuit.CostSizeMinimal operationCost interpretation
         (target ⟨n + 1, phase⟩) →
         ThreeGateStep operationCost interpretation n phase circuit
@@ -212,7 +212,7 @@ theorem lowerBound
     (state : State)
     {g : Nat}
     (circuit : Circuit σ state.inputCount g 1)
-    (computes : circuit.Computes interpretation (target state)) :
+    (computes : circuit.ComputesWith interpretation (target state)) :
     3 * (state.inputCount - 1) ≤ circuit.cost operationCost := by
   exact (framework eliminator).lowerBound state circuit computes
 
@@ -224,7 +224,7 @@ theorem parity_lowerBound
     (eliminator : ThreeGateEliminator operationCost interpretation)
     {n g : Nat}
     (circuit : Circuit σ n g 1)
-    (computes : circuit.Computes interpretation (parityTarget n)) :
+    (computes : circuit.ComputesWith interpretation (parityTarget n)) :
     3 * (n - 1) ≤ circuit.cost operationCost := by
   apply lowerBound eliminator ⟨n, false⟩ circuit
   simpa using computes

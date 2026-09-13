@@ -71,7 +71,7 @@ namespace Circuit
 arbitrary internal NOT gates charged at zero. -/
 theorem parity_size_tradeoff_at_scale_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depth t : Nat)
     (twoLeDepth : 2 ≤ depth)
     (circuitDepth : logicalDepth circuit ≤ depth)
@@ -92,7 +92,7 @@ theorem parity_size_tradeoff_at_scale_raw
 theorem parity_size_tradeoff_at_scale
     (circuit : Algebraic.Circuit signature n g 1)
     (_normal : Program.NegationsAtInputs circuit.program)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depth t : Nat)
     (twoLeDepth : 2 ≤ depth)
     (circuitDepth : logicalDepth circuit ≤ depth)

@@ -556,7 +556,7 @@ theorem routedResourceCircuit_eval
     (resource : Fin (prefixLast prefixWidth + 2))
     (resourceCircuit : Circuit DeMorgan.signature
       (pairs * suffixWidth) gates pairs)
-    (computes : resourceCircuit.Computes DeMorgan.interpretation
+    (computes : resourceCircuit.ComputesWith DeMorgan.interpretation
       (directProduct (resourceFunction function resource) pairs))
     (input : Fin ((2 * pairs) * (prefixWidth + suffixWidth)) -> Bool)
     (pair : Fin pairs) :
@@ -605,7 +605,7 @@ theorem resourceBankCircuit_eval
       Circuit DeMorgan.signature (pairs * suffixWidth)
         (resourceGateCounts resource) pairs)
     (computes : forall resource,
-      (resourceCircuits resource).Computes DeMorgan.interpretation
+      (resourceCircuits resource).ComputesWith DeMorgan.interpretation
         (directProduct (resourceFunction function resource) pairs))
     (input : Fin ((2 * pairs) * (prefixWidth + suffixWidth)) -> Bool)
     (resource : Fin (prefixLast prefixWidth + 2))

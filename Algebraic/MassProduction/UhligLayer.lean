@@ -55,7 +55,7 @@ theorem layerStateCircuit_eval_resource
       Circuit DeMorgan.signature (pairs * suffixWidth)
         (resourceGateCounts resource) pairs)
     (computes : forall resource,
-      (resourceCircuits resource).Computes DeMorgan.interpretation
+      (resourceCircuits resource).ComputesWith DeMorgan.interpretation
         (directProduct (resourceFunction function resource) pairs))
     (input : Fin (layerInputCount prefixWidth suffixWidth pairs) -> Bool)
     (resource : Fin (prefixLast prefixWidth + 2))
@@ -81,7 +81,7 @@ theorem decodedStateValue_layerStateCircuit_eval
       Circuit DeMorgan.signature (pairs * suffixWidth)
         (resourceGateCounts resource) pairs)
     (computes : forall resource,
-      (resourceCircuits resource).Computes DeMorgan.interpretation
+      (resourceCircuits resource).ComputesWith DeMorgan.interpretation
         (directProduct (resourceFunction function resource) pairs))
     (input : Fin (layerInputCount prefixWidth suffixWidth pairs) -> Bool)
     (pair : Fin pairs) (side : Fin 2) :
@@ -128,10 +128,10 @@ theorem sharedUhligLayerCircuit_computes
       Circuit DeMorgan.signature (pairs * suffixWidth)
         (resourceGateCounts resource) pairs)
     (computes : forall resource,
-      (resourceCircuits resource).Computes DeMorgan.interpretation
+      (resourceCircuits resource).ComputesWith DeMorgan.interpretation
         (directProduct (resourceFunction function resource) pairs)) :
     (sharedUhligLayerCircuit pairs resourceGateCounts
-      resourceCircuits).Computes DeMorgan.interpretation
+      resourceCircuits).ComputesWith DeMorgan.interpretation
         (directProduct function (2 * pairs)) := by
   intro input
   funext output
@@ -193,9 +193,9 @@ theorem uhligLayerCircuit_computes
       Circuit DeMorgan.signature (pairs * suffixWidth)
         (resourceGateCounts resource) pairs)
     (computes : forall resource,
-      (resourceCircuits resource).Computes DeMorgan.interpretation
+      (resourceCircuits resource).ComputesWith DeMorgan.interpretation
         (directProduct (resourceFunction function resource) pairs)) :
-    (uhligLayerCircuit pairs resourceGateCounts resourceCircuits).Computes
+    (uhligLayerCircuit pairs resourceGateCounts resourceCircuits).ComputesWith
       DeMorgan.interpretation (directProduct function (2 * pairs)) := by
   intro input
   funext output

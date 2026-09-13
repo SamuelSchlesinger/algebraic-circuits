@@ -34,7 +34,7 @@ example :
   rfl
 
 example :
-    (conjunctionCircuit.replicateScalar 2).Computes
+    (conjunctionCircuit.replicateScalar 2).ComputesWith
       DeMorgan.interpretation (directProduct conjunctionFunction 2) := by
   apply Circuit.replicateScalar_computes_directProduct
   funext input

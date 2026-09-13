@@ -79,7 +79,7 @@ theorem gather_evaluatedPackedResources_routes_incidence
       Circuit DeMorgan.signature (groups * suffixWidth)
         (gateCounts member) groups)
     (computes : forall point bit,
-      (resourceCircuits (resourceMemberIndex point bit)).Computes
+      (resourceCircuits (resourceMemberIndex point bit)).ComputesWith
         DeMorgan.interpretation
         (directProduct
           (packedResourceFunction widthPositive placement function point bit)
@@ -274,7 +274,7 @@ theorem scatter_evaluate_gather_decode_recovers
       Circuit DeMorgan.signature (groups * suffixWidth)
         (gateCounts member) groups)
     (computes : forall point bit,
-      (resourceCircuits (resourceMemberIndex point bit)).Computes
+      (resourceCircuits (resourceMemberIndex point bit)).ComputesWith
         DeMorgan.interpretation
         (directProduct
           (packedResourceFunction widthPositive placement function point bit)
@@ -430,7 +430,7 @@ theorem grouped_scatter_evaluate_gather_decode_recovers
       Circuit DeMorgan.signature (groups * suffixWidth)
         (gateCounts member) groups)
     (computes : forall point bit,
-      (resourceCircuits (resourceMemberIndex point bit)).Computes
+      (resourceCircuits (resourceMemberIndex point bit)).ComputesWith
         DeMorgan.interpretation
         (directProduct
           (packedResourceFunction widthPositive placement function point bit)

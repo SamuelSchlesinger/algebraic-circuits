@@ -21,7 +21,7 @@ private theorem input_mem_support
     {n g : Nat}
     {phase : Bool}
     (circuit : Circuit signature n g 1)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.target ⟨n, phase⟩))
     (input : Fin n) :
     input ∈ circuit.inputSupport := by
@@ -34,7 +34,7 @@ private theorem output_ne_of_target_ne
     {n g : Nat}
     {phase : Bool}
     {circuit : Circuit signature n g 1}
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.target ⟨n, phase⟩))
     {left right : Fin n → Bool}
     (different : GateElimination.Xor.target ⟨n, phase⟩ left 0 ≠
@@ -52,7 +52,7 @@ private theorem outputRoot_not_readsInput
     (positive : 0 < n)
     (phase : Bool)
     (circuit : Circuit signature (n + 1) g 1)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.target ⟨n + 1, phase⟩))
     (root : OutputRoot circuit)
     (selected : Fin (n + 1)) :
@@ -135,7 +135,7 @@ private noncomputable def threeGateStep
     (positive : 0 < n)
     (phase : Bool)
     (circuit : Circuit signature (n + 1) g 1)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.target ⟨n + 1, phase⟩))
     (root : OutputRoot circuit)
     (initial : InitialChargedGate (outputProgram circuit))
@@ -272,7 +272,7 @@ private noncomputable def threeGateStep_of_independent_initial
     (positive : 0 < n)
     (phase : Bool)
     (circuit : Circuit signature (n + 1) g 1)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.target ⟨n + 1, phase⟩))
     (root : OutputRoot circuit)
     (initial : InitialChargedGate (outputProgram circuit))
@@ -314,7 +314,7 @@ noncomputable def eliminate
     (phase : Bool)
     {g : Nat}
     (circuit : Circuit signature (n + 1) g 1)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.target ⟨n + 1, phase⟩)) :
     GateElimination.Xor.ThreeGateStep binaryCost interpretation n phase circuit := by
   classical
@@ -453,7 +453,7 @@ AND/OR gates. Constants and NOT gates are free in this cost model.
 theorem xor_lowerBound
     {n g : Nat}
     (circuit : Circuit signature n g 1)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.parityTarget n)) :
     3 * (n - 1) ≤ circuit.cost binaryCost :=
   GateElimination.Xor.parity_lowerBound

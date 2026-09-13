@@ -268,7 +268,7 @@ theorem _root_.Cslib.Circuits.Circuit.replicateScalar_computes_directProduct
     {function : ScalarFunction U n}
     (computes : circuit.outputFunction interpretation 0 = function)
     (copies : Nat) :
-    (circuit.replicateScalar copies).Computes interpretation
+    (circuit.replicateScalar copies).ComputesWith interpretation
       (directProduct function copies) := by
   intro input
   rw [Circuit.eval_replicateScalar, computes]
@@ -281,7 +281,7 @@ theorem _root_.Cslib.Circuits.Circuit.outputFunction_eq_of_computes_scalarTarget
     {circuit : Circuit σ n g 1}
     {interpretation : Interpretation σ U}
     {function : ScalarFunction U n}
-    (computes : circuit.Computes interpretation (scalarTarget function)) :
+    (computes : circuit.ComputesWith interpretation (scalarTarget function)) :
     circuit.outputFunction interpretation 0 = function := by
   funext input
   exact congrFun (computes input) 0
@@ -373,11 +373,11 @@ export Cslib.Circuits.Circuit (takeDirectProductPrefix_cost)
 theorem _root_.Cslib.Circuits.Circuit.takeDirectProductPrefix_computes
     (circuit : Circuit sigma (large * width) gates large)
     (function : ScalarFunction U width)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (directProduct function large))
     (smallPositive : 0 < small)
     (smallLeLarge : small <= large) :
-    (circuit.takeDirectProductPrefix small smallPositive smallLeLarge).Computes
+    (circuit.takeDirectProductPrefix small smallPositive smallLeLarge).ComputesWith
       interpretation (directProduct function small) := by
   intro input
   funext copy
@@ -406,7 +406,7 @@ theorem _root_.Cslib.Circuits.Circuit.costComplexity_directProduct_mono_copies
       (directProduct function small) <=
     (iInf fun gates => iInf fun circuit :
       Circuit sigma (large * width) gates large =>
-        iInf fun _ : circuit.Computes interpretation
+        iInf fun _ : circuit.ComputesWith interpretation
           (directProduct function large) =>
             (circuit.cost operationCost : ENat))
   refine le_iInf fun gates => le_iInf fun circuit =>
@@ -437,7 +437,7 @@ theorem _root_.Cslib.Circuits.Circuit.costComplexity_directProduct_le
       let empty : Circuit σ (0 * n) 0 0 :=
         { program := .empty
           outputs := Fin.elim0 }
-      have computes : empty.Computes interpretation
+      have computes : empty.ComputesWith interpretation
           (directProduct function 0) := by
         intro input
         funext output
@@ -449,7 +449,7 @@ theorem _root_.Cslib.Circuits.Circuit.costComplexity_directProduct_le
   | succ copies =>
       let count := copies.succ
       have pointwise : ∀ {g} (circuit : Circuit σ n g 1),
-          circuit.Computes interpretation (scalarTarget function) ->
+          circuit.ComputesWith interpretation (scalarTarget function) ->
             Circuit.costComplexity interpretation operationCost
                 (directProduct function count) ≤
               (count : ℕ∞) * circuit.cost operationCost := by
@@ -467,7 +467,7 @@ theorem _root_.Cslib.Circuits.Circuit.costComplexity_directProduct_le
           (directProduct function count) ≤
         (count : ℕ∞) *
           (⨅ g, ⨅ circuit : Circuit σ n g 1,
-            ⨅ _ : circuit.Computes interpretation (scalarTarget function),
+            ⨅ _ : circuit.ComputesWith interpretation (scalarTarget function),
               (circuit.cost operationCost : ℕ∞))
       have nonzero : (count : ℕ∞) ≠ 0 := by
         exact_mod_cast Nat.succ_ne_zero copies

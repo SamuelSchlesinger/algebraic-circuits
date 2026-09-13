@@ -151,7 +151,7 @@ def _root_.Cslib.Circuits.Circuit.Family.Computes
     (family : Circuit.Family sigma m)
     (interpretation : Interpretation sigma U)
     (target : Target.Family U m) : Prop :=
-  forall n, (family.circuit n).Computes interpretation (target n)
+  forall n, (family.circuit n).ComputesWith interpretation (target n)
 
 export Cslib.Circuits.Circuit.Family (Computes)
 

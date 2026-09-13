@@ -29,7 +29,7 @@ private theorem complexity_binary_le (left right : ScalarFunction Bool n) (useOr
     if useOr then .or (.input 0) (.input 1) else .and (.input 0) (.input 1)
   let result := operation.circuit.comp
     ((minimumCircuit left).circuit.parallel (minimumCircuit right).circuit)
-  have computes : result.Computes interpretation
+  have computes : result.ComputesWith interpretation
       (fun input _ => if useOr then left input || right input else left input && right input) := by
     intro input
     funext output

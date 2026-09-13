@@ -13,7 +13,7 @@ rev = "950d27063f377d5ccd80d3eeedcebe319d3eb821"
 [[require]]
 name = "cslib"
 git = "https://github.com/leanprover/cslib"
-rev = "6c3d6fd806a72d5f575091f81eafd5cd7b92b4c3"
+rev = "85805b8447124a6561a5751d8b488f8fae96699e"
 
 [[lean_lib]]
 name = "Algebraic"

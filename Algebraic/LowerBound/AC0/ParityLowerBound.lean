@@ -55,7 +55,7 @@ theorem not_computes_parity_of_concrete_parameters_raw
     (small : ParityParameters.switchingFailure circuit.program t <
       (ParityParameters.minimumRatio t : ENNReal))
     (tooMany : t < ParityParameters.retained n t rounds) :
-    ¬circuit.Computes interpretation (Parity.target n) := by
+    ¬circuit.ComputesWith interpretation (Parity.target n) := by
   have finalPositive : 0 < ParityParameters.retained n t rounds := by
     omega
   apply not_computes_parity_of_iterated_switching_below_top_raw
@@ -88,7 +88,7 @@ theorem not_computes_parity_of_concrete_parameters
     (small : ParityParameters.switchingFailure circuit.program t <
       (ParityParameters.minimumRatio t : ENNReal))
     (tooMany : t < ParityParameters.retained n t rounds) :
-    ¬circuit.Computes interpretation (Parity.target n) :=
+    ¬circuit.ComputesWith interpretation (Parity.target n) :=
   not_computes_parity_of_concrete_parameters_raw circuit rounds
     circuitDepth t oneLe small tooMany
 
@@ -105,7 +105,7 @@ theorem not_computes_parity_of_concrete_depth_reduction_raw
       (ParityParameters.minimumRatio t : ENNReal))
     (survivors :
       t < n / (20 * (20 * t) ^ (depth - 2))) :
-    ¬circuit.Computes interpretation (Parity.target n) := by
+    ¬circuit.ComputesWith interpretation (Parity.target n) := by
   apply not_computes_parity_of_concrete_parameters_raw
     circuit (depth - 1) (by omega) t oneLe small
   have roundsEq : depth - 1 = (depth - 2) + 1 := by omega
@@ -124,7 +124,7 @@ theorem not_computes_parity_of_concrete_depth_reduction
       (ParityParameters.minimumRatio t : ENNReal))
     (survivors :
       t < n / (20 * (20 * t) ^ (depth - 2))) :
-    ¬circuit.Computes interpretation (Parity.target n) :=
+    ¬circuit.ComputesWith interpretation (Parity.target n) :=
   not_computes_parity_of_concrete_depth_reduction_raw circuit depth t
     twoLeDepth circuitDepth oneLe small survivors
 

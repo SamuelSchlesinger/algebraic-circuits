@@ -19,7 +19,7 @@ theorem parity_lowerBound_of_deMorgan_realization
     (realization : Realization ρ DeMorgan.signature interpretation
       DeMorgan.interpretation)
     (circuit : Circuit ρ n g 1)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.parityTarget n)) :
     3 * (n - 1) ≤
       circuit.cost (realization.pullCost DeMorgan.binaryCost) := by
@@ -38,7 +38,7 @@ theorem parity_lowerBound_of_deMorgan_minimumCost
     (realization : Realization ρ DeMorgan.signature interpretation
       DeMorgan.interpretation)
     (circuit : Circuit ρ n g 1)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.parityTarget n)) :
     3 * (n - 1) ≤
       circuit.cost (realization.minimumCost DeMorgan.binaryCost) := by
@@ -57,7 +57,7 @@ theorem parity_size_lowerBound_of_deMorgan_minimumCost
     (bounded : ∀ op,
       realization.minimumCost DeMorgan.binaryCost op ≤ K)
     (circuit : Circuit ρ n g 1)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.parityTarget n)) :
     (3 * (n - 1)) ⌈/⌉ K ≤ circuit.size := by
   rw [ceilDiv_le_iff_le_mul positive]
@@ -75,7 +75,7 @@ theorem parity_size_lowerBound_of_deMorgan_realization
     (positive : 0 < K)
     (bounded : ∀ op, (realization.operation op).size ≤ K)
     (circuit : Circuit ρ n g 1)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.parityTarget n)) :
     (3 * (n - 1)) ⌈/⌉ K ≤ circuit.size := by
   apply realization.transport_sizeLowerBound_ceilDiv

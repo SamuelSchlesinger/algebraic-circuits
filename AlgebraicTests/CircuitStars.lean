@@ -79,7 +79,7 @@ example (center : Bool) (directions : Finset (Fin n → Bool)) :
   constantFaceBirth_complement_le center directions
 
 example (circuit : Circuit DeMorgan.signature n g 1)
-    (f : ScalarFunction Bool n) (computes : circuit.Computes DeMorgan.interpretation (fun input _ => f input)) :
+    (f : ScalarFunction Bool n) (computes : circuit.ComputesWith DeMorgan.interpretation (fun input _ => f input)) :
     complexity f ≤ circuit.cost DeMorgan.standardCost + 2 :=
   complexity_le_standardCost_add_two circuit computes
 

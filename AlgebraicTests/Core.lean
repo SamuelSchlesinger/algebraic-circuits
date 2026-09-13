@@ -37,7 +37,7 @@ example (circuit : Cslib.Circuits.Circuit signature n g m) :
 
 example (circuit : Cslib.Circuits.Circuit signature n g m)
     (interpretation : Cslib.Circuits.Interpretation signature U) :
-    circuit.Computes interpretation (circuit.eval interpretation) := fun _ => rfl
+    circuit.ComputesWith interpretation (circuit.eval interpretation) := fun _ => rfl
 
 example (circuit : Cslib.Circuits.Circuit signature n g m)
     (interpretation : Cslib.Circuits.Interpretation signature U)

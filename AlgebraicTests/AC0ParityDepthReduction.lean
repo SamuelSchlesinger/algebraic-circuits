@@ -34,7 +34,7 @@ example
           (retained (level + 1) : ENNReal) <
         (p level : ENNReal) * (retained level : ENNReal))
     (tooMany : treeBound rounds < retained rounds) :
-    ¬circuit.Computes interpretation (Parity.target n) :=
+    ¬circuit.ComputesWith interpretation (Parity.target n) :=
   AC0.Circuit.not_computes_parity_of_iterated_switching_below_top
     circuit normal rounds circuitDepth treeBound oneLeInitialBound p
     atMostOne boundMonotone retained initial failureLe room tooMany

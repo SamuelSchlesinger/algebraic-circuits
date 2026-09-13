@@ -53,7 +53,7 @@ theorem shannonCircuit_computes
     (inputs : Nat)
     (inputsLarge : 16 <= inputs)
     (function : ScalarFunction Bool inputs) :
-    (shannonCircuit inputs inputsLarge function).Computes
+    (shannonCircuit inputs inputsLarge function).ComputesWith
       DeMorgan.interpretation (scalarTarget function) := by
   intro input
   funext output
@@ -89,7 +89,7 @@ theorem replicatedShannonCircuit_computes
     (inputsLarge : 16 <= inputs)
     (function : ScalarFunction Bool inputs)
     (copies : Nat) :
-    (replicatedShannonCircuit inputs inputsLarge function copies).Computes
+    (replicatedShannonCircuit inputs inputsLarge function copies).ComputesWith
       DeMorgan.interpretation (directProduct function copies) := by
   intro input
   rw [replicatedShannonCircuit, Circuit.eval_replicateScalar]
@@ -153,7 +153,7 @@ theorem booleanMassComplexity_le_replicatedShannon
       (copies * (27 * 2 ^ inputs / inputs) : Nat) := by
   let base := shannonCircuit inputs inputsLarge function
   let replicated := base.replicateScalar copies
-  have computes : replicated.Computes DeMorgan.interpretation
+  have computes : replicated.ComputesWith DeMorgan.interpretation
       (directProduct function copies) := by
     intro input
     rw [show replicated = base.replicateScalar copies by rfl,

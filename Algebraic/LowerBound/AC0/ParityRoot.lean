@@ -101,7 +101,7 @@ namespace Circuit
 allowing arbitrary internal NOT gates at zero cost. -/
 theorem parity_size_tradeoff_at_root_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depth : Nat)
     (twoLeDepth : 2 ≤ depth)
     (circuitDepth : logicalDepth circuit ≤ depth)
@@ -123,7 +123,7 @@ theorem parity_size_tradeoff_at_root_raw
 theorem parity_size_tradeoff_at_root
     (circuit : Algebraic.Circuit signature n g 1)
     (_normal : Program.NegationsAtInputs circuit.program)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depth : Nat)
     (twoLeDepth : 2 ≤ depth)
     (circuitDepth : logicalDepth circuit ≤ depth)
@@ -138,7 +138,7 @@ theorem parity_size_tradeoff_at_root
 floor division, allowing arbitrary internal NOT gates at zero cost. -/
 theorem parity_andOrCost_lower_bound_at_root_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depth : Nat)
     (twoLeDepth : 2 ≤ depth)
     (circuitDepth : logicalDepth circuit ≤ depth)
@@ -154,7 +154,7 @@ theorem parity_andOrCost_lower_bound_at_root_raw
 theorem parity_andOrCost_lower_bound_at_root
     (circuit : Algebraic.Circuit signature n g 1)
     (_normal : Program.NegationsAtInputs circuit.program)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depth : Nat)
     (twoLeDepth : 2 ≤ depth)
     (circuitDepth : logicalDepth circuit ≤ depth)

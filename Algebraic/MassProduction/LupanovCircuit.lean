@@ -5,7 +5,7 @@ import Algebraic.MassProduction.LupanovPatternBank
 
 This module recombines the two pattern banks into the finite Lupanov
 block-table circuit. It gives an explicit cost ledger and proves exact
-evaluation and `Computes` theorems for every positive block size.
+evaluation and `ComputesWith` theorems for every positive block size.
 -/
 
 namespace Algebraic
@@ -330,7 +330,7 @@ theorem circuit_eval
 theorem circuit_computes
     (blockSizePositive : 0 < blockSize)
     (function : ScalarFunction Bool (addressWidth + dataWidth)) :
-    (circuit function blockSize).Computes DeMorgan.interpretation
+    (circuit function blockSize).ComputesWith DeMorgan.interpretation
       (scalarTarget function) := by
   intro input
   funext output

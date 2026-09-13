@@ -63,8 +63,8 @@ namespace Step
 /-- The residual circuit in a step computes the next target problem. -/
 theorem result_computes
     (step : Step operationCost interpretation problem rank bound state circuit)
-    (computes : circuit.Computes interpretation (problem state).target) :
-    step.reduction.result.Computes interpretation (problem step.next).target := by
+    (computes : circuit.ComputesWith interpretation (problem state).target) :
+    step.reduction.result.ComputesWith interpretation (problem step.next).target := by
   have restricted := step.reduction.computes computes
   rw [step.restriction.target_eq] at restricted
   exact restricted
@@ -86,7 +86,7 @@ structure Framework
   /-- Every positive-bound computation admits a paying elimination step. -/
   reduce : ∀ state, 0 < bound state →
     ∀ {g} (circuit : Circuit σ (problem state).inputCount g m),
-      circuit.Computes interpretation (problem state).target →
+      circuit.ComputesWith interpretation (problem state).target →
         Step operationCost interpretation problem rank bound state circuit
 
 /--
@@ -108,7 +108,7 @@ structure OptimalFramework
   /-- Every positive-bound, minimum-cost computation admits a paying step. -/
   reduce : ∀ state, 0 < bound state →
     ∀ {g} (circuit : Circuit σ (problem state).inputCount g m),
-      circuit.Computes interpretation (problem state).target →
+      circuit.ComputesWith interpretation (problem state).target →
       circuit.CostSizeMinimal operationCost interpretation
         (problem state).target →
         Step operationCost interpretation problem rank bound state circuit
@@ -126,7 +126,7 @@ theorem lowerBound
     (framework : Framework (State := State) operationCost interpretation m) :
     ∀ state {g} (circuit :
         Circuit σ (framework.problem state).inputCount g m),
-      circuit.Computes interpretation (framework.problem state).target →
+      circuit.ComputesWith interpretation (framework.problem state).target →
         framework.bound state ≤ circuit.cost operationCost := by
   intro state
   induction state using (measure framework.rank).wf.induction with
@@ -195,7 +195,7 @@ theorem lowerBound
       OptimalFramework (State := State) operationCost interpretation m) :
     ∀ state {g} (circuit : Circuit σ
         (optimalFramework.problem state).inputCount g m),
-      circuit.Computes interpretation (optimalFramework.problem state).target →
+      circuit.ComputesWith interpretation (optimalFramework.problem state).target →
         optimalFramework.bound state ≤ circuit.cost operationCost := by
   exact optimalFramework.toFramework.lowerBound
 

@@ -5,6 +5,8 @@ import Mathlib.Data.Finset.Defs
 # Circuit semantics
 
 This file contains the small semantic vocabulary used by circuit lower bounds.
+`Circuit.ComputesWith` is generic in the interpretation and number of outputs;
+CSLib reserves `Circuit.Computes` for its single-output Boolean circuits.
 -/
 
 namespace Algebraic
@@ -35,24 +37,41 @@ export Cslib.Circuits (Circuit.outputFunction)
 export Cslib.Circuits (Circuit.outputFunction_apply)
 
 /-- Exact pointwise computation of a function by a circuit. -/
-def _root_.Cslib.Circuits.Circuit.Computes
+def _root_.Cslib.Circuits.Circuit.ComputesWith
     (c : Circuit σ n g m)
     (interpretation : Interpretation σ U)
     (target : Target U n m) : Prop :=
   ∀ input, c.eval interpretation input = target input
 
-export Cslib.Circuits (Circuit.Computes)
+export Cslib.Circuits (Circuit.ComputesWith)
+
+/-- Legacy qualified name for generic circuit computation. Use
+`circuit.ComputesWith interpretation target` with field notation. -/
+abbrev Circuit.Computes
+    (circuit : Circuit σ n g m)
+    (interpretation : Interpretation σ U)
+    (target : Target U n m) : Prop :=
+  circuit.ComputesWith interpretation target
 
 /-- Pointwise computation gives equality of the computed and target functions. -/
-theorem _root_.Cslib.Circuits.Circuit.Computes.eval_eq
+theorem _root_.Cslib.Circuits.Circuit.ComputesWith.eval_eq
     {circuit : Circuit σ n g m}
     {interpretation : Interpretation σ U}
     {target : Target U n m}
-    (computes : circuit.Computes interpretation target) :
+    (computes : circuit.ComputesWith interpretation target) :
     circuit.eval interpretation = target :=
   funext computes
 
-export Cslib.Circuits (Circuit.Computes.eval_eq)
+export Cslib.Circuits (Circuit.ComputesWith.eval_eq)
+
+/-- Legacy qualified name for equality of the computed and target functions. -/
+theorem Circuit.Computes.eval_eq
+    {circuit : Circuit σ n g m}
+    {interpretation : Interpretation σ U}
+    {target : Target U n m}
+    (computes : Circuit.Computes circuit interpretation target) :
+    circuit.eval interpretation = target :=
+  Cslib.Circuits.Circuit.ComputesWith.eval_eq computes
 
 /-- A target is gate-hard at budget `G` when no circuit with at most `G`
 internal gates computes it. -/
@@ -61,7 +80,7 @@ def _root_.Cslib.Circuits.Circuit.GateHard
     (G : Nat)
     (target : Target U n m) : Prop :=
   ∀ g ≤ G, ∀ circuit : Circuit σ n g m,
-    ¬circuit.Computes interpretation target
+    ¬circuit.ComputesWith interpretation target
 
 export Cslib.Circuits (Circuit.GateHard)
 
@@ -72,7 +91,7 @@ def _root_.Cslib.Circuits.Circuit.DepthHard
     (depth : Nat)
     (target : Target U n m) : Prop :=
   ∀ g, ∀ circuit : Circuit σ n g m,
-    circuit.Computes interpretation target → depth < circuit.depth
+    circuit.ComputesWith interpretation target → depth < circuit.depth
 
 export Cslib.Circuits (Circuit.DepthHard)
 
@@ -82,7 +101,7 @@ def _root_.Cslib.Circuits.Interpretation.FunctionallyComplete
     (interpretation : Interpretation σ U) : Prop :=
   ∀ n m, ∀ target : Target U n m,
     ∃ g, ∃ circuit : Circuit σ n g m,
-      circuit.Computes interpretation target
+      circuit.ComputesWith interpretation target
 
 export Cslib.Circuits (Interpretation.FunctionallyComplete)
 

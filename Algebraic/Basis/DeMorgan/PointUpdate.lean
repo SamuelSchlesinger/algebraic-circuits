@@ -69,10 +69,10 @@ private def correction (value : Bool) : Expression 2 :=
 The bound counts every internal gate in the De Morgan signature. -/
 theorem exists_update_circuit (circuit : Circuit signature n g 1)
     (function : ScalarFunction Bool n)
-    (computes : circuit.Computes interpretation (fun input _ => function input))
+    (computes : circuit.ComputesWith interpretation (fun input _ => function input))
     (point : Fin n → Bool) (value : Bool) :
     ∃ gates, ∃ result : Circuit signature n gates 1,
-      result.Computes interpretation (fun input _ => Function.update function point value input) ∧
+      result.ComputesWith interpretation (fun input _ => Function.update function point value input) ∧
         gates ≤ g + 2 * n := by
   classical
   cases n with

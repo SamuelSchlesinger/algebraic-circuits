@@ -6,6 +6,7 @@ import Algebraic.Basis.AC0
 import Algebraic.Basis.AC0.Normalization
 import Algebraic.Basis.AC0.Restriction
 import Algebraic.Basis.DeMorgan.Expression
+import Algebraic.Basis.DeMorgan.ShannonLupanov
 import Algebraic.Basis.AndOr.Preimage
 import Algebraic.Translation.Optimal
 import Algebraic.Translation.Category

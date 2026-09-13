@@ -33,7 +33,7 @@ theorem exists_finite_uhlig_circuit
     exists gates,
       exists circuit : Circuit DeMorgan.signature
           (copies * recursiveWidth prefixWidth baseWidth depth) gates copies,
-        circuit.Computes DeMorgan.interpretation
+        circuit.ComputesWith DeMorgan.interpretation
             (directProduct function copies) /\
           circuit.cost DeMorgan.standardCost <=
             resourceCount prefixWidth ^ depth *
@@ -71,7 +71,7 @@ theorem exists_finite_uhlig_circuit_at_width
     exists gates,
       exists circuit : Circuit DeMorgan.signature
           (copies * inputs) gates copies,
-        circuit.Computes DeMorgan.interpretation
+        circuit.ComputesWith DeMorgan.interpretation
             (directProduct function copies) /\
           circuit.cost DeMorgan.standardCost <=
             resourceCount prefixWidth ^ depth *

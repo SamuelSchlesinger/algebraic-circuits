@@ -195,16 +195,25 @@ theorem _root_.Cslib.Circuits.Circuit.eval_dependsOnlyOn
 export Cslib.Circuits (Circuit.eval_dependsOnlyOn)
 
 /-- A computed function depends only on the circuit's structural input support. -/
-theorem _root_.Cslib.Circuits.Circuit.Computes.dependsOnlyOn
+theorem _root_.Cslib.Circuits.Circuit.ComputesWith.dependsOnlyOn
     {c : Circuit σ n g m}
     {interpretation : Interpretation σ U}
     {target : (Fin n → U) → Fin m → U}
-    (computes : c.Computes interpretation target) :
+    (computes : c.ComputesWith interpretation target) :
     DependsOnlyOn target c.inputSupport := by
   intro left right agree
   rw [← computes left, ← computes right]
   exact c.eval_dependsOnlyOn interpretation left right agree
 
-export Cslib.Circuits (Circuit.Computes.dependsOnlyOn)
+export Cslib.Circuits (Circuit.ComputesWith.dependsOnlyOn)
+
+/-- Legacy qualified name for structural support of a computed function. -/
+theorem Circuit.Computes.dependsOnlyOn
+    {circuit : Circuit σ n g m}
+    {interpretation : Interpretation σ U}
+    {target : Target U n m}
+    (computes : Circuit.Computes circuit interpretation target) :
+    DependsOnlyOn target circuit.inputSupport :=
+  Cslib.Circuits.Circuit.ComputesWith.dependsOnlyOn computes
 
 end Algebraic

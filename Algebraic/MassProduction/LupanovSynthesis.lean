@@ -52,7 +52,7 @@ noncomputable def lupanovCircuit
 theorem lupanovCircuit_computes
     (inputs : Nat)
     (function : ScalarFunction Bool inputs) :
-    (lupanovCircuit inputs function).Computes DeMorgan.interpretation
+    (lupanovCircuit inputs function).ComputesWith DeMorgan.interpretation
       (scalarTarget function) := by
   intro input
   funext output

@@ -20,7 +20,7 @@ example
     (small : ParityParameters.switchingFailure circuit.program t <
       (ParityParameters.minimumRatio t : ENNReal))
     (survivors : t < n / (20 * (20 * t) ^ (depth - 2))) :
-    ¬circuit.Computes interpretation (Parity.target n) :=
+    ¬circuit.ComputesWith interpretation (Parity.target n) :=
   AC0.Circuit.not_computes_parity_of_concrete_depth_reduction
     circuit normal depth t twoLeDepth circuitDepth oneLe small survivors
 

@@ -20,7 +20,7 @@ def _root_.Cslib.Circuits.Circuit.CostMinimal
     (interpretation : Interpretation σ U)
     (target : Target U n m) : Prop :=
   ∀ {h : Nat} (competitor : Circuit σ n h m),
-    competitor.Computes interpretation target →
+    competitor.ComputesWith interpretation target →
       circuit.cost operationCost ≤ competitor.cost operationCost
 
 export Cslib.Circuits (Circuit.CostMinimal)
@@ -38,7 +38,7 @@ structure _root_.Cslib.Circuits.Circuit.CostSizeMinimal
   cost : circuit.CostMinimal operationCost interpretation target
   /-- Among equal-cost implementations, none has fewer internal gates. -/
   gateCount : ∀ {h : Nat} (competitor : Circuit σ n h m),
-    competitor.Computes interpretation target →
+    competitor.ComputesWith interpretation target →
     competitor.cost operationCost = circuit.cost operationCost →
       g ≤ h
 
@@ -54,7 +54,7 @@ structure _root_.Cslib.Circuits.Circuit.Minimum
   /-- Chosen implementation. -/
   circuit : Circuit σ n gateCount m
   /-- The implementation computes the requested target. -/
-  computes : circuit.Computes interpretation target
+  computes : circuit.ComputesWith interpretation target
   /-- The implementation is cost-minimal with a gate-count tie-break. -/
   minimal : circuit.CostSizeMinimal operationCost interpretation target
 
@@ -73,12 +73,12 @@ noncomputable def _root_.Cslib.Circuits.Circuit.minimum
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U)
     (target : Target U n m)
-    (computes : circuit.Computes interpretation target) :
+    (computes : circuit.ComputesWith interpretation target) :
     Circuit.Minimum operationCost interpretation target := by
   classical
   let RealizedCost : Nat → Prop := fun cost =>
     ∃ gateCount, ∃ implementation : Circuit σ n gateCount m,
-      implementation.Computes interpretation target ∧
+      implementation.ComputesWith interpretation target ∧
         implementation.cost operationCost = cost
   have realized : ∃ cost, RealizedCost cost :=
     ⟨circuit.cost operationCost, g, circuit, computes, rfl⟩
@@ -86,7 +86,7 @@ noncomputable def _root_.Cslib.Circuits.Circuit.minimum
   have minimumRealized : RealizedCost minimumCost := Nat.find_spec realized
   let RealizedGateCount : Nat → Prop := fun gateCount =>
     ∃ implementation : Circuit σ n gateCount m,
-      implementation.Computes interpretation target ∧
+      implementation.ComputesWith interpretation target ∧
         implementation.cost operationCost = minimumCost
   have realizedGateCount : ∃ gateCount, RealizedGateCount gateCount :=
     minimumRealized
@@ -170,8 +170,8 @@ def _root_.Cslib.Circuits.Circuit.Reduction.rebaseSource
     {substitution : InputSubstitution U n k}
     (reduction : Circuit.Reduction operationCost replacement interpretation
       substitution)
-    (sourceComputes : source.Computes interpretation target)
-    (replacementComputes : replacement.Computes interpretation target)
+    (sourceComputes : source.ComputesWith interpretation target)
+    (replacementComputes : replacement.ComputesWith interpretation target)
     (cost_le : replacement.cost operationCost ≤
       source.cost operationCost) :
     Circuit.Reduction operationCost source interpretation substitution where
@@ -219,8 +219,8 @@ theorem _root_.Cslib.Circuits.Circuit.Reduction.computes
     {target : Target U n m}
     (reduction : Circuit.Reduction operationCost source interpretation
       substitution)
-    (computes : source.Computes interpretation target) :
-    reduction.result.Computes interpretation
+    (computes : source.ComputesWith interpretation target) :
+    reduction.result.ComputesWith interpretation
       (target.substitute substitution) := by
   intro input
   rw [reduction.eval_eq, computes]

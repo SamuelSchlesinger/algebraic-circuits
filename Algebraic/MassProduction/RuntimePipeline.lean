@@ -261,7 +261,7 @@ theorem circuit_recovers
         (gateCounts member) groups)
     (computes : forall
       (point : Fin (pointCount dimension width)) (bit : Fin width),
-      (resourceCircuits (resourceMemberIndex point bit)).Computes
+      (resourceCircuits (resourceMemberIndex point bit)).ComputesWith
         DeMorgan.interpretation
         (directProduct
           (packedResourceFunction
@@ -379,7 +379,7 @@ theorem circuit_computes
         (gateCounts member) groups)
     (computes : forall
       (point : Fin (pointCount dimension width)) (bit : Fin width),
-      (resourceCircuits (resourceMemberIndex point bit)).Computes
+      (resourceCircuits (resourceMemberIndex point bit)).ComputesWith
         DeMorgan.interpretation
         (directProduct
           (packedResourceFunction
@@ -397,7 +397,7 @@ theorem circuit_computes
     (circuit (prefixWidth := prefixWidth) widthPositive gridPositive
       groupsPositive schedulerDepth suffixWidth groupBitWidth orderWidth
       allFit incidenceFits dummyTarget scatterRecordCount gateCounts
-      resourceCircuits gatherRecordCount).Computes DeMorgan.interpretation
+      resourceCircuits gatherRecordCount).ComputesWith DeMorgan.interpretation
         (directProduct (requestFunction function) totalRequests) := by
   intro input
   rw [circuit_recovers widthPositive widthAtLeastTwo dimensionPositive

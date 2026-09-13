@@ -139,7 +139,7 @@ theorem costComplexity_reindexInputs_le
   apply Circuit.le_costComplexity
   intro gates circuit computes
   have mappedComputes :
-      (circuit.mapInputs inputMap).Computes interpretation
+      (circuit.mapInputs inputMap).ComputesWith interpretation
         (fun input output => target (input ∘ inputMap) output) := by
     intro input
     rw [Circuit.eval_mapInputs]

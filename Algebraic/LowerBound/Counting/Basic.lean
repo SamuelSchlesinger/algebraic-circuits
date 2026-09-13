@@ -48,7 +48,7 @@ theorem _root_.Cslib.Circuits.Circuit.mem_functionsAtMost_iff
     {target : Target U n m} :
     target ∈ Circuit.functionsAtMost interpretation n m G ↔
       ∃ g ≤ G, ∃ circuit : Circuit σ n g m,
-        circuit.Computes interpretation target := by
+        circuit.ComputesWith interpretation target := by
   classical
   constructor
   · intro present

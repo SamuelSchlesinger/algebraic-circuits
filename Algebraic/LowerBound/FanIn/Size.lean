@@ -191,7 +191,7 @@ theorem _root_.Cslib.Circuits.Circuit.essential_le_size
     {target : (Fin n → U) → Fin m → U}
     {selected : Finset (Fin n)}
     {r : Nat}
-    (computes : c.Computes interpretation target)
+    (computes : c.ComputesWith interpretation target)
     (essential : ∀ k ∈ selected, EssentialAt target k)
     (bounded : c.FanInAtMost r) :
     selected.card ≤ m + (r - 1) * c.size := by

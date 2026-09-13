@@ -497,7 +497,7 @@ theorem _root_.Cslib.Circuits.Circuit.exists_hard_sharp_of_complete
     ∃ target : Target U n m,
       Circuit.GateHard interpretation G target ∧
       ∃ g, ∃ circuit : Circuit σ n g m,
-        circuit.Computes interpretation target := by
+        circuit.ComputesWith interpretation target := by
   obtain ⟨target, hard⟩ := Circuit.exists_hard_sharp interpretation large
   exact ⟨target, hard, complete n m target⟩
 

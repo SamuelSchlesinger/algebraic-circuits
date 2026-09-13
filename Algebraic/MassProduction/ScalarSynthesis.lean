@@ -23,7 +23,7 @@ structure ScalarSynthesis (width : Nat) where
     Circuit DeMorgan.signature width (gateCount function) 1
   /-- Proof that every selected circuit computes its requested target. -/
   computes : forall function,
-    (circuit function).Computes DeMorgan.interpretation
+    (circuit function).ComputesWith DeMorgan.interpretation
       (scalarTarget function)
 
 /-- Width-indexed one-copy synthesis data. -/

@@ -27,7 +27,7 @@ schedule forces the final survivor count below the final tree bound, with no
 restriction on the placement of NOT gates. -/
 theorem retained_le_treeBound_of_iterated_parity_raw
     (circuit : Algebraic.Circuit signature n g 1)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (rounds : Nat)
     (circuitDepth : logicalDepth circuit ≤ rounds + 1)
     (treeBound : Nat → Nat)
@@ -61,7 +61,7 @@ theorem retained_le_treeBound_of_iterated_parity_raw
 theorem retained_le_treeBound_of_iterated_parity
     (circuit : Algebraic.Circuit signature n g 1)
     (_normal : Program.NegationsAtInputs circuit.program)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (rounds : Nat)
     (circuitDepth : logicalDepth circuit ≤ rounds + 1)
     (treeBound : Nat → Nat)
@@ -113,7 +113,7 @@ theorem not_computes_parity_of_iterated_switching_below_top_raw
           (retained (level + 1) : ENNReal) <
         (p level : ENNReal) * (retained level : ENNReal))
     (tooMany : treeBound rounds < retained rounds) :
-    ¬circuit.Computes interpretation (Parity.target n) := by
+    ¬circuit.ComputesWith interpretation (Parity.target n) := by
   intro computes
   exact (Nat.not_lt_of_ge
     (retained_le_treeBound_of_iterated_parity_raw
@@ -146,7 +146,7 @@ theorem not_computes_parity_of_iterated_switching_below_top
           (retained (level + 1) : ENNReal) <
         (p level : ENNReal) * (retained level : ENNReal))
     (tooMany : treeBound rounds < retained rounds) :
-    ¬circuit.Computes interpretation (Parity.target n) :=
+    ¬circuit.ComputesWith interpretation (Parity.target n) :=
   not_computes_parity_of_iterated_switching_below_top_raw circuit rounds
     circuitDepth treeBound oneLeInitialBound p atMostOne boundMonotone
     retained initial failureLe room tooMany

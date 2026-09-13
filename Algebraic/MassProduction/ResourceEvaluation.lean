@@ -269,7 +269,7 @@ theorem resourceBankCircuit_eval_incidence
     (resourceFunctions : Fin (pointCount dimension width) -> Fin width ->
       ScalarFunction Bool suffixWidth)
     (computes : forall point bit,
-      (resourceCircuits (resourceMemberIndex point bit)).Computes
+      (resourceCircuits (resourceMemberIndex point bit)).ComputesWith
         DeMorgan.interpretation
         (directProduct (resourceFunctions point bit) groups))
     (incidence : Fin (totalRequests * nonzeroScalarCount width))
@@ -540,7 +540,7 @@ theorem evaluatedResourceValues_routes_incidence
     (resourceFunctions : Fin (pointCount dimension width) -> Fin width ->
       ScalarFunction Bool suffixWidth)
     (computes : forall point bit,
-      (resourceCircuits (resourceMemberIndex point bit)).Computes
+      (resourceCircuits (resourceMemberIndex point bit)).ComputesWith
         DeMorgan.interpretation
         (directProduct (resourceFunctions point bit) groups))
     (incidence : Fin (totalRequests * nonzeroScalarCount width)) :

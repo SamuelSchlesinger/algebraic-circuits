@@ -17,7 +17,7 @@ theorem complexity_not_le (function : ScalarFunction Bool n) :
     complexity (fun input => !(function input)) ≤ complexity function + 1 := by
   let operation : Expression 1 := .not (.input 0)
   let result := operation.circuit.comp (minimumCircuit function).circuit
-  have computes : result.Computes interpretation (fun input _ => !(function input)) := by
+  have computes : result.ComputesWith interpretation (fun input _ => !(function input)) := by
     intro input
     funext output
     have equal : output = 0 := Subsingleton.elim _ _
