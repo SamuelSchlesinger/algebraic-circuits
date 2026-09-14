@@ -99,7 +99,7 @@ theorem priorKeyEqualityExpression_eval_eq_true_iff
   constructor
   · intro all previous previousLt
     have := all previous
-    simp only [if_pos previousLt] at this
+    simp only [ite_eq_left previousLt] at this
     exact (bitEqualityExpression_eval_eq_true_iff
       keyFits leftSide rightSide previous input).mp this
   · intro priorEqual previous
@@ -460,7 +460,7 @@ theorem compareSwapBits_keys_ordered
       rightLess
     rw [flagEquality] at flagTrue
     contradiction
-  · simp only [if_true]
+  · simp only [ite_true]
     exact (compareSwapFlag_eq_true_iff keyFits input).mp
       flagEquality |>.le
 

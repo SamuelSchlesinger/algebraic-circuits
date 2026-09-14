@@ -9,6 +9,7 @@ import Algebraic.Basis.DeMorgan.Expression
 import Algebraic.Basis.DeMorgan.NativeCost
 import Algebraic.Basis.DeMorgan.PairIndicator
 import Algebraic.Basis.DeMorgan.Threshold
+import Algebraic.Basis.DeMorgan.ShannonLupanov
 import Algebraic.Basis.AndOr.Preimage
 import Algebraic.Translation.Optimal
 import Algebraic.Translation.Category

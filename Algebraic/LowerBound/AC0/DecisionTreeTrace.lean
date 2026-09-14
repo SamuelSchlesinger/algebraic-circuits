@@ -58,7 +58,7 @@ theorem eval_eq_of_agree_on_evaluationPath
               simp [evaluationPath, sourceValue, PathStep.indices]),
               sourceValue]
           simp only [eval_query, sourceValue, targetValue,
-            Bool.false_eq_true, if_false]
+            Bool.false_eq_true, ite_false]
           apply falseHypothesis
           intro current present
           apply agree current
@@ -71,7 +71,7 @@ theorem eval_eq_of_agree_on_evaluationPath
             rw [agree index (by
               simp [evaluationPath, sourceValue, PathStep.indices]),
               sourceValue]
-          simp only [eval_query, sourceValue, targetValue, if_true]
+          simp only [eval_query, sourceValue, targetValue, ite_true]
           apply trueHypothesis
           intro current present
           apply agree current

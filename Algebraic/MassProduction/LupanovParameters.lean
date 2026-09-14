@@ -44,20 +44,8 @@ theorem lupanovBlockSize_positive (inputs : Nat) :
 length. -/
 theorem eventually_const_mul_log_le_self (constant : Nat) :
     ∀ᶠ inputs in Filter.atTop,
-      constant * Nat.log 2 inputs <= inputs := by
-  obtain ⟨cutoff, pastCutoff⟩ := Filter.eventually_atTop.1
-    (Growth.eventually_const_mul_pow_le_two_pow constant 1)
-  apply Filter.eventually_atTop.2
-  refine ⟨2 ^ cutoff, fun inputs inputsLarge => ?_⟩
-  have inputPositive : 0 < inputs :=
-    (pow_pos (by omega : 0 < 2) cutoff).trans_le inputsLarge
-  have logPastCutoff : cutoff <= Nat.log 2 inputs :=
-    Nat.le_log_of_pow_le (by omega) inputsLarge
-  calc
-    constant * Nat.log 2 inputs =
-        constant * (Nat.log 2 inputs) ^ 1 := by simp
-    _ <= 2 ^ Nat.log 2 inputs := pastCutoff _ logPastCutoff
-    _ <= inputs := Nat.pow_log_le_self 2 (Nat.ne_of_gt inputPositive)
+      constant * Nat.log 2 inputs <= inputs :=
+  Nat.eventually_mul_log_le constant (by decide)
 
 theorem lupanov_parameters_eventually :
     ∀ᶠ inputs in Filter.atTop,

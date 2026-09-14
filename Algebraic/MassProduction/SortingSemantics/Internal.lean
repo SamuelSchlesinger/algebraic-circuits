@@ -671,7 +671,7 @@ private theorem keyedCompareSource_left [LinearOrder κ]
   have hleft :
       (Fin.castAdd (networkRecords depth) pair).val <
         networkRecords depth := pair.isLt
-  rw [dif_pos hleft]
+  rw [dite_eq_left hleft]
   unfold keyedSourceRight
   rw [Fin.natAdd_eq_addNat]
   congr 1
@@ -697,13 +697,13 @@ private theorem keyedCompareSource_involutive [LinearOrder κ]
   · rw [keyedCompareSource_left]
     by_cases hsource :
       keyedSourceRight key depth ascending input pair
-    · rw [if_pos hsource, keyedCompareSource_right, if_pos hsource]
-    · rw [if_neg hsource, keyedCompareSource_left, if_neg hsource]
+    · rw [ite_eq_left hsource, keyedCompareSource_right, ite_eq_left hsource]
+    · rw [ite_eq_right hsource, keyedCompareSource_left, ite_eq_right hsource]
   · rw [Fin.natAdd_eq_addNat, keyedCompareSource_right]
     by_cases hsource :
       keyedSourceRight key depth ascending input pair
-    · rw [if_pos hsource, keyedCompareSource_left, if_pos hsource]
-    · rw [if_neg hsource, keyedCompareSource_right, if_neg hsource]
+    · rw [ite_eq_left hsource, keyedCompareSource_left, ite_eq_left hsource]
+    · rw [ite_eq_right hsource, keyedCompareSource_right, ite_eq_right hsource]
 
 theorem keyedCompareLayer_permutes [LinearOrder κ]
     (key : α → κ) (depth : ℕ) (ascending : Bool)

@@ -368,14 +368,14 @@ theorem closure_result_eq_generatedState
                   (pairs.get pairIndex).2 := by
             simp only [Function.comp_apply, sourceWire,
               Fin.addCases_right, pairSource] at present
-            rw [if_pos active] at present
+            rw [ite_eq_left active] at present
             simpa [gateWire, PairClosure.generatedState] using present
           rw [← active]
           exact .fusion (pairs.get pairIndex)
             (List.get_mem pairs pairIndex) pairDerived.1 pairDerived.2
         · simp only [Function.comp_apply, sourceWire,
             Fin.addCases_right, pairSource] at present
-          rw [if_neg active] at present
+          rw [ite_eq_right active] at present
           simp [gateWire] at present
   · intro derived
     cases derived with

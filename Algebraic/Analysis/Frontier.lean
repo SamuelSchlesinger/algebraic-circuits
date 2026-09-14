@@ -12,11 +12,13 @@ selected wires, including shared intermediate gates and free output wires.
 namespace Algebraic
 
 /-- The union of original inputs supporting a selected set of circuit wires. -/
-def Program.frontierSupport (program : Program σ n g) (frontier : Finset (Wire n g)) :
+def _root_.Cslib.Circuits.Program.frontierSupport (program : Program σ n g) (frontier : Finset (Wire n g)) :
     Finset (Fin n) := frontier.biUnion program.wireSupport
 
+export Cslib.Circuits (Program.frontierSupport)
+
 /-- Weighted fan-in controls the number of inputs reaching an arbitrary wire frontier. -/
-theorem Program.card_frontierSupport_le (program : Program σ n g)
+theorem _root_.Cslib.Circuits.Program.card_frontierSupport_le (program : Program σ n g)
     (weight : OperationCost σ) (bounded : ∀ op, σ.Arity op ≤ weight op + 1)
     (frontier : Finset (Wire n g)) :
     (program.frontierSupport frontier).card ≤ frontier.card + program.cost weight := by
@@ -79,5 +81,7 @@ theorem Program.card_frontierSupport_le (program : Program σ n g)
     exact (Finset.card_le_card supports).trans ((ih opened).trans (by
       simp only [Program.cost_gate]
       omega))
+
+export Cslib.Circuits (Program.card_frontierSupport_le)
 
 end Algebraic

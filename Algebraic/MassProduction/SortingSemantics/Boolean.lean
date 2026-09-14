@@ -15,8 +15,13 @@ namespace Internal
 
 private instance instDecidableSequenceBitonic {n : ℕ} [LinearOrder α]
     (sequence : Fin n → α) : Decidable (SequenceBitonic sequence) := by
-  unfold SequenceBitonic
-  infer_instance
+  -- Test each index inequality before enumerating the remaining indices.
+  exact decidable_of_iff
+    (∀ i j, i < j → ∀ k, j < k → ∀ l, k < l →
+      min (sequence i) (sequence k) ≤ max (sequence j) (sequence l) ∧
+        min (sequence j) (sequence l) ≤ max (sequence i) (sequence k))
+    ⟨fun h i j k l hij hjk hkl => h i j hij k hjk l hkl,
+      fun h i j hij k hjk l hkl => h i j k l hij hjk hkl⟩
 
 /-- Pairwise minima of the two Boolean halves used by the finite cleaning
 check. -/
@@ -34,7 +39,7 @@ theorem boolBitonicHalves
     (sequence : Fin 8 → Bool) (hsequence : SequenceBitonic sequence) :
     SequenceBitonic (boolHalfMin sequence) ∧
       SequenceBitonic (boolHalfMax sequence) := by
-  decide +revert
+  decide +revert +kernel
 
 end Internal
 end Semantics

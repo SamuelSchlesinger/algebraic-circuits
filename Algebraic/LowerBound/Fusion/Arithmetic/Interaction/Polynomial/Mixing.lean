@@ -45,7 +45,7 @@ theorem coefficientMatrix_targets
     coefficientMatrix exponent (targets exponent mix) = mix := by
   classical
   ext selected output
-  simp [coefficientMatrix, targets, MvPolynomial.coeff_sum,
+  simp [coefficientMatrix, targets,
     MvPolynomial.coeff_monomial, injective.eq_iff]
 
 /-- The rank of any monomial mixing matrix lower-bounds multiplication cost. -/

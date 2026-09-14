@@ -326,7 +326,7 @@ noncomputable def toLiveInputSubstitution
     rho.toLiveInputSubstitution.apply input (rho.liveVariable index) =
       input index := by
   have live := liveVariable_isLive rho index
-  simp only [InputSubstitution.apply, toLiveInputSubstitution, dif_pos live]
+  simp only [InputSubstitution.apply, toLiveInputSubstitution, dite_eq_left live]
   exact congrArg input (liveIndex_liveVariable rho index)
 
 /-- Projecting a complete input to its live coordinates and then restoring
@@ -340,7 +340,7 @@ theorem toLiveInputSubstitution_projectLive
   cases fixed : rho index with
   | none =>
       simp only [InputSubstitution.apply, toLiveInputSubstitution,
-        dif_pos fixed, projectLive]
+        dite_eq_left fixed, projectLive]
       rw [apply_of_live rho input fixed]
       exact congrArg input (liveVariable_liveIndex rho index fixed)
   | some value =>

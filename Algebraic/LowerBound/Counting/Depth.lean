@@ -183,7 +183,7 @@ theorem Depth.functions_mono
 
 /-! ## Soundness for programs and circuits -/
 
-theorem Program.gateFunction_mem_depthFunctions
+theorem _root_.Cslib.Circuits.Program.gateFunction_mem_depthFunctions
     [Fintype σ.Op] [Fintype U]
     (program : Program σ n g)
     (interpretation : Interpretation σ U)
@@ -236,7 +236,9 @@ theorem Program.gateFunction_mem_depthFunctions
         simp only [Program.eval, Program.depths, Fin.lastCases_castSucc]
         exact ih priorGate
 
-theorem Program.wireFunction_mem_depthFunctions
+export Cslib.Circuits (Program.gateFunction_mem_depthFunctions)
+
+theorem _root_.Cslib.Circuits.Program.wireFunction_mem_depthFunctions
     [Fintype σ.Op] [Fintype U]
     (program : Program σ n g)
     (interpretation : Interpretation σ U)
@@ -257,7 +259,9 @@ theorem Program.wireFunction_mem_depthFunctions
       Depth.functions interpretation n (program.depths gate)
     exact program.gateFunction_mem_depthFunctions interpretation gate
 
-theorem Circuit.outputFunction_mem_depthFunctions
+export Cslib.Circuits (Program.wireFunction_mem_depthFunctions)
+
+theorem _root_.Cslib.Circuits.Circuit.outputFunction_mem_depthFunctions
     [Fintype σ.Op] [Fintype U]
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U)
@@ -270,6 +274,8 @@ theorem Circuit.outputFunction_mem_depthFunctions
       (circuit.program.wireDepths (circuit.outputs output))
   exact circuit.program.wireFunction_mem_depthFunctions interpretation
     (circuit.outputs output)
+
+export Cslib.Circuits (Circuit.outputFunction_mem_depthFunctions)
 
 /-- Multi-output targets assembled from scalar functions available by `depth`. -/
 noncomputable def Depth.targets
@@ -291,7 +297,7 @@ theorem Depth.card_targets_le
   classical
   exact Finset.card_image_le.trans_eq (by simp [Fintype.card_piFinset])
 
-theorem Circuit.eval_mem_depth_targets
+theorem _root_.Cslib.Circuits.Circuit.eval_mem_depth_targets
     [Fintype σ.Op] [Fintype U]
     (circuit : Circuit σ n g m)
     (interpretation : Interpretation σ U)
@@ -315,6 +321,8 @@ theorem Circuit.eval_mem_depth_targets
   rfl
 
 /-! ## Exact and numeric lower-bound criteria -/
+
+export Cslib.Circuits (Circuit.eval_mem_depth_targets)
 
 /-- Interpretation-independent numeric recurrence bounding the number of scalar
 functions at each depth. -/
@@ -345,7 +353,7 @@ theorem Depth.card_targets_le_countBound
       (Depth.card_functions_le_countBound interpretation n depth) m
 
 /-- A family exceeding the semantic closure count contains a depth-hard target. -/
-theorem Circuit.exists_depth_hard_in_family
+theorem _root_.Cslib.Circuits.Circuit.exists_depth_hard_in_family
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -370,8 +378,10 @@ theorem Circuit.exists_depth_hard_in_family
   rw [← computes.eval_eq]
   exact evaluated
 
+export Cslib.Circuits (Circuit.exists_depth_hard_in_family)
+
 /-- Purely numeric depth criterion, derived from `Depth.countBound`. -/
-theorem Circuit.exists_depth_hard_in_family_of_countBound
+theorem _root_.Cslib.Circuits.Circuit.exists_depth_hard_in_family_of_countBound
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -383,8 +393,10 @@ theorem Circuit.exists_depth_hard_in_family_of_countBound
     (Nat.pow_le_pow_left
       (Depth.card_functions_le_countBound interpretation n depth) m).trans_lt large
 
+export Cslib.Circuits (Circuit.exists_depth_hard_in_family_of_countBound)
+
 /-- Full-universe depth lower bound from the exact semantic closure count. -/
-theorem Circuit.exists_depth_hard
+theorem _root_.Cslib.Circuits.Circuit.exists_depth_hard
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     {depth : Nat}
@@ -402,8 +414,10 @@ theorem Circuit.exists_depth_hard
     (by simpa only [Finset.card_univ, targetCard] using large)
   exact ⟨target, hard⟩
 
+export Cslib.Circuits (Circuit.exists_depth_hard)
+
 /-- Full-universe depth lower bound from the numeric recurrence. -/
-theorem Circuit.exists_depth_hard_of_countBound
+theorem _root_.Cslib.Circuits.Circuit.exists_depth_hard_of_countBound
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     {depth : Nat}
@@ -417,6 +431,8 @@ theorem Circuit.exists_depth_hard_of_countBound
     (Depth.card_functions_le_countBound interpretation n depth) m).trans_lt large
 
 /-! ## Arity-only recurrence -/
+
+export Cslib.Circuits (Circuit.exists_depth_hard_of_countBound)
 
 /-- Arity-only recurrence bounding the interpretation-independent depth
 closure. -/
@@ -442,7 +458,7 @@ theorem Depth.countBound_le_coarseCount
           (σ.lineCount_le_card_mul_pow arity
             (Depth.coarseCount σ r n depth))) n
 
-theorem Circuit.exists_depth_hard_in_family_coarse
+theorem _root_.Cslib.Circuits.Circuit.exists_depth_hard_in_family_coarse
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -455,8 +471,10 @@ theorem Circuit.exists_depth_hard_in_family_coarse
     (Nat.pow_le_pow_left
       (Depth.countBound_le_coarseCount σ arity n depth) m).trans_lt large
 
+export Cslib.Circuits (Circuit.exists_depth_hard_in_family_coarse)
+
 /-- Boolean specialization of the arity-only depth recurrence. -/
-theorem Circuit.exists_boolean_depth_hard_coarse
+theorem _root_.Cslib.Circuits.Circuit.exists_boolean_depth_hard_coarse
     [Fintype σ.Op]
     (interpretation : Interpretation σ Bool)
     {r depth : Nat}
@@ -468,5 +486,7 @@ theorem Circuit.exists_boolean_depth_hard_coarse
   apply Circuit.exists_depth_hard_of_countBound interpretation
   exact (Nat.pow_le_pow_left
     (Depth.countBound_le_coarseCount σ arity n depth) m).trans_lt large
+
+export Cslib.Circuits (Circuit.exists_boolean_depth_hard_coarse)
 
 end Algebraic

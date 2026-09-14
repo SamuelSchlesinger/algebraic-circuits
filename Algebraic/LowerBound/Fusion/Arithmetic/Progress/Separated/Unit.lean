@@ -28,7 +28,7 @@ def IsUnitSeparated
     (polynomial : MvPolynomial Variable ℕ)
     (selected : Finset (Variable →₀ ℕ)) : Prop :=
   IsSeparated polynomial.support selected ∧
-    ∀ exponent ∈ selected, MvPolynomial.coeff exponent polynomial = 1
+    ∀ exponent ∈ selected, AddMonoidAlgebra.coeff polynomial exponent = 1
 
 /-- Maximum coefficient-one separation score of a polynomial. -/
 def separationNumber
@@ -135,10 +135,9 @@ theorem product_pullback
         (separated.2 target.1 target.2))
   have originSpec : ∀ target,
       origin target ∈ polynomial.support ∧
-        MvPolynomial.coeff (origin target) polynomial = 1 ∧
-          MvPolynomial.coeff target.1
-              (Expansion.monomialExpansion productSubstitution
-                (origin target)) = 1 ∧
+        AddMonoidAlgebra.coeff polynomial (origin target) = 1 ∧
+          AddMonoidAlgebra.coeff (Expansion.monomialExpansion productSubstitution
+                (origin target)) target.1 = 1 ∧
             Expansion.IsNeighbor productSubstitution (origin target) target.1 ∧
               ∀ other ∈ polynomial.support,
                 Expansion.IsNeighbor productSubstitution other target.1 →

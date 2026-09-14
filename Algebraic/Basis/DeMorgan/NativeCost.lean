@@ -91,7 +91,7 @@ theorem withSharedConstants_size (circuit : Circuit signature n g m) :
 /-- Any standard-cost circuit yields a native upper bound with only two extra gates. -/
 theorem complexity_le_standardCost_add_two (circuit : Circuit signature n g 1)
     {function : ScalarFunction Bool n}
-    (computes : circuit.Computes interpretation (fun input _ => function input)) :
+    (computes : circuit.ComputesWith interpretation (fun input _ => function input)) :
     complexity function ≤ circuit.cost standardCost + 2 := by
   have bound := complexity_le (withSharedConstants circuit) (by
     intro input

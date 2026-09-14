@@ -124,9 +124,8 @@ theorem coeff_add_pow_eq_one
     (distinct : left ≠ right)
     (power : Nat)
     (exponent : Fin variableCount →₀ ℕ)
-    (coefficientOne : MvPolynomial.coeff exponent
-      ((MvPolynomial.X left + MvPolynomial.X right) ^ power :
-        MvPolynomial (Fin variableCount) ℕ) = 1) :
+    (coefficientOne : AddMonoidAlgebra.coeff ((MvPolynomial.X left + MvPolynomial.X right) ^ power :
+        MvPolynomial (Fin variableCount) ℕ) exponent = 1) :
     exponent = Finsupp.single left power ∨
       exponent = Finsupp.single right power := by
   let embedding := pairEmbedding left right distinct
@@ -134,8 +133,7 @@ theorem coeff_add_pow_eq_one
     ((MvPolynomial.X 0 + MvPolynomial.X 1 :
       MvPolynomial (Fin 2) ℕ) ^ power)
   have renamedCoefficientNonzero :
-      MvPolynomial.coeff exponent
-        (MvPolynomial.rename embedding binary) ≠ 0 := by
+      AddMonoidAlgebra.coeff (MvPolynomial.rename embedding binary) exponent ≠ 0 := by
     rw [show MvPolynomial.rename embedding binary =
         (MvPolynomial.X left + MvPolynomial.X right) ^ power by
       exact rename_binary_add_pow left right distinct power]
@@ -144,7 +142,7 @@ theorem coeff_add_pow_eq_one
     MvPolynomial.coeff_rename_ne_zero embedding binary exponent
       renamedCoefficientNonzero
   have binaryCoefficientOne :
-      MvPolynomial.coeff binaryExponent binary = 1 := by
+      AddMonoidAlgebra.coeff binary binaryExponent = 1 := by
     have renamedCoefficient :=
       MvPolynomial.coeff_rename_mapDomain embedding embedding.injective
         binary binaryExponent
@@ -154,9 +152,8 @@ theorem coeff_add_pow_eq_one
       exact rename_binary_add_pow left right distinct power]
       at renamedCoefficient
     exact renamedCoefficient.symm.trans coefficientOne
-  change MvPolynomial.coeff binaryExponent
-      ((MvPolynomial.X 0 + MvPolynomial.X 1 :
-        MvPolynomial (Fin 2) ℕ) ^ power) = 1 at binaryCoefficientOne
+  change AddMonoidAlgebra.coeff ((MvPolynomial.X 0 + MvPolynomial.X 1 :
+        MvPolynomial (Fin 2) ℕ) ^ power) binaryExponent = 1 at binaryCoefficientOne
   rw [MvPolynomial.coeff_add_pow] at binaryCoefficientOne
   split at binaryCoefficientOne
   next antidiagonal =>
@@ -196,8 +193,7 @@ theorem coeff_monomialExpansion_eq_one
     (distinct : left ≠ right)
     (source : Fin (variableCount + 1) →₀ ℕ)
     (target : Fin variableCount →₀ ℕ)
-    (coefficientOne : MvPolynomial.coeff target
-      (Expansion.monomialExpansion (substitution left right) source) = 1) :
+    (coefficientOne : AddMonoidAlgebra.coeff (Expansion.monomialExpansion (substitution left right) source) target = 1) :
     target = endpoint left source ∨
       target = endpoint right source := by
   rw [monomialExpansion_eq,
@@ -341,7 +337,7 @@ theorem support_monomialExpansion_same
   rw [monomialExpansion_eq,
     MonotonePolynomial.polynomial_support_mul,
     MvPolynomial.support_monomial,
-    if_neg (one_ne_zero : (1 : Nat) ≠ 0),
+    ite_eq_right (one_ne_zero : (1 : Nat) ≠ 0),
     support_add_self_pow]
   ext exponent
   constructor
@@ -366,9 +362,8 @@ theorem coeff_monomialExpansion_eq_one_same
     (coordinate : Fin variableCount)
     (source : Fin (variableCount + 1) →₀ ℕ)
     (target : Fin variableCount →₀ ℕ)
-    (coefficientOne : MvPolynomial.coeff target
-      (Expansion.monomialExpansion
-        (substitution coordinate coordinate) source) = 1) :
+    (coefficientOne : AddMonoidAlgebra.coeff (Expansion.monomialExpansion
+        (substitution coordinate coordinate) source) target = 1) :
     target = endpoint coordinate source := by
   have present : target ∈
       (Expansion.monomialExpansion
@@ -419,10 +414,9 @@ theorem pullback
         (separated.2 target.1 target.2))
   have originSpec : ∀ target,
       origin target ∈ polynomial.support ∧
-        MvPolynomial.coeff (origin target) polynomial = 1 ∧
-          MvPolynomial.coeff target.1
-              (Expansion.monomialExpansion (substitution left right)
-                (origin target)) = 1 ∧
+        AddMonoidAlgebra.coeff polynomial (origin target) = 1 ∧
+          AddMonoidAlgebra.coeff (Expansion.monomialExpansion (substitution left right)
+                (origin target)) target.1 = 1 ∧
             Expansion.IsNeighbor (substitution left right)
                 (origin target) target.1 ∧
               ∀ other ∈ polynomial.support,
@@ -596,7 +590,7 @@ theorem circuit_addition_lowerBound_of_unitSeparated
     (target : MvPolynomial (Fin n) ℕ)
     (targetSeparated : IsSeparated target.support target.support)
     (coefficientsOne : ∀ exponent ∈ target.support,
-      MvPolynomial.coeff exponent target = 1)
+      AddMonoidAlgebra.coeff target exponent = 1)
     (circuit : Circuit
       (Algebraic.Arithmetic.signature PEmpty) n g 1)
     (constructs :

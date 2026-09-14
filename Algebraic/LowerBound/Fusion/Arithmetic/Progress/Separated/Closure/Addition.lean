@@ -138,7 +138,7 @@ theorem split_mem_support_add_pow
       ((MvPolynomial.X 0 + MvPolynomial.X 1 :
         MvPolynomial (Fin 2) ℕ) ^ power).support := by
     rw [MvPolynomial.mem_support_iff, MvPolynomial.coeff_add_pow]
-    rw [if_pos (Finset.mem_antidiagonal.mpr (by
+    rw [ite_eq_left (Finset.mem_antidiagonal.mpr (by
       simpa [binaryZero, binaryOne] using sumPower))]
     exact Nat.choose_ne_zero (by omega)
   rw [← transform_binary_add_pow, support_transform,
@@ -208,7 +208,7 @@ theorem exists_split_of_neighbor
   rw [Expansion.IsNeighbor, monomialExpansion_eq,
     MonotonePolynomial.polynomial_support_mul,
     MvPolynomial.support_monomial,
-    if_neg (one_ne_zero : (1 : ℕ) ≠ 0),
+    ite_eq_right (one_ne_zero : (1 : ℕ) ≠ 0),
     Finset.mem_add] at neighbor
   obtain ⟨base, basePresent, split, splitPresent, targetEqual⟩ := neighbor
   have baseEqual : base = baseExponent basis source :=
@@ -234,7 +234,7 @@ theorem neighbor_of_split
   rw [Expansion.IsNeighbor, monomialExpansion_eq,
     MonotonePolynomial.polynomial_support_mul,
     MvPolynomial.support_monomial,
-    if_neg (one_ne_zero : (1 : ℕ) ≠ 0),
+    ite_eq_right (one_ne_zero : (1 : ℕ) ≠ 0),
     Finset.mem_add]
   exact ⟨baseExponent basis source, Finset.mem_singleton_self _,
     leftPower • left + rightPower • right,

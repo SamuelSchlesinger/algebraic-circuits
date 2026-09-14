@@ -290,20 +290,20 @@ theorem projectiveUnrankPackedBits_rank_of_pivot
   have pivotProperties :=
     (firstNonzeroCoordinate_eq_some_iff vector pivot).mp pivotEquality
   by_cases before : coordinate < pivot
-  · rw [if_pos before]
+  · rw [ite_eq_left before]
     unfold binaryExtensionVectorBits
     simp only [Equiv.symm_apply_apply]
     rw [pivotProperties.2 coordinate before]
     rw [decodeBinaryExtension_zero_bits]
     rfl
-  · rw [if_neg before]
+  · rw [ite_eq_right before]
     by_cases atPivot : coordinate = pivot
-    · rw [if_pos atPivot]
+    · rw [ite_eq_left atPivot]
       subst coordinate
       unfold binaryExtensionVectorBits
       simp only [Equiv.symm_apply_apply]
       rw [pivotOne]
-    · rw [if_neg atPivot]
+    · rw [ite_eq_right atPivot]
       simp [normalizedVectorRankBits, binaryExtensionVectorBits,
         before, atPivot]
 
@@ -641,7 +641,7 @@ theorem normalizedVectorRankBits_projectiveUnrankVector
       simpa [normalizedVectorRankBits, projectiveRankBlock] using atBit.symm
     · unfold normalizedVectorRankBits
       simp only [Equiv.symm_apply_apply]
-      rw [if_neg before, if_neg atPivot]
+      rw [ite_eq_right before, ite_eq_right atPivot]
       unfold projectiveUnrankVector binaryExtensionVectorCoordinate
       rw [decodeBinaryExtension_encode]
       unfold projectiveUnrankPackedBits

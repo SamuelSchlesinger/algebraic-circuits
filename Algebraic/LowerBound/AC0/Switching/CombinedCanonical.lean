@@ -88,7 +88,7 @@ theorem decodeCombined_combinedCanonicalEncoding_of_deep
     (deep : formula.CanonicalDepthAtLeast rho pathLength) :
     decodeCombined formula
       (combinedCanonicalEncoding formula bounded pathLength rho) = rho := by
-  simp only [combinedCanonicalEncoding, dif_pos deep]
+  simp only [combinedCanonicalEncoding, dite_eq_left deep]
   exact (chosenPath formula rho pathLength deep).decodeCombined_satisfyingEncoding
     (chosenTrace formula rho pathLength deep) bounded
 

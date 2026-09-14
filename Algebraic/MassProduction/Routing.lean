@@ -367,7 +367,7 @@ def predecessorCopyCircuit
       ¬ keyWidth + 1 <= (keyBit keyWidth payloadWidth bit).val := by
     change ¬ keyWidth + 1 <= bit.val
     omega
-  rw [dif_neg notPayload]
+  rw [dite_eq_right notPayload]
   rfl
 
 /-- A predecessor-copy pass preserves every type tag. -/
@@ -388,7 +388,7 @@ def predecessorCopyCircuit
       ¬ keyWidth + 1 <= (tagBit keyWidth payloadWidth).val := by
     change ¬ keyWidth + 1 <= keyWidth
     omega
-  rw [dif_neg notPayload]
+  rw [dite_eq_right notPayload]
   rfl
 
 /-- At a positive position, every payload bit is selected by the same
@@ -414,7 +414,7 @@ theorem predecessorCopyBits_recordPayload_of_positive
       keyWidth + 1 <= (payloadBit keyWidth payloadWidth bit).val := by
     change keyWidth + 1 <= keyWidth + 1 + bit.val
     omega
-  rw [dif_pos payload, dif_pos positive]
+  rw [dite_eq_left payload, dite_eq_left positive]
   have payloadIndexEquality :
       (⟨(payloadBit keyWidth payloadWidth bit).val - (keyWidth + 1), by
           have bound := (payloadBit keyWidth payloadWidth bit).isLt
@@ -451,7 +451,7 @@ theorem predecessorCopyBits_recordPayload_zero
     change keyWidth + 1 <= keyWidth + 1 + bit.val
     omega
   have notPositive : ¬0 < current.val := by omega
-  rw [dif_pos payload, dif_neg notPositive]
+  rw [dite_eq_left payload, dite_eq_right notPositive]
   rfl
 
 /-- A correctly tagged same-key predecessor is copied exactly. -/

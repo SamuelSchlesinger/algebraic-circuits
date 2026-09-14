@@ -171,11 +171,11 @@ theorem containsSunflower_of_uniform
           else supportNonempty.choose
         have pick_mem_support : ∀ set ∈ family, pick set ∈ support := by
           intro set present
-          simp only [pick, dif_pos present]
+          simp only [pick, dite_eq_left present]
           exact pickSupport set present
         have pick_mem_set : ∀ set ∈ family, pick set ∈ set := by
           intro set present
-          simp only [pick, dif_pos present]
+          simp only [pick, dite_eq_left present]
           exact pickSet set present
         let priorBound := (petals - 1) ^ width * width.factorial
         have thresholdIdentity :

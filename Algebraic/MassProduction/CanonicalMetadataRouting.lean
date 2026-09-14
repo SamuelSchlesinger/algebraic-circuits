@@ -61,35 +61,35 @@ def metadataOrderBitOrder
   left_inv bit := by
     unfold metadataOrderForward
     by_cases header : bit.val < metadataWidth + 1
-    · rw [dif_pos header]
+    · rw [dite_eq_left header]
       unfold metadataOrderBackward
       have notMatchingKey :
           Not (keyWidth + bit.val < keyWidth) := by omega
       have inHeader :
           keyWidth + bit.val < keyWidth + (metadataWidth + 1) := by omega
-      rw [dif_neg notMatchingKey, dif_pos inHeader]
+      rw [dite_eq_right notMatchingKey, dite_eq_left inHeader]
       apply Fin.ext
       simp
-    · rw [dif_neg header]
+    · rw [dite_eq_right header]
       by_cases matchingKey : bit.val < metadataWidth + 1 + keyWidth
-      · rw [dif_pos matchingKey]
+      · rw [dite_eq_left matchingKey]
         unfold metadataOrderBackward
         have inMatchingKey :
             bit.val - (metadataWidth + 1) < keyWidth := by omega
-        rw [dif_pos inMatchingKey]
+        rw [dite_eq_left inMatchingKey]
         apply Fin.ext
         simp
         omega
-      · rw [dif_neg matchingKey]
+      · rw [dite_eq_right matchingKey]
         unfold metadataOrderBackward
         have notPhysicalKey : Not (bit.val < keyWidth) := by omega
         have notPhysicalHeader :
             Not (bit.val < keyWidth + (metadataWidth + 1)) := by omega
-        rw [dif_neg notPhysicalKey, dif_neg notPhysicalHeader]
+        rw [dite_eq_right notPhysicalKey, dite_eq_right notPhysicalHeader]
   right_inv bit := by
     unfold metadataOrderBackward
     by_cases matchingKey : bit.val < keyWidth
-    · rw [dif_pos matchingKey]
+    · rw [dite_eq_left matchingKey]
       unfold metadataOrderForward
       have notVirtualHeader :
           Not (metadataWidth + 1 + bit.val < metadataWidth + 1) := by
@@ -97,26 +97,26 @@ def metadataOrderBitOrder
       have inVirtualKey :
           metadataWidth + 1 + bit.val < metadataWidth + 1 + keyWidth := by
         omega
-      rw [dif_neg notVirtualHeader, dif_pos inVirtualKey]
+      rw [dite_eq_right notVirtualHeader, dite_eq_left inVirtualKey]
       apply Fin.ext
       simp
-    · rw [dif_neg matchingKey]
+    · rw [dite_eq_right matchingKey]
       by_cases header : bit.val < keyWidth + (metadataWidth + 1)
-      · rw [dif_pos header]
+      · rw [dite_eq_left header]
         unfold metadataOrderForward
         have inVirtualHeader : bit.val - keyWidth < metadataWidth + 1 := by
           omega
-        rw [dif_pos inVirtualHeader]
+        rw [dite_eq_left inVirtualHeader]
         apply Fin.ext
         simp
         omega
-      · rw [dif_neg header]
+      · rw [dite_eq_right header]
         unfold metadataOrderForward
         have notVirtualHeader :
             Not (bit.val < metadataWidth + 1) := by omega
         have notVirtualKey :
             Not (bit.val < metadataWidth + 1 + keyWidth) := by omega
-        rw [dif_neg notVirtualHeader, dif_neg notVirtualKey]
+        rw [dite_eq_right notVirtualHeader, dite_eq_right notVirtualKey]
 
 theorem metadataOrderKeyFits
     (keyWidth metadataWidth valueWidth : Nat) :
@@ -145,7 +145,7 @@ theorem metadataOrderBitOrder_prefix
         omega⟩
     else Fin.castLE
       (metadataOrderKeyFits keyWidth metadataWidth valueWidth) bit) = _
-  rw [dif_pos bit.isLt]
+  rw [dite_eq_left bit.isLt]
 
 /-- The selected virtual prefix is exactly the complemented physical tag
 followed by the preserved metadata field. -/
@@ -879,7 +879,7 @@ theorem matchedCanonicalRoutingBits_fixed_header
           (Routing.keyAndTagFitsRecord keyWidth
             ((orderWidth + 1) + valueWidth)) depth true input))
     unfold FlatKeysSortedBy FlatKeysSorted Semantics.SequenceSorted at sorted
-    simp only [if_true] at sorted
+    simp only [ite_true] at sorted
     intro left right before
     have ordered := sorted left right before
     change

@@ -11,7 +11,7 @@ lower bound on circuit size.
 
 namespace Algebraic
 
-private def Program.reachableInputs :
+private def _root_.Cslib.Circuits.Program.reachableInputs :
     (program : Program σ n g) → Finset (Wire n g) → Finset (Fin n)
   | .empty, frontier => frontier
   | @Program.gate _ _ g program line, frontier =>
@@ -23,20 +23,20 @@ private def Program.reachableInputs :
           prior
       program.reachableInputs opened
 
-private def Circuit.frontier (c : Circuit σ n g m) : Finset (Wire n g) :=
+private def _root_.Cslib.Circuits.Circuit.frontier (c : Circuit σ n g m) : Finset (Wire n g) :=
   Finset.univ.image c.outputs
 
-@[simp] private theorem Circuit.mem_frontier
+@[simp] private theorem _root_.Cslib.Circuits.Circuit.mem_frontier
     {c : Circuit σ n g m}
     {wire : Wire n g} :
     wire ∈ c.frontier ↔
       ∃ output, c.outputs output = wire := by
-  simp [Circuit.frontier]
+  simp [Cslib.Circuits.Circuit.frontier]
 
-private def Circuit.reachableInputs (c : Circuit σ n g m) : Finset (Fin n) :=
+private def _root_.Cslib.Circuits.Circuit.reachableInputs (c : Circuit σ n g m) : Finset (Fin n) :=
   c.program.reachableInputs c.frontier
 
-private theorem Program.support_subset_reachableInputs
+private theorem _root_.Cslib.Circuits.Program.support_subset_reachableInputs
     (program : Program σ n g) :
     ∀ frontier : Finset (Wire n g),
       frontier.biUnion program.wireSupport ⊆
@@ -80,17 +80,17 @@ private theorem Program.support_subset_reachableInputs
         by_cases lastSelected : Fin.last (n + g) ∈ frontier <;>
           simp [opened, lastSelected, prior, wireSelected]
 
-private theorem Circuit.inputSupport_subset_reachableInputs
+private theorem _root_.Cslib.Circuits.Circuit.inputSupport_subset_reachableInputs
     (c : Circuit σ n g m) :
     c.inputSupport ⊆ c.reachableInputs := by
   intro input present
   apply c.program.support_subset_reachableInputs c.frontier
   simp only [Circuit.mem_inputSupport, Finset.mem_biUnion,
-    Circuit.mem_frontier] at present ⊢
+    Cslib.Circuits.Circuit.mem_frontier] at present ⊢
   obtain ⟨output, supported⟩ := present
   exact ⟨c.outputs output, ⟨output, rfl⟩, supported⟩
 
-private theorem Program.card_reachableInputs_le
+private theorem _root_.Cslib.Circuits.Program.card_reachableInputs_le
     (program : Program σ n g)
     (r : Nat) :
     ∀ (_bounded : program.FanInAtMost r) (frontier : Finset (Wire n g)),
@@ -99,7 +99,7 @@ private theorem Program.card_reachableInputs_le
   induction program with
   | empty =>
       intro _ frontier
-      simp [Program.reachableInputs]
+      simp [Cslib.Circuits.Program.reachableInputs]
   | @gate g program line ih =>
       intro bounded frontier
       obtain ⟨programBounded, lineBounded⟩ := bounded
@@ -154,13 +154,13 @@ private theorem Program.card_reachableInputs_le
           rw [Nat.mul_succ]
           omega
 
-private theorem Circuit.card_reachableInputs_le_size
+private theorem _root_.Cslib.Circuits.Circuit.card_reachableInputs_le_size
     (c : Circuit σ n g m)
     (r : Nat)
     (bounded : c.FanInAtMost r) :
     c.reachableInputs.card ≤ m + (r - 1) * c.size := by
   have frontierBound : c.frontier.card ≤ m := by
-    simpa [Circuit.frontier] using
+    simpa [Cslib.Circuits.Circuit.frontier] using
       (Finset.card_image_le :
         (Finset.univ.image c.outputs).card ≤
           (Finset.univ : Finset (Fin m)).card)
@@ -172,7 +172,7 @@ private theorem Circuit.card_reachableInputs_le_size
 
 /-- A fan-in-`r` circuit has at most `m + (r - 1) * c.size`
 supporting inputs. -/
-theorem Circuit.card_inputSupport_le_size
+theorem _root_.Cslib.Circuits.Circuit.card_inputSupport_le_size
     (c : Circuit σ n g m)
     {r : Nat}
     (bounded : c.FanInAtMost r) :
@@ -180,16 +180,18 @@ theorem Circuit.card_inputSupport_le_size
   exact (Finset.card_le_card c.inputSupport_subset_reachableInputs).trans
     (c.card_reachableInputs_le_size r bounded)
 
+export Cslib.Circuits (Circuit.card_inputSupport_le_size)
+
 /-- If a circuit has fan-in at most `r`, computes `target`, and every input in
 `selected` is essential to `target`, then `selected` has at most
 `m + (r - 1) * c.size` elements. -/
-theorem Circuit.essential_le_size
+theorem _root_.Cslib.Circuits.Circuit.essential_le_size
     (c : Circuit σ n g m)
     {interpretation : Interpretation σ U}
     {target : (Fin n → U) → Fin m → U}
     {selected : Finset (Fin n)}
     {r : Nat}
-    (computes : c.Computes interpretation target)
+    (computes : c.ComputesWith interpretation target)
     (essential : ∀ k ∈ selected, EssentialAt target k)
     (bounded : c.FanInAtMost r) :
     selected.card ≤ m + (r - 1) * c.size := by
@@ -197,5 +199,7 @@ theorem Circuit.essential_le_size
   exact (Finset.card_le_card fun k hk =>
     (essential k hk).mem_support targetDepends).trans
       (c.card_inputSupport_le_size bounded)
+
+export Cslib.Circuits (Circuit.essential_le_size)
 
 end Algebraic

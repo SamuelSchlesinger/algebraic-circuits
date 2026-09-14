@@ -40,7 +40,7 @@ theorem informationBitAtPlacement
     informationBit code placement values (placement source) = values source := by
   classical
   unfold informationBit
-  rw [dif_pos ⟨source, rfl⟩]
+  rw [dite_eq_left ⟨source, rfl⟩]
   apply congrArg values
   apply placement.injective
   exact Classical.choose_spec (show ∃ candidate, placement candidate = placement source from ⟨source, rfl⟩)

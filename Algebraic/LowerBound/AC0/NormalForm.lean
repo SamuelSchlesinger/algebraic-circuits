@@ -308,9 +308,9 @@ theorem restrict_sound
         (fun residual => Term.eval residual input) =
       term.eval (rho.apply input) := by
   by_cases conflict : term.ConflictsWith rho
-  · rw [restrict, if_pos conflict]
+  · rw [restrict, ite_eq_left conflict]
     exact (eval_apply_eq_false_of_conflicts term rho input conflict).symm
-  · rw [restrict, if_neg conflict]
+  · rw [restrict, ite_eq_right conflict]
     exact eval_residual_eq_eval_apply_of_not_conflicts
       term rho input conflict
 
@@ -323,7 +323,7 @@ theorem width_restrict_le
     residual.width ≤ term.width := by
   by_cases conflict : term.ConflictsWith rho
   · simp [restrict, conflict] at restricted
-  · rw [restrict, if_neg conflict] at restricted
+  · rw [restrict, ite_eq_right conflict] at restricted
     injection restricted with equal
     subst residual
     exact LiteralSet.width_residual_le term rho
@@ -429,9 +429,9 @@ theorem restrict_sound
         (fun residual => Clause.eval residual input) =
       clause.eval (rho.apply input) := by
   by_cases hit : clause.HitBy rho
-  · rw [restrict, if_pos hit]
+  · rw [restrict, ite_eq_left hit]
     exact (eval_apply_eq_true_of_hit clause rho input hit).symm
-  · rw [restrict, if_neg hit]
+  · rw [restrict, ite_eq_right hit]
     exact eval_residual_eq_eval_apply_of_not_hit clause rho input hit
 
 /-- Any residual returned by clause restriction has no greater width than the
@@ -443,7 +443,7 @@ theorem width_restrict_le
     residual.width ≤ clause.width := by
   by_cases hit : clause.HitBy rho
   · simp [restrict, hit] at restricted
-  · rw [restrict, if_neg hit] at restricted
+  · rw [restrict, ite_eq_right hit] at restricted
     injection restricted with equal
     subst residual
     exact LiteralSet.width_residual_le clause rho

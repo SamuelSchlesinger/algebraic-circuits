@@ -83,8 +83,7 @@ theorem product_substitution_eq
       substitution (productBasis left right) := by
   funext source
   refine Fin.lastCases ?_ (fun prior => ?_) source
-  · simp [substitution, productBasis, MvPolynomial.X,
-      MvPolynomial.monomial_mul]
+  · simp [substitution, productBasis, MvPolynomial.X]
   · simp [substitution, productBasis, MvPolynomial.X]
 
 /-- Product enrichment gives every source monomial exactly one expansion

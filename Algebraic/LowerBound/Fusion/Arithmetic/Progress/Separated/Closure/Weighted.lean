@@ -226,8 +226,7 @@ theorem transform_product_eq
   simp only [MvPolynomial.bind₁_X_right]
   refine Fin.lastCases ?_ (fun prior => ?_) source
   · simp [WeightedMonomialSubstitution.substitution,
-      productWeight, Closure.productLift,
-      MvPolynomial.monomial_mul]
+      productWeight, Closure.productLift]
   · simp [WeightedMonomialSubstitution.substitution,
       productWeight, Closure.productLift]
 

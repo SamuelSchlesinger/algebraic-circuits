@@ -256,8 +256,7 @@ theorem transform_product_eq
   intro source
   simp only [MvPolynomial.bind₁_X_right]
   refine Fin.lastCases ?_ (fun prior => ?_) source
-  · simp [MonomialSubstitution.substitution, productLift,
-      MvPolynomial.monomial_mul]
+  · simp [MonomialSubstitution.substitution, productLift]
   · simp [MonomialSubstitution.substitution, productLift]
 
 /-- Product reverse substitution cannot increase Schnorr's closed measure. -/

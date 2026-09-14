@@ -29,7 +29,7 @@ example (circuit : Circuit DeMorgan.signature n g m) (input : Fin n → Bool) :
 
 example (circuit : Circuit DeMorgan.signature n g 1)
     (f : ScalarFunction Bool n)
-    (computes : circuit.Computes DeMorgan.interpretation (fun input _ => f input)) :
+    (computes : circuit.ComputesWith DeMorgan.interpretation (fun input _ => f input)) :
     complexity f ≤ circuit.cost DeMorgan.standardCost + 2 :=
   complexity_le_standardCost_add_two circuit computes
 
@@ -52,14 +52,14 @@ example (positive : 0 < n) (point : Fin n → Bool) (value : Bool) :
 
 example (circuit : Circuit DeMorgan.signature n g 1)
     (f : ScalarFunction Bool n)
-    (computes : circuit.Computes DeMorgan.interpretation (fun input _ => f input))
+    (computes : circuit.ComputesWith DeMorgan.interpretation (fun input _ => f input))
     (essential : ∀ i, EssentialAt f i) (tight : circuit.cost DeMorgan.binaryCost + 1 ≤ n) :
     ∃ expression : DeMorgan.Expression n, expression.ReadOnce ∧ expression.eval = f :=
   exists_readOnce_of_binaryCost_le circuit computes essential tight
 
 example (circuit : Circuit DeMorgan.signature n g 1)
     (f : ScalarFunction Bool n)
-    (computes : circuit.Computes DeMorgan.interpretation (fun input _ => f input))
+    (computes : circuit.ComputesWith DeMorgan.interpretation (fun input _ => f input))
     (essential : ∀ i, EssentialAt f i) (nonunate : ¬Unate f) : n + 1 ≤ g :=
   size_ge_of_essential_nonunate circuit computes essential nonunate
 

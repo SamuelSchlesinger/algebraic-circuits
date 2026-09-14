@@ -154,27 +154,26 @@ noncomputable def catalecticant
       Matrix (MatrixRank.Layer (2 * n) n)
         (MatrixRank.Layer (2 * n) n) K where
   toFun polynomial row column :=
-    MvPolynomial.coeff (entryExponent n row column) polynomial /
+    AddMonoidAlgebra.coeff polynomial (entryExponent n row column) /
       ((entryExponent n row column).multinomial : K)
   map_add' := by
     intro left right
     ext row column
-    change MvPolynomial.coeff (entryExponent n row column) (left + right) /
+    change AddMonoidAlgebra.coeff (left + right) (entryExponent n row column) /
         ((entryExponent n row column).multinomial : K) =
-      MvPolynomial.coeff (entryExponent n row column) left /
+      AddMonoidAlgebra.coeff left (entryExponent n row column) /
           ((entryExponent n row column).multinomial : K) +
-        MvPolynomial.coeff (entryExponent n row column) right /
+        AddMonoidAlgebra.coeff right (entryExponent n row column) /
           ((entryExponent n row column).multinomial : K)
-    simp [MvPolynomial.coeff_add, add_div]
+    simp [AddMonoidAlgebra.coeff_add, add_div]
   map_smul' := by
     intro scalar polynomial
     ext row column
-    change MvPolynomial.coeff (entryExponent n row column)
-          (scalar • polynomial) /
+    change AddMonoidAlgebra.coeff (scalar • polynomial) (entryExponent n row column) /
         ((entryExponent n row column).multinomial : K) =
-      scalar * (MvPolynomial.coeff (entryExponent n row column) polynomial /
+      scalar * (AddMonoidAlgebra.coeff polynomial (entryExponent n row column) /
         ((entryExponent n row column).multinomial : K))
-    simp [MvPolynomial.coeff_smul, smul_eq_mul, mul_div_assoc]
+    simp [smul_eq_mul, mul_div_assoc]
 
 @[simp] theorem catalecticant_apply
     {K : Type}
@@ -183,7 +182,7 @@ noncomputable def catalecticant
     (polynomial : MvPolynomial (Fin (2 * n)) K)
     (row column : MatrixRank.Layer (2 * n) n) :
     catalecticant K n polynomial row column =
-      MvPolynomial.coeff (entryExponent n row column) polynomial /
+      AddMonoidAlgebra.coeff polynomial (entryExponent n row column) /
         ((entryExponent n row column).multinomial : K) := rfl
 
 /-- The multinomial denominator of every queried entry is nonzero in
@@ -221,15 +220,14 @@ theorem coeff_linearForm_pow_entryExponent
     [CommSemiring K]
     (term : Term K n)
     (row column : MatrixRank.Layer (2 * n) n) :
-    MvPolynomial.coeff (entryExponent n row column)
-        (linearForm term ^ (2 * n)) =
+    AddMonoidAlgebra.coeff (linearForm term ^ (2 * n)) (entryExponent n row column) =
       ((entryExponent n row column).multinomial : K) *
         ((∏ index ∈ row.1, term.coefficients index) *
           ∏ index ∈ (complement n column).1,
             term.coefficients index) := by
   rw [linearForm,
     MvPolynomial.coeff_linearCombination_X_pow_of_fintype]
-  rw [if_pos]
+  rw [ite_eq_left]
   · rw [entryExponent_prod]
   · exact exponent_add_complement_sum n row column
 
@@ -261,8 +259,7 @@ theorem catalecticant_termValue
   classical
   ext row column
   rw [catalecticant_apply]
-  change MvPolynomial.coeff (entryExponent n row column)
-      (MvPolynomial.C term.scale * linearForm term ^ (2 * n)) /
+  change AddMonoidAlgebra.coeff (MvPolynomial.C term.scale * linearForm term ^ (2 * n)) (entryExponent n row column) /
         ((entryExponent n row column).multinomial : K) = _
   rw [MvPolynomial.coeff_C_mul,
     coeff_linearForm_pow_entryExponent]

@@ -71,7 +71,7 @@ theorem exists_family_between (budget : Nat → Nat)
     else fun _ => false
   refine ⟨family, ?_⟩
   filter_upwards [available] with n hn
-  simpa only [family, dif_pos hn] using Classical.choose_spec hn
+  simpa only [family, dite_eq_left hn] using Classical.choose_spec hn
 
 /-- General size hierarchy below the Shannon scale. The gap must absorb every
 constant multiple of the smaller budget and the exact interpolation overhead. -/

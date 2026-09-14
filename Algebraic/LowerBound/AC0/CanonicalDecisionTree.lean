@@ -79,9 +79,9 @@ theorem firstSurvivingIn_mem
   | nil => simp [firstSurvivingIn] at found
   | cons head rest inductionHypothesis =>
       by_cases conflict : head.ConflictsWith rho
-      · simp only [firstSurvivingIn, if_pos conflict] at found
+      · simp only [firstSurvivingIn, ite_eq_left conflict] at found
         exact List.mem_cons_of_mem head (inductionHypothesis found)
-      · simp only [firstSurvivingIn, if_neg conflict,
+      · simp only [firstSurvivingIn, ite_eq_right conflict,
           Option.some.injEq] at found
         subst head
         simp
@@ -97,9 +97,9 @@ theorem firstSurvivingIn_not_conflicts
   | nil => simp [firstSurvivingIn] at found
   | cons head rest inductionHypothesis =>
       by_cases conflict : head.ConflictsWith rho
-      · simp only [firstSurvivingIn, if_pos conflict] at found
+      · simp only [firstSurvivingIn, ite_eq_left conflict] at found
         exact inductionHypothesis found
-      · simp only [firstSurvivingIn, if_neg conflict,
+      · simp only [firstSurvivingIn, ite_eq_right conflict,
           Option.some.injEq] at found
         subst head
         exact conflict
@@ -118,10 +118,10 @@ theorem firstSurvivingIn_refine
   | cons head rest inductionHypothesis =>
       by_cases conflict : head.ConflictsWith rho
       · have refinedConflict := conflict.refine extension
-        simp only [firstSurvivingIn, if_pos conflict] at found
-        simp only [firstSurvivingIn, if_pos refinedConflict]
+        simp only [firstSurvivingIn, ite_eq_left conflict] at found
+        simp only [firstSurvivingIn, ite_eq_left refinedConflict]
         exact inductionHypothesis found
-      · simp only [firstSurvivingIn, if_neg conflict,
+      · simp only [firstSurvivingIn, ite_eq_right conflict,
           Option.some.injEq] at found
         subst head
         simp [firstSurvivingIn, survives]
@@ -234,7 +234,7 @@ theorem support_subset_live_of_mem_restrict
   obtain ⟨source, _, restricted⟩ := List.mem_filterMap.1 present
   by_cases conflict : source.ConflictsWith rho
   · simp [Term.restrict, conflict] at restricted
-  · rw [Term.restrict, if_neg conflict] at restricted
+  · rw [Term.restrict, ite_eq_right conflict] at restricted
     injection restricted with equal
     subst term
     exact LiteralSet.support_residual_subset_live source rho
@@ -311,7 +311,7 @@ private theorem queryRemainingBelow_computes
       cases inputValue : input index with
       | false =>
           simp only [queryRemainingBelow, DecisionTree.eval_query, inputValue,
-            Bool.false_eq_true, if_false]
+            Bool.false_eq_true, ite_false]
           rw [falseComputes input]
           change formula.eval
               ((rho.refine (PartialAssignment.fix index false)).apply input) =
@@ -320,7 +320,7 @@ private theorem queryRemainingBelow_computes
             PartialAssignment.apply_fix_eq_self input index false inputValue]
       | true =>
           simp only [queryRemainingBelow, DecisionTree.eval_query, inputValue,
-            if_true]
+            ite_true]
           rw [trueComputes input]
           change formula.eval
               ((rho.refine (PartialAssignment.fix index true)).apply input) =
@@ -638,7 +638,7 @@ private theorem canonicalSupportStep_computes
       simp only [canonicalSupportStep, DecisionTree.eval_query]
       cases inputValue : input index with
       | false =>
-          simp only [Bool.false_eq_true, if_false]
+          simp only [Bool.false_eq_true, ite_false]
           rw [falseComputes input]
           change formula.eval
               ((rho.refine (PartialAssignment.fix index false)).apply input) =
@@ -646,7 +646,7 @@ private theorem canonicalSupportStep_computes
           rw [PartialAssignment.apply_refine,
             PartialAssignment.apply_fix_eq_self input index false inputValue]
       | true =>
-          simp only [if_true]
+          simp only [ite_true]
           rw [trueComputes input]
           change formula.eval
               ((rho.refine (PartialAssignment.fix index true)).apply input) =

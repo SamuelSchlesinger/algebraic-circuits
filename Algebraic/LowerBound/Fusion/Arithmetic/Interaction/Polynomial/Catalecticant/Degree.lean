@@ -37,8 +37,7 @@ theorem coeff_entryExponent_eq_zero_of_totalDegree_lt
     (polynomial : MvPolynomial (Fin (2 * n)) K)
     (small : polynomial.totalDegree < 2 * n)
     (row column : SumOfTerms.MatrixRank.Layer (2 * n) n) :
-    MvPolynomial.coeff (SumOfTerms.Waring.entryExponent n row column)
-      polynomial = 0 := by
+    AddMonoidAlgebra.coeff polynomial (SumOfTerms.Waring.entryExponent n row column) = 0 := by
   apply MvPolynomial.coeff_eq_zero_of_totalDegree_lt
   have degree :
       (∑ index ∈

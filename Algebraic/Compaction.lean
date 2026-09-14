@@ -12,7 +12,7 @@ dependent `Fin` transport and preserve the complete source trace.
 namespace Algebraic
 
 /-- A semantics-preserving rebuilding of a program with no additional gates. -/
-structure Program.Compaction
+structure _root_.Cslib.Circuits.Program.Compaction
     (source : Program σ n g)
     (interpretation : Interpretation σ U) where
   /-- Number of gates in the rebuilt program. -/
@@ -31,8 +31,10 @@ structure Program.Compaction
   cost_le : ∀ operationCost : OperationCost σ,
     result.cost operationCost ≤ source.cost operationCost
 
+export Cslib.Circuits (Program.Compaction)
+
 /-- A semantics-preserving circuit compaction that does not increase cost. -/
-structure Circuit.Compaction
+structure _root_.Cslib.Circuits.Circuit.Compaction
     (source : Circuit σ n g m)
     (interpretation : Interpretation σ U) where
   /-- Number of internal gates in the rebuilt circuit. -/
@@ -48,6 +50,8 @@ structure Circuit.Compaction
   cost_le : ∀ operationCost : OperationCost σ,
     result.cost operationCost ≤ source.cost operationCost
 
+export Cslib.Circuits (Circuit.Compaction)
+
 namespace Program.Compaction
 
 variable {σ : Signature} {n g m : Nat} {U : Type u}
@@ -55,7 +59,7 @@ variable {source : Program σ n g}
 variable {interpretation : Interpretation σ U}
 
 /-- The empty program compacts to itself. -/
-def empty {σ : Signature} {n : Nat} {U : Type u}
+def _root_.Cslib.Circuits.Program.Compaction.empty {σ : Signature} {n : Nat} {U : Type u}
     (interpretation : Interpretation σ U) :
     Program.Compaction (Program.empty : Program σ n 0) interpretation where
   gateCount := 0
@@ -67,8 +71,10 @@ def empty {σ : Signature} {n : Nat} {U : Type u}
   gateCount_le := Nat.le_refl 0
   cost_le := fun _ => Nat.le_refl 0
 
+export Cslib.Circuits.Program.Compaction (empty)
+
 /-- Evaluation of a line is preserved after mapping it through a compaction. -/
-theorem mapLine_eval
+theorem _root_.Cslib.Circuits.Program.Compaction.mapLine_eval
     (compaction : Program.Compaction source interpretation)
     (line : Line σ n g)
     (input : Fin n → U) :
@@ -81,8 +87,10 @@ theorem mapLine_eval
     Fin.addCases_right] using
     compaction.trace_eq input (Wire.gate gate)
 
+export Cslib.Circuits.Program.Compaction (mapLine_eval)
+
 /-- Retain the new last source gate in the rebuilt program. -/
-def copy
+def _root_.Cslib.Circuits.Program.Compaction.copy
     (compaction : Program.Compaction source interpretation)
     (line : Line σ n g) :
     Program.Compaction (source.gate line) interpretation := by
@@ -123,8 +131,10 @@ def copy
         exact Nat.add_le_add_right
           (compaction.cost_le operationCost) (operationCost line.op) }
 
+export Cslib.Circuits.Program.Compaction (copy)
+
 /-- Replace the new last source gate by an existing rebuilt wire. -/
-def eliminate
+def _root_.Cslib.Circuits.Program.Compaction.eliminate
     (compaction : Program.Compaction source interpretation)
     (line : Line σ n g)
     (replacement : Wire n compaction.gateCount)
@@ -161,8 +171,10 @@ def eliminate
     exact (compaction.cost_le operationCost).trans
       (Nat.le_add_right _ (operationCost line.op))
 
+export Cslib.Circuits.Program.Compaction (eliminate)
+
 /-- Lift a program compaction to a circuit by renaming its output wires. -/
-def toCircuit
+def _root_.Cslib.Circuits.Program.Compaction.toCircuit
     {circuit : Circuit σ n g m}
     (compaction : Program.Compaction circuit.program interpretation) :
     Circuit.Compaction circuit interpretation := by
@@ -182,6 +194,8 @@ def toCircuit
         intro operationCost
         exact compaction.cost_le operationCost }
 
+export Cslib.Circuits.Program.Compaction (toCircuit)
+
 end Program.Compaction
 
 namespace Circuit.Compaction
@@ -191,7 +205,7 @@ variable {source : Circuit σ n g m}
 variable {interpretation : Interpretation σ U}
 
 /-- View a compaction as a certified identity-substitution reduction. -/
-def toReduction
+def _root_.Cslib.Circuits.Circuit.Compaction.toReduction
     (compaction : Circuit.Compaction source interpretation)
     (operationCost : OperationCost σ) :
     Circuit.Reduction operationCost source interpretation
@@ -204,6 +218,8 @@ def toReduction
   saving := source.cost operationCost - compaction.result.cost operationCost
   saving_le := by
     rw [Nat.sub_add_cancel (compaction.cost_le operationCost)]
+
+export Cslib.Circuits.Circuit.Compaction (toReduction)
 
 end Circuit.Compaction
 

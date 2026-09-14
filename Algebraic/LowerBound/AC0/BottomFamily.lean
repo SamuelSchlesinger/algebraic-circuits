@@ -227,7 +227,7 @@ theorem paddedAndBottomFormula_eval_of_bottom
   have represented := exists_representsBoundedBottomAnd
     program normal widthBound gate operation depthOne bounded
   unfold paddedAndBottomFormula
-  rw [dif_pos represented]
+  rw [dite_eq_left represented]
   exact (Classical.choose_spec represented).2.2 input
 
 /-- At an eligible OR gate, the padded formula computes the internal gate
@@ -248,7 +248,7 @@ theorem paddedOrBottomFormula_eval_of_bottom
   have represented := exists_representsBoundedBottomOr
     program normal widthBound gate operation depthOne bounded
   unfold paddedOrBottomFormula
-  rw [dif_pos represented]
+  rw [dite_eq_left represented]
   exact (Classical.choose_spec represented).2.2 input
 
 /-- Restricting the padded AND formula agrees with semantic restriction of the

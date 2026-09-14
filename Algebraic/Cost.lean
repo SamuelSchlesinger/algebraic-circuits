@@ -20,26 +20,32 @@ abbrev OperationCost (σ : Signature) := σ.Op → Nat
 def OperationCost.unit : OperationCost σ := fun _ => 1
 
 /-- The cost of all gates in a straight-line program. -/
-def Program.cost (operationCost : OperationCost σ) :
+def _root_.Cslib.Circuits.Program.cost (operationCost : OperationCost σ) :
     Program σ n g → Nat
   | .empty => 0
   | .gate program line =>
       program.cost operationCost + operationCost line.op
 
-@[simp] theorem Program.cost_empty
+export Cslib.Circuits (Program.cost)
+
+@[simp] theorem _root_.Cslib.Circuits.Program.cost_empty
     (operationCost : OperationCost σ) :
     (Program.empty : Program σ n 0).cost operationCost = 0 := rfl
 
-@[simp] theorem Program.cost_gate
+export Cslib.Circuits (Program.cost_empty)
+
+@[simp] theorem _root_.Cslib.Circuits.Program.cost_gate
     (operationCost : OperationCost σ)
     (program : Program σ n g)
     (line : Line σ n g) :
     (program.gate line).cost operationCost =
       program.cost operationCost + operationCost line.op := rfl
 
+export Cslib.Circuits (Program.cost_gate)
+
 /-- Program cost is the sum of the costs of its gates viewed in the final
 wire namespace. -/
-theorem Program.cost_eq_sum_lines
+theorem _root_.Cslib.Circuits.Program.cost_eq_sum_lines
     (program : Program σ n g)
     (operationCost : OperationCost σ) :
     program.cost operationCost =
@@ -50,9 +56,11 @@ theorem Program.cost_eq_sum_lines
       rw [Program.cost_gate, Fin.sum_univ_castSucc]
       simp [inductionHypothesis]
 
+export Cslib.Circuits (Program.cost_eq_sum_lines)
+
 /-- If every operation costs at most `K`, a program of `g` gates costs at most
 `K * g`. -/
-theorem Program.cost_le_mul_gateCount
+theorem _root_.Cslib.Circuits.Program.cost_le_mul_gateCount
     (program : Program σ n g)
     (operationCost : OperationCost σ)
     (bounded : ∀ op, operationCost op ≤ K) :
@@ -66,8 +74,10 @@ theorem Program.cost_le_mul_gateCount
         _ ≤ K * g + K := Nat.add_le_add ih (bounded line.op)
         _ = K * (g + 1) := (Nat.mul_succ K g).symm
 
+export Cslib.Circuits (Program.cost_le_mul_gateCount)
+
 /-- Unit cost is exactly the number of program gates. -/
-@[simp] theorem Program.cost_unit
+@[simp] theorem _root_.Cslib.Circuits.Program.cost_unit
     (program : Program σ n g) :
     program.cost OperationCost.unit = g := by
   induction program with
@@ -75,29 +85,39 @@ theorem Program.cost_le_mul_gateCount
   | gate program line ih =>
       simp [Program.cost, OperationCost.unit, ih]
 
+export Cslib.Circuits (Program.cost_unit)
+
 /-- The cost of all gates in a circuit. -/
-def Circuit.cost
+def _root_.Cslib.Circuits.Circuit.cost
     (circuit : Circuit σ n g m)
     (operationCost : OperationCost σ) : Nat :=
   circuit.program.cost operationCost
 
-@[simp] theorem Circuit.cost_id
+export Cslib.Circuits (Circuit.cost)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_id
     (operationCost : OperationCost σ) :
     (Circuit.id σ n).cost operationCost = 0 := rfl
 
+export Cslib.Circuits (Circuit.cost_id)
+
 /-- If every operation costs at most `K`, circuit cost is at most `K` times
 its gate count. -/
-theorem Circuit.cost_le_mul_size
+theorem _root_.Cslib.Circuits.Circuit.cost_le_mul_size
     (circuit : Circuit σ n g m)
     (operationCost : OperationCost σ)
     (bounded : ∀ op, operationCost op ≤ K) :
     circuit.cost operationCost ≤ K * circuit.size := by
   exact circuit.program.cost_le_mul_gateCount operationCost bounded
 
+export Cslib.Circuits (Circuit.cost_le_mul_size)
+
 /-- Unit cost is exactly circuit size. -/
-@[simp] theorem Circuit.cost_unit
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_unit
     (circuit : Circuit σ n g m) :
     circuit.cost OperationCost.unit = circuit.size := by
   exact circuit.program.cost_unit
+
+export Cslib.Circuits (Circuit.cost_unit)
 
 end Algebraic

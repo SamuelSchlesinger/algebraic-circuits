@@ -11,7 +11,7 @@ open Algebraic.AC0
 
 example
     (circuit : Circuit signature n g 1)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depth t : Nat)
     (twoLeDepth : 2 ≤ depth)
     (circuitDepth : AC0.Circuit.logicalDepth circuit ≤ depth)
@@ -25,7 +25,7 @@ example
 example
     (circuit : Circuit signature n g 1)
     (normal : AC0.Program.NegationsAtInputs circuit.program)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depth t : Nat)
     (twoLeDepth : 2 ≤ depth)
     (circuitDepth : AC0.Circuit.logicalDepth circuit ≤ depth)

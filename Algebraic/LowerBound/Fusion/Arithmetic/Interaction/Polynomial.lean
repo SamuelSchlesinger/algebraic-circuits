@@ -37,7 +37,7 @@ def coefficientFeature
     (polynomial : MvPolynomial σ K)
     (output : I) :
     coefficientFeature exponent polynomial output =
-      MvPolynomial.coeff (exponent output) polynomial :=
+      AddMonoidAlgebra.coeff polynomial (exponent output) :=
   rfl
 
 /-- Selected nonconstant coefficients vanish on scalar polynomials. -/
@@ -123,7 +123,7 @@ def coefficientMatrix
     (exponent : I → σ →₀ ℕ)
     (outputs : Fin m → MvPolynomial σ K) : Matrix I (Fin m) K :=
   fun selected output =>
-    MvPolynomial.coeff (exponent selected) (outputs output)
+    AddMonoidAlgebra.coeff (outputs output) (exponent selected)
 
 @[simp] theorem coefficientMatrix_col
     [CommSemiring K]

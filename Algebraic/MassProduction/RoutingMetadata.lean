@@ -238,7 +238,7 @@ def predecessorCopyCircuit
         (Routing.keyBit keyWidth (metadataWidth + valueWidth) bit).val) := by
     change Not (keyWidth + 1 + metadataWidth <= bit.val)
     omega
-  rw [dif_neg beforeValue]
+  rw [dite_eq_right beforeValue]
   rfl
 
 @[simp] theorem predecessorCopyBits_recordTag
@@ -258,7 +258,7 @@ def predecessorCopyCircuit
         (Routing.tagBit keyWidth (metadataWidth + valueWidth)).val) := by
     change Not (keyWidth + 1 + metadataWidth <= keyWidth)
     omega
-  rw [dif_neg beforeValue]
+  rw [dite_eq_right beforeValue]
   rfl
 
 @[simp] theorem predecessorCopyBits_recordMetadata
@@ -279,7 +279,7 @@ def predecessorCopyCircuit
         (metadataBit keyWidth metadataWidth valueWidth bit).val) := by
     change Not (keyWidth + 1 + metadataWidth <= keyWidth + 1 + bit.val)
     omega
-  rw [dif_neg beforeValue]
+  rw [dite_eq_right beforeValue]
   rfl
 
 /-- A positive record copies the predecessor value exactly when the same
@@ -307,7 +307,7 @@ theorem predecessorCopyBits_recordValue_of_positive
     change keyWidth + 1 + metadataWidth <=
       keyWidth + 1 + (metadataWidth + bit.val)
     omega
-  rw [dif_pos isValue, dif_pos positive]
+  rw [dite_eq_left isValue, dite_eq_left positive]
   have valueIndexEquality :
       (⟨(valueBit keyWidth metadataWidth valueWidth bit).val -
           (keyWidth + 1 + metadataWidth), by

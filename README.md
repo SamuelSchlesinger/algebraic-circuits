@@ -1,17 +1,30 @@
 # Algebraic
 
 Algebraic is a Lean 4 library for finite-arity universal algebra and shared
-circuit computation. It provides reusable syntax, semantics, translations,
+circuit computation built on [CSLib](https://github.com/leanprover/cslib).
+It extends CSLib's circuit model with semantics, costs, translations,
 analyses, and lower-bound frameworks without fixing a particular carrier or
 gate basis.
 
 ## Design
+
+The signatures, interpretations, homomorphisms, wires, programs, and circuits
+come from `Cslib.Computability.Circuit`. The `Algebraic` core imports re-export
+these types and their operations, so native CSLib circuits work directly with
+the library's constructions and lower bounds. Lake pins CSLib to revision
+`85805b8447124a6561a5751d8b488f8fae96699e`, the stacked head of
+[Shannon #891](https://github.com/leanprover/cslib/pull/891) and
+[Lupanov #890](https://github.com/leanprover/cslib/pull/890), with their matching
+Lean and Mathlib versions.
 
 - A `Signature` describes operation symbols and their arities, while an
   `Interpretation` assigns them concrete meaning.
 - A `Program` is a topologically ordered, shared computation. A `Circuit`
   designates input or gate wires as outputs, so projections and multi-output
   circuits do not need artificial output gates.
+- `circuit.ComputesWith interpretation target` expresses generic computation.
+  CSLib's `circuit.Computes function` specializes to its scalar Boolean basis.
+  The former generic name remains available as `Algebraic.Circuit.Computes`.
 - Homomorphisms connect interpretations. Translations implement one signature
   by circuits over another and carry semantic and weighted-cost guarantees.
 - Structural and abstract analyses are kept separate from concrete bases, so
@@ -54,6 +67,12 @@ support bounds, Hessian rank, and Waring and rectangle bounds. Restricted
 models and their charged operations are explicit in the theorem statements.
 The AC0 development has a detailed [theory map](docs/ac0-theory-map.md).
 
+`Algebraic.Basis.DeMorgan.ShannonLupanov` transfers CSLib's sharp bounds to
+the local De Morgan complexity measures. The conversions preserve semantics,
+remove identity gates when exporting to CSLib, and track the difference between
+total gate count and weighted logical-gate cost. The local mass-production
+constructions retain their explicit finite cost bounds.
+
 The Fusion development is parameterized by the circuit signature,
 interpretation, target problem, observation model, and operation costs. This
 keeps the circuit-to-cover argument independent of its set-theoretic or
@@ -76,7 +95,7 @@ public library and regression suite.
 lake build --wfail
 ```
 
-Run all default declaration linters over the public `Algebraic` namespace:
+Run all default declaration linters over the `Algebraic` modules:
 
 ```sh
 lake lint

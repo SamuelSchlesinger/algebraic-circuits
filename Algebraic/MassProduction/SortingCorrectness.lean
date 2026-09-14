@@ -284,11 +284,11 @@ private theorem pairLeft_comparePairBits
   rw [recordPairSide_comparePairBits_zero]
   cases ascending with
   | false =>
-      simp only [Bool.false_eq_true, if_false, pairSelectsRight]
+      simp only [Bool.false_eq_true, ite_false, pairSelectsRight]
       rw [compareSwapBits_side_one]
       cases compareSwapFlag keyFits input <;> rfl
   | true =>
-      simp only [if_true, pairSelectsRight]
+      simp only [ite_true, pairSelectsRight]
       exact compareSwapBits_side_zero keyFits input
 
 private theorem pairRight_comparePairBits
@@ -301,11 +301,11 @@ private theorem pairRight_comparePairBits
   rw [recordPairSide_comparePairBits_one]
   cases ascending with
   | false =>
-      simp only [Bool.false_eq_true, if_false, pairSelectsRight]
+      simp only [Bool.false_eq_true, ite_false, pairSelectsRight]
       rw [compareSwapBits_side_zero]
       cases compareSwapFlag keyFits input <;> rfl
   | true =>
-      simp only [if_true, pairSelectsRight]
+      simp only [ite_true, pairSelectsRight]
       exact compareSwapBits_side_one keyFits input
 
 private theorem pairSelectsRight_eq_true_iff
@@ -330,7 +330,7 @@ private theorem pairSelectsRight_eq_true_iff
             (compareSwapFlag_eq_true_iff keyFits input).mp flagEquality
           simp [pairSelectsRight, flagEquality, rightLess]
   | true =>
-      simp only [pairSelectsRight, if_true]
+      simp only [pairSelectsRight, ite_true]
       exact compareSwapFlag_eq_true_iff keyFits input
 
 private theorem flatRecordKey_pairSide
@@ -361,11 +361,11 @@ private theorem pairSelectsRight_gather_eq_true_iff
   rw [pairSelectsRight_eq_true_iff]
   cases ascending with
   | false =>
-      simp only [Bool.false_eq_true, if_false]
+      simp only [Bool.false_eq_true, ite_false]
       rw [← flatRecordKey_pairSide, ← flatRecordKey_pairSide,
         pairLeft_gatherLayer, pairRight_gatherLayer]
   | true =>
-      simp only [if_true]
+      simp only [ite_true]
       rw [← flatRecordKey_pairSide, ← flatRecordKey_pairSide,
         pairLeft_gatherLayer, pairRight_gatherLayer]
 
@@ -386,7 +386,7 @@ private theorem flatRecords_compareLayer_left
   have firstHalf :
       (Fin.castAdd (networkRecords depth) pair).val <
         networkRecords depth := pair.isLt
-  rw [dif_pos firstHalf]
+  rw [dite_eq_left firstHalf]
   rfl
 
 private theorem flatRecords_compareLayer_right
@@ -406,7 +406,7 @@ private theorem flatRecords_compareLayer_right
   have notFirstHalf :
       ¬(Fin.natAdd (networkRecords depth) pair).val <
         networkRecords depth := by simp
-  rw [dif_neg notFirstHalf]
+  rw [dite_eq_right notFirstHalf]
   have pairEquality :
       (⟨(Fin.natAdd (networkRecords depth) pair).val -
           networkRecords depth, by simpa using pair.isLt⟩ :
@@ -432,7 +432,7 @@ private theorem flatRecords_compareLayerBits
     have firstHalf :
         (Fin.castAdd (networkRecords depth) pair).val <
           networkRecords depth := pair.isLt
-    rw [dif_pos firstHalf]
+    rw [dite_eq_left firstHalf]
     have pairEquality :
         (⟨(Fin.castAdd (networkRecords depth) pair).val, firstHalf⟩ :
           Fin (networkRecords depth)) = pair := by
@@ -465,12 +465,12 @@ private theorem flatRecords_compareLayerBits
           have selected := selection.mpr conditionTrue
           rw [selectionValue] at selected
           contradiction
-        simp only [Bool.false_eq_true, if_false]
-        exact (if_neg conditionFalse).symm
+        simp only [Bool.false_eq_true, ite_false]
+        exact (ite_eq_right conditionFalse).symm
     | true =>
         have conditionTrue := selection.mp selectionValue
-        simp only [if_true]
-        exact (if_pos conditionTrue).symm
+        simp only [ite_true]
+        exact (ite_eq_left conditionTrue).symm
   · rw [flatRecords_compareLayer_right,
       pairRight_comparePairBits, pairLeft_gatherLayer,
       pairRight_gatherLayer]
@@ -479,7 +479,7 @@ private theorem flatRecords_compareLayerBits
     have notFirstHalf :
         ¬(Fin.natAdd (networkRecords depth) pair).val <
           networkRecords depth := by simp
-    rw [dif_neg notFirstHalf]
+    rw [dite_eq_right notFirstHalf]
     have pairEquality :
         (⟨(Fin.natAdd (networkRecords depth) pair).val -
             networkRecords depth, by simpa using pair.isLt⟩ :
@@ -513,12 +513,12 @@ private theorem flatRecords_compareLayerBits
           have selected := selection.mpr conditionTrue
           rw [selectionValue] at selected
           contradiction
-        simp only [Bool.false_eq_true, if_false]
-        exact (if_neg conditionFalse).symm
+        simp only [Bool.false_eq_true, ite_false]
+        exact (ite_eq_right conditionFalse).symm
     | true =>
         have conditionTrue := selection.mp selectionValue
-        simp only [if_true]
-        exact (if_pos conditionTrue).symm
+        simp only [ite_true]
+        exact (ite_eq_left conditionTrue).symm
 
 /-- The packed merge refines the generic keyed record merge. -/
 theorem flatRecords_bitonicMergeBits

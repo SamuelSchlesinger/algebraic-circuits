@@ -82,7 +82,7 @@ theorem conjoinLiteral_sound
           exact (Term.eval_eq_true term input).1 termTrue
             literal.index literal.value existing
         cases termValue : term.eval input <;> simp [termValue, literalFollows]
-      · simp only [conjoinLiteral, existing, if_neg equal,
+      · simp only [conjoinLiteral, existing, ite_eq_right equal,
           Option.elim_none]
         symm
         apply Bool.eq_false_iff.mpr

@@ -90,7 +90,7 @@ example :
 
 example {n g : Nat}
     (circuit : Algebraic.Circuit DeMorgan.signature n g 1)
-    (computes : circuit.Computes DeMorgan.interpretation
+    (computes : circuit.ComputesWith DeMorgan.interpretation
       (GateElimination.Xor.parityTarget n)) :
     3 * (n - 1) ≤ circuit.cost DeMorgan.binaryCost :=
   Applications.xor_lowerBound circuit computes

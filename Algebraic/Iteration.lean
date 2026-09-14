@@ -11,12 +11,14 @@ as exponentiation and inversion.
 namespace Algebraic
 
 /-- Left-associated iteration, universe-polymorphic over `Sort`. -/
-def Circuit.iterateFunction {A : Sort u} (function : A -> A) : Nat -> A -> A
+def _root_.Cslib.Circuits.Circuit.iterateFunction {A : Sort u} (function : A -> A) : Nat -> A -> A
   | 0 => _root_.id
   | steps + 1 => fun input => function (iterateFunction function steps input)
 
+export Cslib.Circuits (Circuit.iterateFunction)
+
 /-- Compose an endomorphism circuit with itself `steps` times. -/
-def Circuit.iterate
+def _root_.Cslib.Circuits.Circuit.iterate
     (circuit : Circuit σ n g n) :
     (steps : Nat) -> Circuit σ n (steps * g) n
   | 0 => (Circuit.id σ n).castCounts rfl (Nat.zero_mul g).symm rfl
@@ -24,8 +26,10 @@ def Circuit.iterate
       (circuit.comp (circuit.iterate steps)).castCounts rfl
         (Nat.succ_mul steps g).symm rfl
 
+export Cslib.Circuits (Circuit.iterate)
+
 /-- Iterated circuit evaluation is function iteration. -/
-@[simp] theorem Circuit.eval_iterate
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_iterate
     (circuit : Circuit σ n g n)
     (steps : Nat)
     (interpretation : Interpretation σ U)
@@ -41,8 +45,10 @@ def Circuit.iterate
       rw [inductionHypothesis]
       rfl
 
+export Cslib.Circuits (Circuit.eval_iterate)
+
 /-- Iterating a circuit multiplies its weighted cost by the round count. -/
-@[simp] theorem Circuit.cost_iterate
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_iterate
     (circuit : Circuit σ n g n)
     (steps : Nat)
     (operationCost : OperationCost σ) :
@@ -53,5 +59,7 @@ def Circuit.iterate
   | succ steps inductionHypothesis =>
       rw [Circuit.iterate, Circuit.cost_castCounts, Circuit.cost_comp,
         inductionHypothesis, Nat.succ_mul]
+
+export Cslib.Circuits (Circuit.cost_iterate)
 
 end Algebraic

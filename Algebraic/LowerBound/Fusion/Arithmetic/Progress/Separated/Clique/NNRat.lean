@@ -35,7 +35,7 @@ def polynomial
   classical
   rw [polynomial, ExactSupport.support_finset_sum]
   simp_rw [MvPolynomial.support_monomial,
-    if_neg (one_ne_zero : (1 : ℚ≥0) ≠ 0)]
+    ite_eq_right (one_ne_zero : (1 : ℚ≥0) ≠ 0)]
   exact Finset.biUnion_singleton_eq_self
 
 theorem card_polynomial_support

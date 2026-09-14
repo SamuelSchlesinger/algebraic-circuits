@@ -65,7 +65,7 @@ theorem support_C_mul_of_pos
       polynomial.support := by
   rw [MonotonePolynomial.polynomial_support_mul,
     MvPolynomial.support_C]
-  rw [if_neg (Nat.ne_of_gt positive)]
+  rw [ite_eq_right (Nat.ne_of_gt positive)]
   ext exponent
   constructor
   · intro present
@@ -90,21 +90,21 @@ theorem support_bind₁_monomial_coeff
     (present : exponent ∈ polynomial.support) :
     (MvPolynomial.bind₁ substitution
       (MvPolynomial.monomial exponent
-        (MvPolynomial.coeff exponent polynomial))).support =
+        (AddMonoidAlgebra.coeff polynomial exponent))).support =
       (monomialExpansion substitution exponent).support := by
   have coefficientPositive :
-      0 < MvPolynomial.coeff exponent polynomial :=
+      0 < AddMonoidAlgebra.coeff polynomial exponent :=
     Nat.pos_of_ne_zero (MvPolynomial.mem_support_iff.mp present)
   have monomialFactorization :
       MvPolynomial.monomial exponent
-          (MvPolynomial.coeff exponent polynomial) =
-          MvPolynomial.C (MvPolynomial.coeff exponent polynomial) *
+          (AddMonoidAlgebra.coeff polynomial exponent) =
+          MvPolynomial.C (AddMonoidAlgebra.coeff polynomial exponent) *
           MvPolynomial.monomial exponent 1 := by
     symm
     simpa using
       (MvPolynomial.C_mul_monomial
         (σ := SourceVar) (R := Nat)
-        (a := MvPolynomial.coeff exponent polynomial)
+        (a := AddMonoidAlgebra.coeff polynomial exponent)
         (s := exponent) (a' := 1))
   rw [monomialFactorization, map_mul]
   simp only [MvPolynomial.bind₁_C_right]
@@ -205,7 +205,7 @@ theorem bind₁_eq_sum
       ∑ exponent ∈ polynomial.support,
         MvPolynomial.bind₁ substitution
           (MvPolynomial.monomial exponent
-            (MvPolynomial.coeff exponent polynomial)) := by
+            (AddMonoidAlgebra.coeff polynomial exponent)) := by
   conv_lhs => rw [polynomial.as_sum]
   simp only [map_sum]
 
@@ -215,13 +215,11 @@ theorem coeff_bind₁_eq_sum
     (substitution : SourceVar → MvPolynomial TargetVar ℕ)
     (polynomial : MvPolynomial SourceVar ℕ)
     (target : TargetVar →₀ ℕ) :
-    MvPolynomial.coeff target
-        (MvPolynomial.bind₁ substitution polynomial) =
+    AddMonoidAlgebra.coeff (MvPolynomial.bind₁ substitution polynomial) target =
       ∑ exponent ∈ polynomial.support,
-        MvPolynomial.coeff target
-          (MvPolynomial.bind₁ substitution
+        AddMonoidAlgebra.coeff (MvPolynomial.bind₁ substitution
             (MvPolynomial.monomial exponent
-              (MvPolynomial.coeff exponent polynomial))) := by
+              (AddMonoidAlgebra.coeff polynomial exponent))) target := by
   rw [bind₁_eq_sum, MvPolynomial.coeff_sum]
 
 /-- Membership in one source-monomial expansion. -/
@@ -265,31 +263,28 @@ theorem coeff_bind₁_monomial_coeff
     (polynomial : MvPolynomial SourceVar ℕ)
     (source : SourceVar →₀ ℕ)
     (target : TargetVar →₀ ℕ) :
-    MvPolynomial.coeff target
-        (MvPolynomial.bind₁ substitution
+    AddMonoidAlgebra.coeff (MvPolynomial.bind₁ substitution
           (MvPolynomial.monomial source
-            (MvPolynomial.coeff source polynomial))) =
-      MvPolynomial.coeff source polynomial *
-        MvPolynomial.coeff target
-          (monomialExpansion substitution source) := by
+            (AddMonoidAlgebra.coeff polynomial source))) target =
+      AddMonoidAlgebra.coeff polynomial source *
+        AddMonoidAlgebra.coeff (monomialExpansion substitution source) target := by
   have monomialFactorization :
       MvPolynomial.monomial source
-          (MvPolynomial.coeff source polynomial) =
-        MvPolynomial.C (MvPolynomial.coeff source polynomial) *
+          (AddMonoidAlgebra.coeff polynomial source) =
+        MvPolynomial.C (AddMonoidAlgebra.coeff polynomial source) *
           MvPolynomial.monomial source 1 := by
     symm
     simpa using
       (MvPolynomial.C_mul_monomial
         (σ := SourceVar) (R := Nat)
-        (a := MvPolynomial.coeff source polynomial)
+        (a := AddMonoidAlgebra.coeff polynomial source)
         (s := source) (a' := 1))
   rw [monomialFactorization, map_mul]
   simp only [MvPolynomial.bind₁_C_right]
-  change MvPolynomial.coeff target
-      (MvPolynomial.C (MvPolynomial.coeff source polynomial) *
-        monomialExpansion substitution source) = _
+  change AddMonoidAlgebra.coeff (MvPolynomial.C (AddMonoidAlgebra.coeff polynomial source) *
+        monomialExpansion substitution source) target = _
   exact MvPolynomial.coeff_C_mul target
-    (MvPolynomial.coeff source polynomial)
+    (AddMonoidAlgebra.coeff polynomial source)
     (monomialExpansion substitution source)
 
 /-- A coefficient-one target monomial has a unique source origin.  This is
@@ -301,21 +296,18 @@ theorem exists_unique_source_of_coeff_eq_one
     (substitution : SourceVar → MvPolynomial TargetVar ℕ)
     (polynomial : MvPolynomial SourceVar ℕ)
     (target : TargetVar →₀ ℕ)
-    (coefficientOne : MvPolynomial.coeff target
-      (MvPolynomial.bind₁ substitution polynomial) = 1) :
+    (coefficientOne : AddMonoidAlgebra.coeff (MvPolynomial.bind₁ substitution polynomial) target = 1) :
     ∃ source ∈ polynomial.support,
-      MvPolynomial.coeff source polynomial = 1 ∧
-        MvPolynomial.coeff target
-            (monomialExpansion substitution source) = 1 ∧
+      AddMonoidAlgebra.coeff polynomial source = 1 ∧
+        AddMonoidAlgebra.coeff (monomialExpansion substitution source) target = 1 ∧
           IsNeighbor substitution source target ∧
           ∀ other ∈ polynomial.support,
             IsNeighbor substitution other target → other = source := by
   classical
   let contribution := fun source =>
-    MvPolynomial.coeff target
-      (MvPolynomial.bind₁ substitution
+    AddMonoidAlgebra.coeff (MvPolynomial.bind₁ substitution
         (MvPolynomial.monomial source
-          (MvPolynomial.coeff source polynomial)))
+          (AddMonoidAlgebra.coeff polynomial source))) target
   have contributionSum :
       ∑ source ∈ polynomial.support, contribution source = 1 := by
     simpa [contribution] using
@@ -331,42 +323,37 @@ theorem exists_unique_source_of_coeff_eq_one
     Finset.single_le_sum (fun _ _ => Nat.zero_le _) sourcePresent
   have sourceOne : contribution source = 1 := by
     omega
-  have sourceCoefficientOne : MvPolynomial.coeff source polynomial = 1 := by
+  have sourceCoefficientOne : AddMonoidAlgebra.coeff polynomial source = 1 := by
     have contributionFactor :=
       coeff_bind₁_monomial_coeff substitution polynomial source target
     change contribution source =
-      MvPolynomial.coeff source polynomial *
-        MvPolynomial.coeff target
-          (monomialExpansion substitution source) at contributionFactor
-    have productOne : MvPolynomial.coeff source polynomial *
-        MvPolynomial.coeff target
-          (monomialExpansion substitution source) = 1 := by
+      AddMonoidAlgebra.coeff polynomial source *
+        AddMonoidAlgebra.coeff (monomialExpansion substitution source) target at contributionFactor
+    have productOne : AddMonoidAlgebra.coeff polynomial source *
+        AddMonoidAlgebra.coeff (monomialExpansion substitution source) target = 1 := by
       rw [← contributionFactor, sourceOne]
     exact Nat.eq_one_of_dvd_one
-      ⟨MvPolynomial.coeff target (monomialExpansion substitution source),
+      ⟨AddMonoidAlgebra.coeff (monomialExpansion substitution source) target,
         productOne.symm⟩
   have expansionCoefficientOne :
-      MvPolynomial.coeff target
-        (monomialExpansion substitution source) = 1 := by
+      AddMonoidAlgebra.coeff (monomialExpansion substitution source) target = 1 := by
     have contributionFactor :=
       coeff_bind₁_monomial_coeff substitution polynomial source target
     change contribution source =
-      MvPolynomial.coeff source polynomial *
-        MvPolynomial.coeff target
-          (monomialExpansion substitution source) at contributionFactor
-    have productOne : MvPolynomial.coeff source polynomial *
-        MvPolynomial.coeff target
-          (monomialExpansion substitution source) = 1 := by
+      AddMonoidAlgebra.coeff polynomial source *
+        AddMonoidAlgebra.coeff (monomialExpansion substitution source) target at contributionFactor
+    have productOne : AddMonoidAlgebra.coeff polynomial source *
+        AddMonoidAlgebra.coeff (monomialExpansion substitution source) target = 1 := by
       rw [← contributionFactor, sourceOne]
     exact Nat.eq_one_of_dvd_one
-      ⟨MvPolynomial.coeff source polynomial, by
+      ⟨AddMonoidAlgebra.coeff polynomial source, by
         rw [Nat.mul_comm]
         exact productOne.symm⟩
   have sourceNeighbor : IsNeighbor substitution source target := by
     have actualPresent : target ∈
         (MvPolynomial.bind₁ substitution
           (MvPolynomial.monomial source
-            (MvPolynomial.coeff source polynomial))).support :=
+            (AddMonoidAlgebra.coeff polynomial source))).support :=
       MvPolynomial.mem_support_iff.mpr sourceNonzero
     rw [support_bind₁_monomial_coeff substitution polynomial source
       sourcePresent] at actualPresent
@@ -378,7 +365,7 @@ theorem exists_unique_source_of_coeff_eq_one
   have actualOtherPresent : target ∈
       (MvPolynomial.bind₁ substitution
         (MvPolynomial.monomial other
-          (MvPolynomial.coeff other polynomial))).support := by
+          (AddMonoidAlgebra.coeff polynomial other))).support := by
     rw [support_bind₁_monomial_coeff substitution polynomial other
       otherPresent]
     exact otherNeighbor

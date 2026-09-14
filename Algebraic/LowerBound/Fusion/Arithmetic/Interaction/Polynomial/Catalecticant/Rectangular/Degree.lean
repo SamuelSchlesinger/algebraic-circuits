@@ -43,9 +43,7 @@ theorem coeff_entryExponent_eq_zero_of_totalDegree_lt
     (polynomial : MvPolynomial (Fin degree) K)
     (small : polynomial.totalDegree < degree)
     (row column : SumOfTerms.MatrixRank.Layer degree split) :
-    MvPolynomial.coeff
-      (SumOfTerms.Waring.Rectangular.entryExponent degree split row column)
-      polynomial = 0 := by
+    AddMonoidAlgebra.coeff polynomial (SumOfTerms.Waring.Rectangular.entryExponent degree split row column) = 0 := by
   apply MvPolynomial.coeff_eq_zero_of_totalDegree_lt
   have queriedDegree :
       (∑ index ∈

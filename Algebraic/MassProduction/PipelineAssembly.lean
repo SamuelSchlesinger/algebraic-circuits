@@ -296,7 +296,7 @@ theorem assembledPipelineCircuit_recovers
       Circuit DeMorgan.signature (groups * suffixWidth)
         (gateCounts member) groups)
     (computes : forall point bit,
-      (resourceCircuits (resourceMemberIndex point bit)).Computes
+      (resourceCircuits (resourceMemberIndex point bit)).ComputesWith
         DeMorgan.interpretation
         (directProduct
           (packedResourceFunction widthPositive placement function point bit)

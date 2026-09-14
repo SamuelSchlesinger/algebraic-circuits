@@ -351,14 +351,14 @@ theorem fixedRoutedSuffixExpression_eval
         localSuffix input 1 bit
       else false) := by
   by_cases leftMember : resource ∈ (uhligRecoveryPair first second).1
-  · simp only [fixedRoutedSuffixExpression, if_pos leftMember]
+  · simp only [fixedRoutedSuffixExpression, ite_eq_left leftMember]
     rfl
   · by_cases rightMember : resource ∈ (uhligRecoveryPair first second).2
-    · simp only [fixedRoutedSuffixExpression, if_neg leftMember,
-        if_pos rightMember]
+    · simp only [fixedRoutedSuffixExpression, ite_eq_right leftMember,
+        ite_eq_left rightMember]
       rfl
-    · simp only [fixedRoutedSuffixExpression, if_neg leftMember,
-        if_neg rightMember]
+    · simp only [fixedRoutedSuffixExpression, ite_eq_right leftMember,
+        ite_eq_right rightMember]
       rfl
 
 theorem routedSuffixExpression_eval
@@ -556,7 +556,7 @@ theorem routedResourceCircuit_eval
     (resource : Fin (prefixLast prefixWidth + 2))
     (resourceCircuit : Circuit DeMorgan.signature
       (pairs * suffixWidth) gates pairs)
-    (computes : resourceCircuit.Computes DeMorgan.interpretation
+    (computes : resourceCircuit.ComputesWith DeMorgan.interpretation
       (directProduct (resourceFunction function resource) pairs))
     (input : Fin ((2 * pairs) * (prefixWidth + suffixWidth)) -> Bool)
     (pair : Fin pairs) :
@@ -605,7 +605,7 @@ theorem resourceBankCircuit_eval
       Circuit DeMorgan.signature (pairs * suffixWidth)
         (resourceGateCounts resource) pairs)
     (computes : forall resource,
-      (resourceCircuits resource).Computes DeMorgan.interpretation
+      (resourceCircuits resource).ComputesWith DeMorgan.interpretation
         (directProduct (resourceFunction function resource) pairs))
     (input : Fin ((2 * pairs) * (prefixWidth + suffixWidth)) -> Bool)
     (resource : Fin (prefixLast prefixWidth + 2))

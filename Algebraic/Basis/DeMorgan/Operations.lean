@@ -26,7 +26,7 @@ private theorem complexity_binary_le (left right : ScalarFunction Bool n) (useOr
     if useOr then .or (.input 0) (.input 1) else .and (.input 0) (.input 1)
   let result := operation.circuit.comp
     ((minimumCircuit left).circuit.parallel (minimumCircuit right).circuit)
-  have computes : result.Computes interpretation
+  have computes : result.ComputesWith interpretation
       (fun input _ => if useOr then left input || right input else left input && right input) := by
     intro input
     funext output
@@ -61,7 +61,7 @@ theorem complexity_not_le (function : ScalarFunction Bool n) :
     complexity (fun input => !(function input)) ≤ complexity function + 1 := by
   let operation : Expression 1 := .not (.input 0)
   let result := operation.circuit.comp (minimumCircuit function).circuit
-  have computes : result.Computes interpretation (fun input _ => !(function input)) := by
+  have computes : result.ComputesWith interpretation (fun input _ => !(function input)) := by
     intro input
     funext output
     have equal : output = 0 := Subsingleton.elim _ _
@@ -89,7 +89,7 @@ theorem complexity_xor_le (left right : ScalarFunction Bool n) :
   let operation : Expression 2 := .xor (.input 0) (.input 1)
   let result := operation.circuit.comp
     ((minimumCircuit left).circuit.parallel (minimumCircuit right).circuit)
-  have computes : result.Computes interpretation (fun input _ => Bool.xor (left input) (right input)) := by
+  have computes : result.ComputesWith interpretation (fun input _ => Bool.xor (left input) (right input)) := by
     intro input
     funext output
     have outputZero : output = 0 := Subsingleton.elim _ _

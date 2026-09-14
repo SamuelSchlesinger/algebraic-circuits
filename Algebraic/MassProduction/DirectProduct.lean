@@ -106,7 +106,7 @@ open MassProduction
 
 /-- Place `copies` independent, disjoint-input copies of one circuit side by
 side. Sharing internal to the original circuit is preserved within each copy. -/
-def replicate
+def _root_.Cslib.Circuits.Circuit.replicate
     (circuit : Circuit σ n g m) :
     (copies : Nat) -> Circuit σ (copies * n) (copies * g) (copies * m)
   | 0 =>
@@ -120,9 +120,11 @@ def replicate
       (prefixCircuit.parallel suffixCircuit).castCounts rfl
         (Nat.succ_mul copies g).symm (Nat.succ_mul copies m).symm
 
+export Cslib.Circuits.Circuit (replicate)
+
 /-- Replication evaluates one selected copy exactly as the original circuit
 on the corresponding row-major input block. -/
-theorem eval_replicate_apply
+theorem _root_.Cslib.Circuits.Circuit.eval_replicate_apply
     (circuit : Circuit σ n g m)
     (copies : Nat)
     (interpretation : Interpretation σ U)
@@ -166,9 +168,11 @@ theorem eval_replicate_apply
         simp [blockSuffixIndex, finProdFinEquiv, last,
           Nat.mul_comm, Nat.add_comm]
 
+export Cslib.Circuits.Circuit (eval_replicate_apply)
+
 /-- Replication applies the original circuit independently to all consecutive
 input blocks. -/
-theorem eval_replicate
+theorem _root_.Cslib.Circuits.Circuit.eval_replicate
     (circuit : Circuit σ n g m)
     (copies : Nat)
     (interpretation : Interpretation σ U)
@@ -181,8 +185,10 @@ theorem eval_replicate
     circuit.eval_replicate_apply copies interpretation input
       copy output
 
+export Cslib.Circuits.Circuit (eval_replicate)
+
 /-- Replication has exactly multiplicative weighted cost. -/
-@[simp] theorem cost_replicate
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_replicate
     (circuit : Circuit σ n g m)
     (copies : Nat)
     (operationCost : OperationCost σ) :
@@ -193,8 +199,10 @@ theorem eval_replicate
   | succ copies ih =>
       simp [replicate, ih, Nat.succ_mul]
 
+export Cslib.Circuits.Circuit (cost_replicate)
+
 /-- Replication has exactly `copies` times the original gate count. -/
-@[simp] theorem size_replicate
+@[simp] theorem _root_.Cslib.Circuits.Circuit.size_replicate
     (circuit : Circuit σ n g m)
     (copies : Nat) :
     (circuit.replicate copies).size = copies * circuit.size := by
@@ -206,15 +214,19 @@ theorem eval_replicate
       circuit.cost_replicate copies OperationCost.unit
     _ = copies * circuit.size := by rw [Circuit.cost_unit]
 
+export Cslib.Circuits.Circuit (size_replicate)
+
 /-- A scalar circuit replicated on disjoint inputs has the manuscript's
 direct-product semantics after removing the trivial `Fin 1` output factor. -/
-def replicateScalar
+def _root_.Cslib.Circuits.Circuit.replicateScalar
     (circuit : Circuit σ n g 1)
     (copies : Nat) : Circuit σ (copies * n) (copies * g) copies :=
   (circuit.replicate copies).mapOutputs fun copy =>
     finProdFinEquiv (copy, (0 : Fin 1))
 
-@[simp] theorem eval_replicateScalar
+export Cslib.Circuits.Circuit (replicateScalar)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_replicateScalar
     (circuit : Circuit σ n g 1)
     (copies : Nat)
     (interpretation : Interpretation σ U)
@@ -227,7 +239,9 @@ def replicateScalar
     circuit.eval interpretation (directProductInput input copy) 0
   exact circuit.eval_replicate_apply copies interpretation input copy 0
 
-@[simp] theorem cost_replicateScalar
+export Cslib.Circuits.Circuit (eval_replicateScalar)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_replicateScalar
     (circuit : Circuit σ n g 1)
     (copies : Nat)
     (operationCost : OperationCost σ) :
@@ -235,50 +249,60 @@ def replicateScalar
       copies * circuit.cost operationCost := by
   simp [replicateScalar]
 
-@[simp] theorem size_replicateScalar
+export Cslib.Circuits.Circuit (cost_replicateScalar)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.size_replicateScalar
     (circuit : Circuit σ n g 1)
     (copies : Nat) :
     (circuit.replicateScalar copies).size =
       copies * circuit.size := by
   simp [replicateScalar]
 
+export Cslib.Circuits.Circuit (size_replicateScalar)
+
 /-- The concrete naive upper bound: `copies` disjoint copies of a scalar
 circuit compute the direct product at exactly multiplicative cost. -/
-theorem replicateScalar_computes_directProduct
+theorem _root_.Cslib.Circuits.Circuit.replicateScalar_computes_directProduct
     {circuit : Circuit σ n g 1}
     {interpretation : Interpretation σ U}
     {function : ScalarFunction U n}
     (computes : circuit.outputFunction interpretation 0 = function)
     (copies : Nat) :
-    (circuit.replicateScalar copies).Computes interpretation
+    (circuit.replicateScalar copies).ComputesWith interpretation
       (directProduct function copies) := by
   intro input
   rw [Circuit.eval_replicateScalar, computes]
 
+export Cslib.Circuits.Circuit (replicateScalar_computes_directProduct)
+
 /-- Computation of a one-output target identifies its scalar output
 function. -/
-theorem outputFunction_eq_of_computes_scalarTarget
+theorem _root_.Cslib.Circuits.Circuit.outputFunction_eq_of_computes_scalarTarget
     {circuit : Circuit σ n g 1}
     {interpretation : Interpretation σ U}
     {function : ScalarFunction U n}
-    (computes : circuit.Computes interpretation (scalarTarget function)) :
+    (computes : circuit.ComputesWith interpretation (scalarTarget function)) :
     circuit.outputFunction interpretation 0 = function := by
   funext input
   exact congrFun (computes input) 0
 
 /-! ## Retaining an initial sub-batch -/
 
+export Cslib.Circuits.Circuit (outputFunction_eq_of_computes_scalarTarget)
+
 /-- Send a copy of a larger batch to the same copy of a smaller batch when
 it exists, and to copy zero otherwise.  The positivity premise is explicit
 rather than hidden in an instance. -/
-def prefixOrZeroCopy
+def _root_.Cslib.Circuits.Circuit.prefixOrZeroCopy
     (small : Nat) (smallPositive : 0 < small) (copy : Fin large) : Fin small :=
   if bounded : copy.val < small then
     ⟨copy.val, bounded⟩
   else
     ⟨0, smallPositive⟩
 
-@[simp] theorem prefixOrZeroCopy_castLE
+export Cslib.Circuits.Circuit (prefixOrZeroCopy)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.prefixOrZeroCopy_castLE
     (smallPositive : 0 < small)
     (smallLeLarge : small <= large)
     (copy : Fin small) :
@@ -287,10 +311,12 @@ def prefixOrZeroCopy
   apply Fin.ext
   simp [prefixOrZeroCopy]
 
+export Cslib.Circuits.Circuit (prefixOrZeroCopy_castLE)
+
 /-- Rewire the inputs expected by a larger batch circuit onto a smaller
 batch.  Inputs belonging to discarded copies are harmlessly redirected to
 the first retained block. -/
-def prefixBatchInputMap
+def _root_.Cslib.Circuits.Circuit.prefixBatchInputMap
     (width small large : Nat)
     (smallPositive : 0 < small) :
     Fin (large * width) -> Fin (small * width) :=
@@ -299,7 +325,9 @@ def prefixBatchInputMap
     finProdFinEquiv
       (prefixOrZeroCopy small smallPositive copyInput.1, copyInput.2)
 
-theorem directProductInput_prefixBatchInputMap
+export Cslib.Circuits.Circuit (prefixBatchInputMap)
+
+theorem _root_.Cslib.Circuits.Circuit.directProductInput_prefixBatchInputMap
     (smallPositive : 0 < small)
     (smallLeLarge : small <= large)
     (input : Fin (small * width) -> U)
@@ -315,9 +343,11 @@ theorem directProductInput_prefixBatchInputMap
   dsimp only
   rw [prefixOrZeroCopy_castLE smallPositive smallLeLarge]
 
+export Cslib.Circuits.Circuit (directProductInput_prefixBatchInputMap)
+
 /-- A circuit for `large` independent copies yields, without adding gates, a
 circuit for every positive initial batch of at most `large` copies. -/
-def takeDirectProductPrefix
+def _root_.Cslib.Circuits.Circuit.takeDirectProductPrefix
     (circuit : Circuit sigma (large * width) gates large)
     (small : Nat)
     (smallPositive : 0 < small)
@@ -327,7 +357,9 @@ def takeDirectProductPrefix
       (prefixBatchInputMap width small large smallPositive)).mapOutputs
     (Fin.castLE smallLeLarge)
 
-@[simp] theorem takeDirectProductPrefix_cost
+export Cslib.Circuits.Circuit (takeDirectProductPrefix)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.takeDirectProductPrefix_cost
     (circuit : Circuit sigma (large * width) gates large)
     (smallPositive : 0 < small)
     (smallLeLarge : small <= large)
@@ -336,14 +368,16 @@ def takeDirectProductPrefix
         operationCost = circuit.cost operationCost := by
   simp [Circuit.takeDirectProductPrefix]
 
-theorem takeDirectProductPrefix_computes
+export Cslib.Circuits.Circuit (takeDirectProductPrefix_cost)
+
+theorem _root_.Cslib.Circuits.Circuit.takeDirectProductPrefix_computes
     (circuit : Circuit sigma (large * width) gates large)
     (function : ScalarFunction U width)
-    (computes : circuit.Computes interpretation
+    (computes : circuit.ComputesWith interpretation
       (directProduct function large))
     (smallPositive : 0 < small)
     (smallLeLarge : small <= large) :
-    (circuit.takeDirectProductPrefix small smallPositive smallLeLarge).Computes
+    (circuit.takeDirectProductPrefix small smallPositive smallLeLarge).ComputesWith
       interpretation (directProduct function small) := by
   intro input
   funext copy
@@ -353,10 +387,12 @@ theorem takeDirectProductPrefix_computes
     (directProductInput_prefixBatchInputMap smallPositive smallLeLarge
       input copy)
 
+export Cslib.Circuits.Circuit (takeDirectProductPrefix_computes)
+
 /-- Minimum direct-product complexity is monotone in the number of positive
 copies.  This is the formal version of fixing unused inputs and discarding
 unused outputs. -/
-theorem costComplexity_directProduct_mono_copies
+theorem _root_.Cslib.Circuits.Circuit.costComplexity_directProduct_mono_copies
     (interpretation : Interpretation sigma U)
     (operationCost : OperationCost sigma)
     (function : ScalarFunction U width)
@@ -370,7 +406,7 @@ theorem costComplexity_directProduct_mono_copies
       (directProduct function small) <=
     (iInf fun gates => iInf fun circuit :
       Circuit sigma (large * width) gates large =>
-        iInf fun _ : circuit.Computes interpretation
+        iInf fun _ : circuit.ComputesWith interpretation
           (directProduct function large) =>
             (circuit.cost operationCost : ENat))
   refine le_iInf fun gates => le_iInf fun circuit =>
@@ -382,10 +418,12 @@ theorem costComplexity_directProduct_mono_copies
       |>.costComplexity_le operationCost retainedComputes
   simpa using upper
 
+export Cslib.Circuits.Circuit (costComplexity_directProduct_mono_copies)
+
 /-- The naive direct-product upper bound for minimum weighted complexity. It
 is valid even when the one-copy function is not representable, in which case
 the right side may be `⊤`. -/
-theorem costComplexity_directProduct_le
+theorem _root_.Cslib.Circuits.Circuit.costComplexity_directProduct_le
     (interpretation : Interpretation σ U)
     (operationCost : OperationCost σ)
     (function : ScalarFunction U n)
@@ -399,7 +437,7 @@ theorem costComplexity_directProduct_le
       let empty : Circuit σ (0 * n) 0 0 :=
         { program := .empty
           outputs := Fin.elim0 }
-      have computes : empty.Computes interpretation
+      have computes : empty.ComputesWith interpretation
           (directProduct function 0) := by
         intro input
         funext output
@@ -411,7 +449,7 @@ theorem costComplexity_directProduct_le
   | succ copies =>
       let count := copies.succ
       have pointwise : ∀ {g} (circuit : Circuit σ n g 1),
-          circuit.Computes interpretation (scalarTarget function) ->
+          circuit.ComputesWith interpretation (scalarTarget function) ->
             Circuit.costComplexity interpretation operationCost
                 (directProduct function count) ≤
               (count : ℕ∞) * circuit.cost operationCost := by
@@ -429,7 +467,7 @@ theorem costComplexity_directProduct_le
           (directProduct function count) ≤
         (count : ℕ∞) *
           (⨅ g, ⨅ circuit : Circuit σ n g 1,
-            ⨅ _ : circuit.Computes interpretation (scalarTarget function),
+            ⨅ _ : circuit.ComputesWith interpretation (scalarTarget function),
               (circuit.cost operationCost : ℕ∞))
       have nonzero : (count : ℕ∞) ≠ 0 := by
         exact_mod_cast Nat.succ_ne_zero copies
@@ -441,8 +479,10 @@ theorem costComplexity_directProduct_le
       refine le_iInf fun computes => ?_
       simpa using pointwise circuit computes
 
+export Cslib.Circuits.Circuit (costComplexity_directProduct_le)
+
 /-- The naive direct-product upper bound for minimum gate count. -/
-theorem gateComplexity_directProduct_le
+theorem _root_.Cslib.Circuits.Circuit.gateComplexity_directProduct_le
     (interpretation : Interpretation σ U)
     (function : ScalarFunction U n)
     (copies : Nat) :
@@ -451,6 +491,8 @@ theorem gateComplexity_directProduct_le
         Circuit.gateComplexity interpretation (scalarTarget function) := by
   exact Circuit.costComplexity_directProduct_le interpretation
     OperationCost.unit function copies
+
+export Cslib.Circuits.Circuit (gateComplexity_directProduct_le)
 
 end Circuit
 end Algebraic

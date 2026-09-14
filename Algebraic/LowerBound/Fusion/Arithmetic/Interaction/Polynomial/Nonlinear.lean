@@ -135,14 +135,14 @@ theorem ker_coefficientFeature_le_affineSubmodule
   intro exponent exponentInSupport
   by_cases nonlinear : exponent ≠ 0 ∧
       ∀ input : Fin n, exponent ≠ Finsupp.single input 1
-  · have coefficientZero : MvPolynomial.coeff exponent polynomial = 0 := by
+  · have coefficientZero : AddMonoidAlgebra.coeff polynomial exponent = 0 := by
       have pointwise := congrFun featureZero
         (⟨exponent, nonlinear⟩ : Exponent n)
       simpa [coefficientFeature, Polynomial.coefficientFeature] using pointwise
     rw [coefficientZero, MvPolynomial.monomial_zero]
     exact (affineSubmodule K n).zero_mem
   · exact monomial_mem_affineSubmodule_of_not_nonlinear n exponent
-      nonlinear (MvPolynomial.coeff exponent polynomial)
+      nonlinear (AddMonoidAlgebra.coeff polynomial exponent)
 
 /-- Exact kernel characterization of the joint nonlinear coefficient map. -/
 theorem ker_coefficientFeature

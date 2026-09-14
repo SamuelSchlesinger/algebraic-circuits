@@ -199,7 +199,7 @@ noncomputable def pairCoverOfJoinMeetCyclic
         rw [constructs.fixed gate]
         exact finalResult
       by_cases gateBad : bad gate
-      · simp only [candidate, gateBad, if_pos]
+      · simp only [candidate, gateBad, ite_eq_left]
         refine ⟨finalGate, ?_⟩
         simp only [Set.mem_singleton_iff]
         intro elementEq

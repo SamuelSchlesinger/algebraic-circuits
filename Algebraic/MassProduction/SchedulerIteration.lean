@@ -224,7 +224,7 @@ theorem greedyStageInputIndex_point_of_padding
   have paddingCast : ¬↑record.castSucc <
       priorRequests * nonzeroScalarCount width := by
     exact padding
-  rw [dif_neg paddingCast]
+  rw [dite_eq_right paddingCast]
   apply Fin.ext
   rfl
 
@@ -709,7 +709,7 @@ theorem greedyStageInputIndex_retainedRecord
   simp only [decoded]
   have liveCast : ↑(retainedRecordIndex priorFit request scalar).castSucc <
       requests * nonzeroScalarCount width := live
-  rw [dif_pos liveCast]
+  rw [dite_eq_left liveCast]
   apply Fin.ext
   simp [retainedRecordIndex, finProdFinEquiv,
     lineBitWidth, pointBitWidth, Nat.mul_assoc]

@@ -98,7 +98,7 @@ theorem canonicalExtension_fixedCount_of_deep
     (deep : formula.CanonicalDepthAtLeast rho pathLength) :
     (canonicalExtension (widthBound := widthBound)
       formula pathLength rho).fixedCount = pathLength := by
-  simp only [canonicalExtension, dif_pos deep]
+  simp only [canonicalExtension, dite_eq_left deep]
   exact (chosenPath formula rho pathLength deep).satisfyingAssignment_fixedCount
     (chosenTrace formula rho pathLength deep)
 
@@ -112,7 +112,7 @@ theorem canonicalExtension_fixesOnlyLive_of_deep
     (deep : formula.CanonicalDepthAtLeast rho pathLength) :
     (canonicalExtension (widthBound := widthBound)
       formula pathLength rho).fixedVariables ⊆ rho.liveVariables := by
-  simp only [canonicalExtension, dif_pos deep]
+  simp only [canonicalExtension, dite_eq_left deep]
   exact (chosenPath formula rho pathLength deep).satisfyingAssignment_fixesOnlyLive
     (chosenTrace formula rho pathLength deep)
 
@@ -128,7 +128,7 @@ theorem decode_canonicalEncoding_of_deep
     decode formula
       (canonicalEncoding (widthBound := widthBound) formula pathLength rho) =
       rho := by
-  simp only [canonicalEncoding, dif_pos deep]
+  simp only [canonicalEncoding, dite_eq_left deep]
   exact (chosenPath formula rho pathLength deep).decode_satisfyingEncoding
     (chosenTrace formula rho pathLength deep) bounded
 

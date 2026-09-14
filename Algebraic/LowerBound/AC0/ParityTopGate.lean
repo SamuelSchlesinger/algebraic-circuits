@@ -161,7 +161,7 @@ theorem liveCount_le_of_shallowBelowTop_computes_parity_raw
     {circuit : Algebraic.Circuit signature n g 1}
     {rho : PartialAssignment n}
     {level bound : Nat}
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depthBound : logicalDepth circuit ≤ level + 1)
     (shallow : Program.ShallowUpTo circuit.program rho level bound) :
     rho.liveCount ≤ bound := by
@@ -183,7 +183,7 @@ theorem liveCount_le_of_shallowBelowTop_computes_parity
     {rho : PartialAssignment n}
     {level bound : Nat}
     (_normal : Program.NegationsAtInputs circuit.program)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depthBound : logicalDepth circuit ≤ level + 1)
     (shallow : Program.ShallowUpTo circuit.program rho level bound) :
     rho.liveCount ≤ bound :=

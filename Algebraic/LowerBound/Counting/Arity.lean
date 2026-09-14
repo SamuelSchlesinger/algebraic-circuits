@@ -11,21 +11,25 @@ The exact counting theorems remain independent of these estimates.
 namespace Algebraic
 
 /-- Every symbol in a signature has arity at most `r`. -/
-def Signature.ArityAtMost (σ : Signature) (r : Nat) : Prop :=
+def _root_.Cslib.Circuits.Signature.ArityAtMost (σ : Signature) (r : Nat) : Prop :=
   ∀ op, σ.Arity op ≤ r
+
+export Cslib.Circuits (Signature.ArityAtMost)
 
 /-- The finite signature has maximum arity exactly `r`. Packaging the upper
 bound and an operation attaining it gives the closed Shannon theorem a natural
 basis-level hypothesis. -/
-structure Signature.HasMaximumArity (σ : Signature) (r : Nat) : Prop where
+structure _root_.Cslib.Circuits.Signature.HasMaximumArity (σ : Signature) (r : Nat) : Prop where
   /-- No primitive operation has arity greater than `r`. -/
   arity_le : σ.ArityAtMost r
   /-- Some primitive operation has arity `r`. -/
   attained : ∃ op, σ.Arity op = r
 
+export Cslib.Circuits (Signature.HasMaximumArity)
+
 /-- Arity-only upper bound for the number of lines. The successor on `w`
 handles zero wires and nullary operations uniformly. -/
-theorem Signature.lineCount_le_card_mul_pow
+theorem _root_.Cslib.Circuits.Signature.lineCount_le_card_mul_pow
     (σ : Signature) [Fintype σ.Op]
     {r : Nat}
     (arity : σ.ArityAtMost r)
@@ -40,16 +44,20 @@ theorem Signature.lineCount_le_card_mul_pow
           (pow_le_pow_right' (by omega) (arity op))
     _ = Fintype.card σ.Op * (w + 1) ^ r := by simp
 
+export Cslib.Circuits (Signature.lineCount_le_card_mul_pow)
+
 /-- The number of available lines is monotone in the number of wires. -/
-theorem Signature.lineCount_mono (σ : Signature) [Fintype σ.Op] :
+theorem _root_.Cslib.Circuits.Signature.lineCount_mono (σ : Signature) [Fintype σ.Op] :
     Monotone σ.lineCount := by
   intro left right bounded
   unfold Signature.lineCount
   exact Finset.sum_le_sum fun _ _ => Nat.pow_le_pow_left bounded _
 
+export Cslib.Circuits (Signature.lineCount_mono)
+
 /-- A signature with a positive maximum arity has at least as many possible
 lines as available wires. -/
-theorem Signature.HasMaximumArity.wires_le_lineCount
+theorem _root_.Cslib.Circuits.Signature.HasMaximumArity.wires_le_lineCount
     {σ : Signature} [Fintype σ.Op]
     {r : Nat}
     (maximum : σ.HasMaximumArity r)
@@ -65,5 +73,7 @@ theorem Signature.HasMaximumArity.wires_le_lineCount
       exact Finset.single_le_sum
         (s := Finset.univ) (f := fun op : σ.Op => w ^ σ.Arity op)
         (fun _ _ => Nat.zero_le _) (Finset.mem_univ op)
+
+export Cslib.Circuits (Signature.HasMaximumArity.wires_le_lineCount)
 
 end Algebraic

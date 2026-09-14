@@ -112,29 +112,27 @@ noncomputable def catalecticant
       Matrix (MatrixRank.Layer degree split)
         (MatrixRank.Layer degree split) K where
   toFun polynomial row column :=
-    MvPolynomial.coeff (entryExponent degree split row column) polynomial /
+    AddMonoidAlgebra.coeff polynomial (entryExponent degree split row column) /
       ((entryExponent degree split row column).multinomial : K)
   map_add' := by
     intro left right
     ext row column
-    change MvPolynomial.coeff (entryExponent degree split row column)
-          (left + right) /
+    change AddMonoidAlgebra.coeff (left + right) (entryExponent degree split row column) /
         ((entryExponent degree split row column).multinomial : K) =
-      MvPolynomial.coeff (entryExponent degree split row column) left /
+      AddMonoidAlgebra.coeff left (entryExponent degree split row column) /
           ((entryExponent degree split row column).multinomial : K) +
-        MvPolynomial.coeff (entryExponent degree split row column) right /
+        AddMonoidAlgebra.coeff right (entryExponent degree split row column) /
           ((entryExponent degree split row column).multinomial : K)
-    simp [MvPolynomial.coeff_add, add_div]
+    simp [AddMonoidAlgebra.coeff_add, add_div]
   map_smul' := by
     intro scalar polynomial
     ext row column
-    change MvPolynomial.coeff (entryExponent degree split row column)
-          (scalar • polynomial) /
+    change AddMonoidAlgebra.coeff (scalar • polynomial) (entryExponent degree split row column) /
         ((entryExponent degree split row column).multinomial : K) =
       scalar *
-        (MvPolynomial.coeff (entryExponent degree split row column) polynomial /
+        (AddMonoidAlgebra.coeff polynomial (entryExponent degree split row column) /
           ((entryExponent degree split row column).multinomial : K))
-    simp [MvPolynomial.coeff_smul, smul_eq_mul, mul_div_assoc]
+    simp [smul_eq_mul, mul_div_assoc]
 
 @[simp] theorem catalecticant_apply
     {K : Type}
@@ -143,7 +141,7 @@ noncomputable def catalecticant
     (polynomial : MvPolynomial (Fin degree) K)
     (row column : MatrixRank.Layer degree split) :
     catalecticant K degree split polynomial row column =
-      MvPolynomial.coeff (entryExponent degree split row column) polynomial /
+      AddMonoidAlgebra.coeff polynomial (entryExponent degree split row column) /
         ((entryExponent degree split row column).multinomial : K) := rfl
 
 /-- Every normalization denominator is nonzero in characteristic zero. -/
@@ -178,14 +176,13 @@ theorem coeff_linearForm_pow_entryExponent
     [CommSemiring K]
     (term : Term K degree)
     (row column : MatrixRank.Layer degree split) :
-    MvPolynomial.coeff (entryExponent degree split row column)
-        (linearForm term ^ degree) =
+    AddMonoidAlgebra.coeff (linearForm term ^ degree) (entryExponent degree split row column) =
       ((entryExponent degree split row column).multinomial : K) *
         ((∏ index ∈ row.1, term.coefficients index) *
           ∏ index ∈ complementSet column, term.coefficients index) := by
   rw [linearForm,
     MvPolynomial.coeff_linearCombination_X_pow_of_fintype]
-  rw [if_pos]
+  rw [ite_eq_left]
   · rw [entryExponent_prod]
   · exact entryExponent_sum degree split row column
 
@@ -218,8 +215,7 @@ theorem catalecticant_termValue
   classical
   ext row column
   rw [catalecticant_apply]
-  change MvPolynomial.coeff (entryExponent degree split row column)
-      (MvPolynomial.C term.scale * linearForm term ^ degree) /
+  change AddMonoidAlgebra.coeff (MvPolynomial.C term.scale * linearForm term ^ degree) (entryExponent degree split row column) /
         ((entryExponent degree split row column).multinomial : K) = _
   rw [MvPolynomial.coeff_C_mul,
     coeff_linearForm_pow_entryExponent]

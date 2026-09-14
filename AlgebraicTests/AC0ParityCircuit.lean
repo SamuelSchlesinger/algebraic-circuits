@@ -13,7 +13,7 @@ open scoped ENNReal
 example
     (circuit : Circuit signature n g 1)
     (normal : AC0.Program.NegationsAtInputs circuit.program)
-    (computes : circuit.Computes interpretation (Parity.target n))
+    (computes : circuit.ComputesWith interpretation (Parity.target n))
     (depth bound : Nat)
     (circuitDepth : AC0.Circuit.logicalDepth circuit <= depth)
     (oneLeBound : 1 <= bound)
@@ -53,7 +53,7 @@ example
             (retained (level + 1) : ENNReal) <
           (p : ENNReal) * (retained level : ENNReal))
     (tooMany : bound < retained depth) :
-    Not (circuit.Computes interpretation (Parity.target n)) :=
+    Not (circuit.ComputesWith interpretation (Parity.target n)) :=
   AC0.Circuit.not_computes_parity_of_iterated_switching
     circuit normal depth bound circuitDepth oneLeBound p atMostOne
     retained initial failureLe room tooMany

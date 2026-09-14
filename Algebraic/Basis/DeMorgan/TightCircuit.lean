@@ -158,7 +158,7 @@ private theorem exists_readOnce_of_tight_frontier (program : Program signature n
 /-- A shared circuit using the minimum possible number of binary gates has read-once semantics. -/
 theorem exists_readOnce_of_binaryCost_le (circuit : Circuit signature n g 1)
     {function : ScalarFunction Bool n}
-    (computes : circuit.Computes interpretation (fun input _ => function input))
+    (computes : circuit.ComputesWith interpretation (fun input _ => function input))
     (essential : ∀ i, EssentialAt function i) (tight : circuit.cost binaryCost + 1 ≤ n) :
     ∃ expression : Expression n, expression.ReadOnce ∧ expression.eval = function := by
   let output : Expression (n + g) := .input (circuit.outputs 0)
@@ -174,7 +174,7 @@ theorem exists_readOnce_of_binaryCost_le (circuit : Circuit signature n g 1)
 /-- Unateness is forced at the tight binary-gate budget, even with arbitrary circuit sharing. -/
 theorem unate_of_binaryCost_le (circuit : Circuit signature n g 1)
     {function : ScalarFunction Bool n}
-    (computes : circuit.Computes interpretation (fun input _ => function input))
+    (computes : circuit.ComputesWith interpretation (fun input _ => function input))
     (essential : ∀ i, EssentialAt function i) (tight : circuit.cost binaryCost + 1 ≤ n) :
     Unate function := by
   obtain ⟨expression, once, equal⟩ := exists_readOnce_of_binaryCost_le circuit computes essential tight
@@ -220,7 +220,7 @@ private theorem trace_monotone_of_binaryCost_eq (program : Program signature n g
 /-- An essential non-unate function needs at least `n+1` native gates in an arbitrary shared circuit. -/
 theorem size_ge_of_essential_nonunate (circuit : Circuit signature n g 1)
     {function : ScalarFunction Bool n}
-    (computes : circuit.Computes interpretation (fun input _ => function input))
+    (computes : circuit.ComputesWith interpretation (fun input _ => function input))
     (essential : ∀ i, EssentialAt function i) (nonunate : ¬Unate function) : n + 1 ≤ g := by
   have binaryLower : n ≤ circuit.cost binaryCost := by
     by_contra small

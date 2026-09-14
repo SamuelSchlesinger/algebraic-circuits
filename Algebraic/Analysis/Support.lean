@@ -13,14 +13,16 @@ semantics from the general compilation theorem.
 namespace Algebraic
 
 /-- The dependency-support interpretation on `n` original inputs. -/
-def Signature.supportInterpretation
+def _root_.Cslib.Circuits.Signature.supportInterpretation
     (σ : Signature)
     (n : Nat) : Interpretation σ (Finset (Fin n)) :=
   fun _ input => Finset.univ.biUnion input
 
+export Cslib.Circuits (Signature.supportInterpretation)
+
 /-- Evaluating a program in the support interpretation gives exactly its gate
 supports. -/
-theorem Program.eval_supportInterpretation
+theorem _root_.Cslib.Circuits.Program.eval_supportInterpretation
     (program : Program σ n g) :
     program.eval (σ.supportInterpretation n) (fun input => {input}) =
       program.gateSupport := by
@@ -37,23 +39,29 @@ theorem Program.eval_supportInterpretation
         rfl
       · simpa [Program.eval, Program.gateSupport] using congrFun ih priorGate
 
+export Cslib.Circuits (Program.eval_supportInterpretation)
+
 /-- Evaluating all wires in the support interpretation gives exactly the
 program's wire supports. -/
-theorem Program.trace_supportInterpretation
+theorem _root_.Cslib.Circuits.Program.trace_supportInterpretation
     (program : Program σ n g) :
     program.trace (σ.supportInterpretation n) (fun input => {input}) =
       program.wireSupport := by
   unfold Program.trace Program.wireSupport
   rw [program.eval_supportInterpretation]
 
+export Cslib.Circuits (Program.trace_supportInterpretation)
+
 /-- Circuit evaluation in the support interpretation gives each designated
 output's structural support. -/
-theorem Circuit.eval_supportInterpretation
+theorem _root_.Cslib.Circuits.Circuit.eval_supportInterpretation
     (circuit : Circuit σ n g m) :
     circuit.eval (σ.supportInterpretation n) (fun input => {input}) =
       circuit.outputSupport := by
   unfold Circuit.eval Circuit.outputSupport
   rw [circuit.program.trace_supportInterpretation]
+
+export Cslib.Circuits (Circuit.eval_supportInterpretation)
 
 /-- Compiled output support is exact evaluation of the source circuit in the
 pulled-back target support interpretation. -/

@@ -45,7 +45,7 @@ theorem existsCircuit
       (networkRecords depth),
       result.cost DeMorgan.standardCost ≤ overhead depth copies prefixWidth dimension width suffixWidth copyBits selectorBits +
         ∑ resource, (members resource).cost DeMorgan.standardCost ∧
-      result.Computes DeMorgan.interpretation (directProduct (requestFunction function) (networkRecords depth)) := by
+      result.ComputesWith DeMorgan.interpretation (directProduct (requestFunction function) (networkRecords depth)) := by
   obtain ⟨preparationGates, preparation, preparationBound, preparationCorrect⟩ := PrefixMetadata.existsCircuit
     positive code placement (networkRecords depth) suffixWidth copyBits selectorBits
   let original := fun (request : Fin (networkRecords depth))

@@ -28,7 +28,7 @@ example
     (oneLe : 1 ≤ t)
     (small : 20 * t * circuit.program.cost AC0.andOrCost < 2 ^ (t + 1))
     (survivors : t < n / (20 * (20 * t) ^ (depth - 2))) :
-    ¬circuit.Computes interpretation (Parity.target n) :=
+    ¬circuit.ComputesWith interpretation (Parity.target n) :=
   AC0.Circuit.not_computes_parity_of_integral_bounds
     circuit normal depth t twoLeDepth circuitDepth oneLe small survivors
 

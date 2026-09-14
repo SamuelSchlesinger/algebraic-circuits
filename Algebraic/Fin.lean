@@ -1,4 +1,5 @@
 import Mathlib.Data.Fin.Basic
+import Mathlib.Order.Basic
 
 /-!
 # Finite folds

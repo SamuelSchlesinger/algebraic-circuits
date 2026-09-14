@@ -13,59 +13,75 @@ mapping their designated output wires.
 namespace Algebraic
 
 /-- A map from one input-and-gate wire namespace to another. -/
-structure Wire.Substitution (n g n' g' : Nat) where
+structure _root_.Cslib.Circuits.Wire.Substitution (n g n' g' : Nat) where
   /-- Image of every formal input. -/
   inputs : Fin n → Wire n' g'
   /-- Image of every gate wire. -/
   gates : Fin g → Wire n' g'
 
+export Cslib.Circuits (Wire.Substitution)
+
 namespace Wire.Substitution
 
 /-- Apply a wire substitution. -/
-def apply (θ : Wire.Substitution n g n' g') : Wire n g → Wire n' g' :=
+def _root_.Cslib.Circuits.Wire.Substitution.apply (θ : Wire.Substitution n g n' g') : Wire n g → Wire n' g' :=
   Fin.addCases θ.inputs θ.gates
+
+export Cslib.Circuits.Wire.Substitution (apply)
 
 instance : CoeFun (Wire.Substitution n g n' g')
     fun _ => Wire n g → Wire n' g' :=
   ⟨apply⟩
 
-@[simp] theorem apply_input
+@[simp] theorem _root_.Cslib.Circuits.Wire.Substitution.apply_input
     (θ : Wire.Substitution n g n' g') (input : Fin n) :
     θ (Wire.input input) = θ.inputs input := by
   simp [apply]
 
-@[simp] theorem apply_gate
+export Cslib.Circuits.Wire.Substitution (apply_input)
+
+@[simp] theorem _root_.Cslib.Circuits.Wire.Substitution.apply_gate
     (θ : Wire.Substitution n g n' g') (gate : Fin g) :
     θ (Wire.gate gate) = θ.gates gate := by
   simp [apply]
+
+export Cslib.Circuits.Wire.Substitution (apply_gate)
 
 end Wire.Substitution
 
 namespace Wire.Renaming
 
 /-- Include a wire namespace into one with `k` additional gates. -/
-def castAdd (k : Nat) : Wire.Renaming n g (g + k) where
+def _root_.Cslib.Circuits.Wire.Renaming.castAdd (k : Nat) : Wire.Renaming n g (g + k) where
   gates := fun gate => Wire.gate (gate.castAdd k)
 
-theorem castAdd_input
+export Cslib.Circuits.Wire.Renaming (castAdd)
+
+theorem _root_.Cslib.Circuits.Wire.Renaming.castAdd_input
     (k : Nat) (input : Fin n) :
     (castAdd k : Wire.Renaming n g (g + k)) (Wire.input input) =
       Wire.input input := by
   simp [castAdd]
 
-theorem castAdd_gate
+export Cslib.Circuits.Wire.Renaming (castAdd_input)
+
+theorem _root_.Cslib.Circuits.Wire.Renaming.castAdd_gate
     (k : Nat) (gate : Fin g) :
     (castAdd k : Wire.Renaming n g (g + k)) (Wire.gate gate) =
       Wire.gate (gate.castAdd k) := by
   simp [castAdd]
 
-@[simp] theorem castAdd_zero_apply
+export Cslib.Circuits.Wire.Renaming (castAdd_gate)
+
+@[simp] theorem _root_.Cslib.Circuits.Wire.Renaming.castAdd_zero_apply
     (wire : Wire n g) :
     (castAdd 0 : Wire.Renaming n g (g + 0)) wire = wire := by
   refine Fin.addCases (fun input => ?_) (fun gate => ?_) wire <;>
     simp [castAdd]
 
-theorem castAdd_succ_apply
+export Cslib.Circuits.Wire.Renaming (castAdd_zero_apply)
+
+theorem _root_.Cslib.Circuits.Wire.Renaming.castAdd_succ_apply
     (k : Nat) (wire : Wire n g) :
     (castAdd (k + 1) : Wire.Renaming n g (g + (k + 1))) wire =
       ((castAdd k : Wire.Renaming n g (g + k)) wire).castSucc := by
@@ -76,19 +92,23 @@ theorem castAdd_succ_apply
   · simp only [Wire.Renaming.apply_gate, castAdd,
       Fin.castSucc_natAdd, Fin.castSucc_castAdd]
 
+export Cslib.Circuits.Wire.Renaming (castAdd_succ_apply)
+
 end Wire.Renaming
 
 namespace Wire.Substitution
 
 /-- Map formal inputs into an ambient program and source gates to the freshly
 appended block of gates. -/
-def append
+def _root_.Cslib.Circuits.Wire.Substitution.append
     (inputWires : Fin n → Wire n' h)
     (g : Nat) : Wire.Substitution n g n' (h + g) where
   inputs := Wire.Renaming.castAdd g ∘ inputWires
   gates := fun gate => Wire.gate (Fin.natAdd h gate)
 
-theorem append_castSucc
+export Cslib.Circuits.Wire.Substitution (append)
+
+theorem _root_.Cslib.Circuits.Wire.Substitution.append_castSucc
     (inputWires : Fin n → Wire n' h)
     (wire : Wire n g) :
     append inputWires (g + 1) wire.castSucc =
@@ -107,7 +127,9 @@ theorem append_castSucc
       _ = (Wire.gate (n := n') (Fin.natAdd h gate)).castSucc :=
         Fin.natAdd_castSucc
 
-@[simp] theorem append_last
+export Cslib.Circuits.Wire.Substitution (append_castSucc)
+
+@[simp] theorem _root_.Cslib.Circuits.Wire.Substitution.append_last
     (inputWires : Fin n → Wire n' h) :
     append inputWires (g + 1) (Fin.last (n + g)) =
       Fin.last (n' + (h + g)) := by
@@ -117,11 +139,13 @@ theorem append_castSucc
   rw [Fin.natAdd_last]
   exact Fin.natAdd_last
 
+export Cslib.Circuits.Wire.Substitution (append_last)
+
 end Wire.Substitution
 
 /-- Append `source` to `ambient`, replacing every formal source input by the
 corresponding ambient wire. -/
-def Program.instantiate
+def _root_.Cslib.Circuits.Program.instantiate
     (source : Program σ n g)
     (ambient : Program σ n' h)
     (inputWires : Fin n → Wire n' h) : Program σ n' (h + g) :=
@@ -131,9 +155,11 @@ def Program.instantiate
       (source.instantiate ambient inputWires).gate
         (line.mapWires (Wire.Substitution.append inputWires _))
 
+export Cslib.Circuits (Program.instantiate)
+
 /-- Instantiation leaves every ambient wire unchanged, up to inclusion into
 the extended wire namespace. -/
-theorem Program.instantiate_trace_ambient
+theorem _root_.Cslib.Circuits.Program.instantiate_trace_ambient
     (source : Program σ n g)
     (ambient : Program σ n' h)
     (inputWires : Fin n → Wire n' h)
@@ -150,9 +176,11 @@ theorem Program.instantiate_trace_ambient
       rw [Program.instantiate, Program.trace_gate_castSucc]
       exact ih
 
+export Cslib.Circuits (Program.instantiate_trace_ambient)
+
 /-- Instantiation evaluates every source wire under the values supplied by the
 ambient input wires. -/
-theorem Program.instantiate_trace
+theorem _root_.Cslib.Circuits.Program.instantiate_trace
     (source : Program σ n g)
     (ambient : Program σ n' h)
     (inputWires : Fin n → Wire n' h)
@@ -208,7 +236,9 @@ theorem Program.instantiate_trace
           Program.trace_gate_castSucc]
         exact ih priorWire
 
-@[simp] theorem Program.cost_instantiate
+export Cslib.Circuits (Program.instantiate_trace)
+
+@[simp] theorem _root_.Cslib.Circuits.Program.cost_instantiate
     (source : Program σ n g)
     (ambient : Program σ n' h)
     (inputWires : Fin n → Wire n' h)
@@ -220,16 +250,20 @@ theorem Program.instantiate_trace
   | gate source line ih =>
       simp [Program.instantiate, ih, Nat.add_assoc]
 
+export Cslib.Circuits (Program.cost_instantiate)
+
 /-- Instantiate a circuit after an ambient program. -/
-def Circuit.instantiate
+def _root_.Cslib.Circuits.Circuit.instantiate
     (source : Circuit σ n g m)
     (ambient : Program σ n' h)
     (inputWires : Fin n → Wire n' h) : Circuit σ n' (h + g) m where
   program := source.program.instantiate ambient inputWires
   outputs := Wire.Substitution.append inputWires g ∘ source.outputs
 
+export Cslib.Circuits (Circuit.instantiate)
+
 /-- Circuit instantiation preserves evaluation exactly. -/
-theorem Circuit.eval_instantiate
+theorem _root_.Cslib.Circuits.Circuit.eval_instantiate
     (source : Circuit σ n g m)
     (ambient : Program σ n' h)
     (inputWires : Fin n → Wire n' h)
@@ -242,8 +276,10 @@ theorem Circuit.eval_instantiate
   exact source.program.instantiate_trace ambient inputWires interpretation input
     (source.outputs output)
 
+export Cslib.Circuits (Circuit.eval_instantiate)
+
 /-- Circuit instantiation has exactly additive gate cost. -/
-@[simp] theorem Circuit.cost_instantiate
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_instantiate
     (source : Circuit σ n g m)
     (ambient : Program σ n' h)
     (inputWires : Fin n → Wire n' h)
@@ -252,14 +288,18 @@ theorem Circuit.eval_instantiate
       ambient.cost operationCost + source.cost operationCost :=
   source.program.cost_instantiate ambient inputWires operationCost
 
+export Cslib.Circuits (Circuit.cost_instantiate)
+
 /-- Sequentially compose two circuits by substituting the inner outputs for
 the outer inputs. -/
-def Circuit.comp
+def _root_.Cslib.Circuits.Circuit.comp
     (outer : Circuit σ m h k)
     (inner : Circuit σ n g m) : Circuit σ n (g + h) k :=
   outer.instantiate inner.program inner.outputs
 
-theorem Circuit.eval_comp
+export Cslib.Circuits (Circuit.comp)
+
+theorem _root_.Cslib.Circuits.Circuit.eval_comp
     (outer : Circuit σ m h k)
     (inner : Circuit σ n g m)
     (interpretation : Interpretation σ U)
@@ -268,7 +308,9 @@ theorem Circuit.eval_comp
       outer.eval interpretation (inner.eval interpretation input) := by
   exact outer.eval_instantiate inner.program inner.outputs interpretation input
 
-@[simp] theorem Circuit.eval_comp_id
+export Cslib.Circuits (Circuit.eval_comp)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_comp_id
     (outer : Circuit σ n g m)
     (interpretation : Interpretation σ U)
     (input : Fin n → U) :
@@ -276,7 +318,9 @@ theorem Circuit.eval_comp
       outer.eval interpretation input := by
   rw [Circuit.eval_comp, Circuit.eval_id]
 
-@[simp] theorem Circuit.eval_id_comp
+export Cslib.Circuits (Circuit.eval_comp_id)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_id_comp
     (inner : Circuit σ n g m)
     (interpretation : Interpretation σ U)
     (input : Fin n → U) :
@@ -284,12 +328,16 @@ theorem Circuit.eval_comp
       inner.eval interpretation input := by
   rw [Circuit.eval_comp, Circuit.eval_id]
 
-@[simp] theorem Circuit.cost_comp
+export Cslib.Circuits (Circuit.eval_id_comp)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_comp
     (outer : Circuit σ m h k)
     (inner : Circuit σ n g m)
     (operationCost : OperationCost σ) :
     (outer.comp inner).cost operationCost =
       inner.cost operationCost + outer.cost operationCost :=
   outer.cost_instantiate inner.program inner.outputs operationCost
+
+export Cslib.Circuits (Circuit.cost_comp)
 
 end Algebraic

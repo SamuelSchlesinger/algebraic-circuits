@@ -15,7 +15,7 @@ namespace Algebraic
 /-! ## Easy and hard members of a finite family -/
 
 /-- Members of a family that are easy at internal-gate budget `G`. -/
-noncomputable def Circuit.easyInFamily
+noncomputable def _root_.Cslib.Circuits.Circuit.easyInFamily
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -24,8 +24,10 @@ noncomputable def Circuit.easyInFamily
   exact family.filter fun target =>
     target ∈ Circuit.functionsAtMost interpretation n m G
 
+export Cslib.Circuits (Circuit.easyInFamily)
+
 /-- Members of a family requiring more than `G` internal gates. -/
-noncomputable def Circuit.hardInFamily
+noncomputable def _root_.Cslib.Circuits.Circuit.hardInFamily
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -34,15 +36,19 @@ noncomputable def Circuit.hardInFamily
   exact family.filter fun target =>
     target ∉ Circuit.functionsAtMost interpretation n m G
 
+export Cslib.Circuits (Circuit.hardInFamily)
+
 /-- Proportion of a finite family computed within gate budget `G`. -/
-noncomputable def Circuit.easyDensity
+noncomputable def _root_.Cslib.Circuits.Circuit.easyDensity
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
     (G : Nat) : Real :=
   (Circuit.easyInFamily interpretation family G).card / family.card
 
-theorem Circuit.mem_hardInFamily_iff
+export Cslib.Circuits (Circuit.easyDensity)
+
+theorem _root_.Cslib.Circuits.Circuit.mem_hardInFamily_iff
     [Fintype σ.Op] [Fintype U]
     {interpretation : Interpretation σ U}
     {family : Finset (Target U n m)}
@@ -54,7 +60,9 @@ theorem Circuit.mem_hardInFamily_iff
   rw [Circuit.hardInFamily, Finset.mem_filter,
     Circuit.not_mem_functionsAtMost_iff]
 
-theorem Circuit.card_easyInFamily_le_sharpBudget
+export Cslib.Circuits (Circuit.mem_hardInFamily_iff)
+
+theorem _root_.Cslib.Circuits.Circuit.card_easyInFamily_le_sharpBudget
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -69,8 +77,10 @@ theorem Circuit.card_easyInFamily_le_sharpBudget
   exact (Finset.card_le_card subset).trans
     (Circuit.card_functionsAtMost_le_sharpBudget interpretation n m G)
 
+export Cslib.Circuits (Circuit.card_easyInFamily_le_sharpBudget)
+
 /-- Quantitative almost-all theorem: at most the sharp budget can be easy. -/
-theorem Circuit.card_family_sub_sharpBudget_le_hardInFamily
+theorem _root_.Cslib.Circuits.Circuit.card_family_sub_sharpBudget_le_hardInFamily
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (family : Finset (Target U n m))
@@ -94,10 +104,12 @@ theorem Circuit.card_family_sub_sharpBudget_le_hardInFamily
 
 /-! ## Division-free asymptotic density -/
 
+export Cslib.Circuits (Circuit.card_family_sub_sharpBudget_le_hardInFamily)
+
 /-- A sequence of easy subsets is asymptotically negligible when every fixed
 multiple of its cardinality is eventually bounded by the ambient family. This
 is a division-free finite-set formulation of density tending to zero. -/
-def Circuit.AsymptoticallyAlmostAllHard
+def _root_.Cslib.Circuits.Circuit.AsymptoticallyAlmostAllHard
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (m : Nat)
@@ -107,10 +119,12 @@ def Circuit.AsymptoticallyAlmostAllHard
     K * (Circuit.easyInFamily interpretation (family n) (gateBudget n)).card ≤
       (family n).card
 
+export Cslib.Circuits (Circuit.AsymptoticallyAlmostAllHard)
+
 /-- Generic exact asymptotic Shannon theorem. Every fixed multiple of the
 sharp description budget being eventually smaller than the family implies
 that the easy subfamily has density zero. -/
-theorem Circuit.asymptoticallyAlmostAllHard_of_sharpBudget
+theorem _root_.Cslib.Circuits.Circuit.asymptoticallyAlmostAllHard_of_sharpBudget
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (m : Nat)
@@ -126,9 +140,11 @@ theorem Circuit.asymptoticallyAlmostAllHard_of_sharpBudget
     (Circuit.card_easyInFamily_le_sharpBudget
       interpretation (family n) (gateBudget n))).trans bounded
 
+export Cslib.Circuits (Circuit.asymptoticallyAlmostAllHard_of_sharpBudget)
+
 /-- Analytic form of the almost-all transfer theorem. It replaces the exact
 sum of integer quotients by the real final-term envelope. -/
-theorem Circuit.asymptoticallyAlmostAllHard_of_finalTerm
+theorem _root_.Cslib.Circuits.Circuit.asymptoticallyAlmostAllHard_of_finalTerm
     [Fintype σ.Op] [Fintype U]
     (interpretation : Interpretation σ U)
     (m : Nat)
@@ -169,9 +185,11 @@ theorem Circuit.asymptoticallyAlmostAllHard_of_finalTerm
 
 /-! ## The full target space and conventional density -/
 
+export Cslib.Circuits (Circuit.asymptoticallyAlmostAllHard_of_finalTerm)
+
 /-- An asymptotically negligible easy subset leaves a hard target at every
 sufficiently large width, provided the ambient families are nonempty. -/
-theorem Circuit.AsymptoticallyAlmostAllHard.eventually_exists_hard
+theorem _root_.Cslib.Circuits.Circuit.AsymptoticallyAlmostAllHard.eventually_exists_hard
     [Fintype σ.Op] [Fintype U]
     {interpretation : Interpretation σ U}
     {m : Nat} {family : (n : Nat) → Finset (Target U n m)}
@@ -189,22 +207,28 @@ theorem Circuit.AsymptoticallyAlmostAllHard.eventually_exists_hard
   intro easy
   exact notEasy (Finset.mem_filter.mpr ⟨present, easy⟩)
 
+export Cslib.Circuits (Circuit.AsymptoticallyAlmostAllHard.eventually_exists_hard)
+
 /-- The complete family of `m`-output functions on `n` inputs. -/
-noncomputable def Circuit.fullFamily
+noncomputable def _root_.Cslib.Circuits.Circuit.fullFamily
     (U : Type*) [Fintype U] (m n : Nat) : Finset (Target U n m) := by
   classical
   exact Finset.univ
 
-@[simp] theorem Circuit.card_fullFamily
+export Cslib.Circuits (Circuit.fullFamily)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.card_fullFamily
     (U : Type*) [Fintype U] (m n : Nat) :
     (Circuit.fullFamily U m n).card = Target.count U n m := by
   classical
   rw [Circuit.fullFamily, Finset.card_univ]
   rw [Target.count, Nat.card_eq_fintype_card]
 
+export Cslib.Circuits (Circuit.card_fullFamily)
+
 /-- The division-free almost-all predicate implies the conventional statement
 that the real-valued density of easy functions tends to zero. -/
-theorem Circuit.AsymptoticallyAlmostAllHard.tendsto_easyDensity_zero
+theorem _root_.Cslib.Circuits.Circuit.AsymptoticallyAlmostAllHard.tendsto_easyDensity_zero
     [Fintype σ.Op] [Fintype U]
     {interpretation : Interpretation σ U}
     {m : Nat}
@@ -245,5 +269,7 @@ theorem Circuit.AsymptoticallyAlmostAllHard.tendsto_easyDensity_zero
       rw [div_le_div_iff₀ (by exact_mod_cast familyPositive) KPositive]
       simpa [mul_comm] using castBound
     exact ratioBound.trans_lt reciprocalSmall
+
+export Cslib.Circuits (Circuit.AsymptoticallyAlmostAllHard.tendsto_easyDensity_zero)
 
 end Algebraic

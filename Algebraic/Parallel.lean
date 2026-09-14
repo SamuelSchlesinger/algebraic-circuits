@@ -19,7 +19,7 @@ open scoped BigOperators
 
 /-- Transport a circuit along equalities of its input, gate, and output
 counts. This is a structural cast; it changes no gate or wire. -/
-def Circuit.castCounts
+def _root_.Cslib.Circuits.Circuit.castCounts
     {n g m n' g' m' : Nat}
     (inputCount : n = n')
     (gateCount : g = g')
@@ -30,9 +30,11 @@ def Circuit.castCounts
   subst m'
   exact circuit
 
+export Cslib.Circuits (Circuit.castCounts)
+
 /-- Casting circuit counts transports inputs and outputs by the corresponding
 finite-index equalities and otherwise preserves evaluation. -/
-@[simp] theorem Circuit.eval_castCounts
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_castCounts
     {n g m n' g' m' : Nat}
     (inputCount : n = n')
     (gateCount : g = g')
@@ -50,8 +52,10 @@ finite-index equalities and otherwise preserves evaluation. -/
   subst m'
   rfl
 
+export Cslib.Circuits (Circuit.eval_castCounts)
+
 /-- Casting circuit counts preserves weighted cost. -/
-@[simp] theorem Circuit.cost_castCounts
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_castCounts
     {n g m n' g' m' : Nat}
     (inputCount : n = n')
     (gateCount : g = g')
@@ -65,8 +69,10 @@ finite-index equalities and otherwise preserves evaluation. -/
   subst m'
   rfl
 
+export Cslib.Circuits (Circuit.cost_castCounts)
+
 /-- Casting circuit counts transports the gate count exactly. -/
-@[simp] theorem Circuit.size_castCounts
+@[simp] theorem _root_.Cslib.Circuits.Circuit.size_castCounts
     {n g m n' g' m' : Nat}
     (inputCount : n = n')
     (gateCount : g = g')
@@ -79,28 +85,36 @@ finite-index equalities and otherwise preserves evaluation. -/
   subst m'
   rfl
 
+export Cslib.Circuits (Circuit.size_castCounts)
+
 /-- Reindex the original inputs of a wire while leaving its gate index
 unchanged. -/
-def Wire.mapInputs
+def _root_.Cslib.Circuits.Wire.mapInputs
     (inputMap : Fin n -> Fin n') : Wire n g -> Wire n' g :=
   Fin.addCases (Wire.input ∘ inputMap) Wire.gate
 
-@[simp] theorem Wire.mapInputs_input
+export Cslib.Circuits (Wire.mapInputs)
+
+@[simp] theorem _root_.Cslib.Circuits.Wire.mapInputs_input
     (inputMap : Fin n -> Fin n')
     (input : Fin n) :
     Wire.mapInputs (g := g) inputMap (Wire.input input) =
       Wire.input (inputMap input) := by
   simp [Wire.mapInputs]
 
-@[simp] theorem Wire.mapInputs_gate
+export Cslib.Circuits (Wire.mapInputs_input)
+
+@[simp] theorem _root_.Cslib.Circuits.Wire.mapInputs_gate
     (inputMap : Fin n -> Fin n')
     (gate : Fin g) :
     Wire.mapInputs inputMap (Wire.gate gate) =
       (Wire.gate gate : Wire n' g) := by
   simp [Wire.mapInputs]
 
+export Cslib.Circuits (Wire.mapInputs_gate)
+
 /-- Reindex every original input of a program without changing its gates. -/
-def Program.mapInputs
+def _root_.Cslib.Circuits.Program.mapInputs
     (inputMap : Fin n -> Fin n') :
     Program σ n g -> Program σ n' g
   | .empty => .empty
@@ -108,8 +122,10 @@ def Program.mapInputs
       .gate (program.mapInputs inputMap)
         (line.mapWires (Wire.mapInputs inputMap))
 
+export Cslib.Circuits (Program.mapInputs)
+
 /-- Input reindexing evaluates a program after precomposing its input. -/
-theorem Program.eval_mapInputs
+theorem _root_.Cslib.Circuits.Program.eval_mapInputs
     (program : Program σ n g)
     (inputMap : Fin n -> Fin n')
     (interpretation : Interpretation σ U)
@@ -133,8 +149,10 @@ theorem Program.eval_mapInputs
       · simp only [Program.mapInputs, Program.eval_gate_castSucc]
         exact congrFun ih priorGate
 
+export Cslib.Circuits (Program.eval_mapInputs)
+
 /-- Input reindexing preserves the value of every mapped wire. -/
-theorem Program.trace_mapInputs
+theorem _root_.Cslib.Circuits.Program.trace_mapInputs
     (program : Program σ n g)
     (inputMap : Fin n -> Fin n')
     (interpretation : Interpretation σ U)
@@ -147,9 +165,11 @@ theorem Program.trace_mapInputs
   · simp [Function.comp_apply]
   · simp [Program.trace, Program.eval_mapInputs]
 
+export Cslib.Circuits (Program.trace_mapInputs)
+
 /-- Input reindexing leaves every gate label, and hence every weighted cost,
 unchanged. -/
-@[simp] theorem Program.cost_mapInputs
+@[simp] theorem _root_.Cslib.Circuits.Program.cost_mapInputs
     (program : Program σ n g)
     (inputMap : Fin n -> Fin n')
     (operationCost : OperationCost σ) :
@@ -160,15 +180,19 @@ unchanged. -/
   | gate program line ih =>
       simp [Program.mapInputs, Program.cost, ih]
 
+export Cslib.Circuits (Program.cost_mapInputs)
+
 /-- Rewire the original inputs of a circuit without adding gates. The map may
 identify, duplicate, permute, or discard inputs. -/
-def Circuit.mapInputs
+def _root_.Cslib.Circuits.Circuit.mapInputs
     (circuit : Circuit σ n g m)
     (inputMap : Fin n -> Fin n') : Circuit σ n' g m where
   program := circuit.program.mapInputs inputMap
   outputs := Wire.mapInputs inputMap ∘ circuit.outputs
 
-@[simp] theorem Circuit.eval_mapInputs
+export Cslib.Circuits (Circuit.mapInputs)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_mapInputs
     (circuit : Circuit σ n g m)
     (inputMap : Fin n -> Fin n')
     (interpretation : Interpretation σ U)
@@ -179,7 +203,9 @@ def Circuit.mapInputs
   exact circuit.program.trace_mapInputs inputMap interpretation input
     (circuit.outputs output)
 
-@[simp] theorem Circuit.cost_mapInputs
+export Cslib.Circuits (Circuit.eval_mapInputs)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_mapInputs
     (circuit : Circuit σ n g m)
     (inputMap : Fin n -> Fin n')
     (operationCost : OperationCost σ) :
@@ -187,20 +213,26 @@ def Circuit.mapInputs
       circuit.cost operationCost := by
   exact circuit.program.cost_mapInputs inputMap operationCost
 
-@[simp] theorem Circuit.size_mapInputs
+export Cslib.Circuits (Circuit.cost_mapInputs)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.size_mapInputs
     (circuit : Circuit σ n g m)
     (inputMap : Fin n -> Fin n') :
     (circuit.mapInputs inputMap).size = circuit.size := rfl
 
+export Cslib.Circuits (Circuit.size_mapInputs)
+
 /-- Select, reorder, or repeat the designated outputs of a circuit without
 changing its gates. -/
-def Circuit.mapOutputs
+def _root_.Cslib.Circuits.Circuit.mapOutputs
     (circuit : Circuit σ n g m)
     (outputMap : Fin m' -> Fin m) : Circuit σ n g m' where
   program := circuit.program
   outputs := circuit.outputs ∘ outputMap
 
-@[simp] theorem Circuit.eval_mapOutputs
+export Cslib.Circuits (Circuit.mapOutputs)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_mapOutputs
     (circuit : Circuit σ n g m)
     (outputMap : Fin m' -> Fin m)
     (interpretation : Interpretation σ U)
@@ -208,21 +240,27 @@ def Circuit.mapOutputs
     (circuit.mapOutputs outputMap).eval interpretation input =
       circuit.eval interpretation input ∘ outputMap := rfl
 
-@[simp] theorem Circuit.cost_mapOutputs
+export Cslib.Circuits (Circuit.eval_mapOutputs)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_mapOutputs
     (circuit : Circuit σ n g m)
     (outputMap : Fin m' -> Fin m)
     (operationCost : OperationCost σ) :
     (circuit.mapOutputs outputMap).cost operationCost =
       circuit.cost operationCost := rfl
 
-@[simp] theorem Circuit.size_mapOutputs
+export Cslib.Circuits (Circuit.cost_mapOutputs)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.size_mapOutputs
     (circuit : Circuit σ n g m)
     (outputMap : Fin m' -> Fin m) :
     (circuit.mapOutputs outputMap).size = circuit.size := rfl
 
+export Cslib.Circuits (Circuit.size_mapOutputs)
+
 /-- Place two circuits with the same original inputs side by side and
 concatenate their designated outputs. -/
-def Circuit.parallel
+def _root_.Cslib.Circuits.Circuit.parallel
     (left : Circuit σ n g m)
     (right : Circuit σ n h k) : Circuit σ n (g + h) (m + k) where
   program := right.program.instantiate left.program Wire.input
@@ -232,8 +270,10 @@ def Circuit.parallel
       Wire.Substitution.append (fun input => Wire.input input) h
         (right.outputs output))
 
+export Cslib.Circuits (Circuit.parallel)
+
 /-- Parallel composition concatenates the two output vectors. -/
-@[simp] theorem Circuit.eval_parallel
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_parallel
     (left : Circuit σ n g m)
     (right : Circuit σ n h k)
     (interpretation : Interpretation σ U)
@@ -264,8 +304,10 @@ def Circuit.parallel
       simp [Function.comp_apply]
     rw [mappedInputs]
 
+export Cslib.Circuits (Circuit.eval_parallel)
+
 /-- Parallel composition has exactly additive weighted cost. -/
-@[simp] theorem Circuit.cost_parallel
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_parallel
     (left : Circuit σ n g m)
     (right : Circuit σ n h k)
     (operationCost : OperationCost σ) :
@@ -273,22 +315,28 @@ def Circuit.parallel
       left.cost operationCost + right.cost operationCost := by
   exact right.program.cost_instantiate left.program Wire.input operationCost
 
+export Cslib.Circuits (Circuit.cost_parallel)
+
 /-- Parallel composition has exactly additive gate count. -/
-@[simp] theorem Circuit.size_parallel
+@[simp] theorem _root_.Cslib.Circuits.Circuit.size_parallel
     (left : Circuit σ n g m)
     (right : Circuit σ n h k) :
     (left.parallel right).size = left.size + right.size := rfl
 
+export Cslib.Circuits (Circuit.size_parallel)
+
 /-- Put two equally wide output vectors into the row-major two-block layout
 `Fin (2 * width)`. -/
-def Circuit.parallelPair
+def _root_.Cslib.Circuits.Circuit.parallelPair
     (left : Circuit σ n g width)
     (right : Circuit σ n h width) :
     Circuit σ n (g + h) (2 * width) :=
   (left.parallel right).mapOutputs (Fin.cast (Nat.two_mul width))
 
+export Cslib.Circuits (Circuit.parallelPair)
+
 /-- Evaluation of `parallelPair` selects the indicated row-major block. -/
-@[simp] theorem Circuit.eval_parallelPair_apply
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_parallelPair_apply
     (left : Circuit σ n g width)
     (right : Circuit σ n h width)
     (interpretation : Interpretation σ U)
@@ -319,7 +367,9 @@ def Circuit.parallelPair
     rw [Fin.append_right]
     rfl
 
-@[simp] theorem Circuit.cost_parallelPair
+export Cslib.Circuits (Circuit.eval_parallelPair_apply)
+
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_parallelPair
     (left : Circuit σ n g width)
     (right : Circuit σ n h width)
     (operationCost : OperationCost σ) :
@@ -327,10 +377,12 @@ def Circuit.parallelPair
       left.cost operationCost + right.cost operationCost := by
   simp [Circuit.parallelPair]
 
+export Cslib.Circuits (Circuit.cost_parallelPair)
+
 /-- Place a finite family of scalar circuits with a common input namespace
 side by side. Each member may have a different gate count; the resulting gate
 count is their finite sum. -/
-def Circuit.parallelFin :
+def _root_.Cslib.Circuits.Circuit.parallelFin :
     (outputs : Nat) ->
     (gateCounts : Fin outputs -> Nat) ->
     ((output : Fin outputs) -> Circuit σ n (gateCounts output) 1) ->
@@ -343,14 +395,16 @@ def Circuit.parallelFin :
           Circuit σ n (prefixCounts output) 1 :=
         fun output => circuits output.castSucc
       let prefixCircuit :=
-        Circuit.parallelFin outputs prefixCounts prefixCircuits
+        Cslib.Circuits.Circuit.parallelFin outputs prefixCounts prefixCircuits
       let suffix := circuits (Fin.last outputs)
       (prefixCircuit.parallel suffix).castCounts rfl
         (Fin.sum_univ_castSucc gateCounts).symm rfl
 
+export Cslib.Circuits (Circuit.parallelFin)
+
 /-- `parallelFin` returns, at each output coordinate, the corresponding
 member circuit's scalar value. -/
-@[simp] theorem Circuit.eval_parallelFin
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_parallelFin
     (outputs : Nat)
     (gateCounts : Fin outputs -> Nat)
     (circuits : (output : Fin outputs) ->
@@ -382,8 +436,10 @@ member circuit's scalar value. -/
           (fun selected : Fin outputs => circuits selected.castSucc)
           prefixOutput
 
+export Cslib.Circuits (Circuit.eval_parallelFin)
+
 /-- Exact weighted cost of a finite parallel family. -/
-@[simp] theorem Circuit.cost_parallelFin
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_parallelFin
     (outputs : Nat)
     (gateCounts : Fin outputs -> Nat)
     (circuits : (output : Fin outputs) ->
@@ -402,9 +458,11 @@ member circuit's scalar value. -/
       exact (Fin.sum_univ_castSucc
         (fun output => (circuits output).cost operationCost)).symm
 
+export Cslib.Circuits (Circuit.cost_parallelFin)
+
 /-- Place a finite family of equally wide vector circuits side by side in
 row-major `(member, coordinate)` order. -/
-def Circuit.parallelFinVector :
+def _root_.Cslib.Circuits.Circuit.parallelFinVector :
     (members width : Nat) ->
     (gateCounts : Fin members -> Nat) ->
     ((member : Fin members) ->
@@ -420,13 +478,15 @@ def Circuit.parallelFinVector :
           Circuit σ n (prefixCounts member) width :=
         fun member => circuits member.castSucc
       let prefixCircuit :=
-        Circuit.parallelFinVector members width prefixCounts prefixCircuits
+        Cslib.Circuits.Circuit.parallelFinVector members width prefixCounts prefixCircuits
       let suffix := circuits (Fin.last members)
       (prefixCircuit.parallel suffix).castCounts rfl
         (Fin.sum_univ_castSucc gateCounts).symm (Nat.succ_mul members width).symm
 
+export Cslib.Circuits (Circuit.parallelFinVector)
+
 /-- `parallelFinVector` evaluates the indicated member and coordinate. -/
-@[simp] theorem Circuit.eval_parallelFinVector
+@[simp] theorem _root_.Cslib.Circuits.Circuit.eval_parallelFinVector
     (members width : Nat)
     (gateCounts : Fin members -> Nat)
     (circuits : (member : Fin members) ->
@@ -464,8 +524,10 @@ def Circuit.parallelFinVector :
           (fun selected : Fin members => circuits selected.castSucc)
           prefixMember
 
+export Cslib.Circuits (Circuit.eval_parallelFinVector)
+
 /-- Exact weighted cost of a finite parallel vector family. -/
-@[simp] theorem Circuit.cost_parallelFinVector
+@[simp] theorem _root_.Cslib.Circuits.Circuit.cost_parallelFinVector
     (members width : Nat)
     (gateCounts : Fin members -> Nat)
     (circuits : (member : Fin members) ->
@@ -484,5 +546,7 @@ def Circuit.parallelFinVector :
       rw [inductionHypothesis]
       exact (Fin.sum_univ_castSucc
         (fun member => (circuits member).cost operationCost)).symm
+
+export Cslib.Circuits (Circuit.cost_parallelFinVector)
 
 end Algebraic

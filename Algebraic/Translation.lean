@@ -422,13 +422,13 @@ theorem transport_lowerBound
     (operationCost : OperationCost τ)
     (target : Target U n m)
     (lowerBound : ∀ {h} (targetCircuit : Circuit τ n h m),
-      targetCircuit.Computes targetInterpretation target →
+      targetCircuit.ComputesWith targetInterpretation target →
         L ≤ targetCircuit.cost operationCost)
     (circuit : Circuit σ n g m)
-    (computes : circuit.Computes source target) :
+    (computes : circuit.ComputesWith source target) :
     L ≤ circuit.cost (realization.pullCost operationCost) := by
   have compiledComputes :
-      (realization.compile circuit).Computes targetInterpretation target := by
+      (realization.compile circuit).ComputesWith targetInterpretation target := by
     intro input
     exact (realization.compile_eval circuit input).trans (computes input)
   have transported := lowerBound (realization.compile circuit) compiledComputes
