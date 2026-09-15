@@ -56,9 +56,9 @@ private theorem outputRoot_not_readsInput
       (GateElimination.Xor.target ⟨n + 1, phase⟩))
     (root : OutputRoot circuit)
     (selected : Fin (n + 1)) :
-    ¬ReadsInput (outputProgram circuit) root.gate selected := by
+    ¬ReadsInput circuit.program root.gate selected := by
   intro reads
-  let program := outputProgram circuit
+  let program := circuit.program
   let annihilation := Classical.choice
     (annihilate_of_readsInput program selected root.gate reads)
   let restriction := restrictProgram selected annihilation.fixedValue program
@@ -79,11 +79,11 @@ private theorem outputRoot_not_readsInput
         else annihilation.outputValue := by
     let sourceInput :=
       (InputSubstitution.fix selected annihilation.fixedValue).apply input
-    let outputWire : Wire (n + 1) (g + 1) := Fin.last ((n + 1) + g)
+    let outputWire := circuit.outputs 0
     calc
       circuit.eval interpretation sourceInput 0 =
           program.trace interpretation sourceInput outputWire :=
-        (outputProgram_trace_last circuit sourceInput).symm
+        rfl
       _ = (origins program outputWire).eval program sourceInput :=
         (origins_eval program sourceInput outputWire).symm
       _ = (ResidualValue.wire root.negated (Wire.gate root.gate)).eval
@@ -138,23 +138,23 @@ private noncomputable def threeGateStep
     (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.target ⟨n + 1, phase⟩))
     (root : OutputRoot circuit)
-    (initial : InitialChargedGate (outputProgram circuit))
+    (initial : InitialChargedGate circuit.program)
     (selected : Fin (n + 1))
     (left right : Fin (n + 1) → Bool)
     (agree : ∀ input, input ≠ selected → left input = right input)
     (targetDifferent : GateElimination.Xor.target ⟨n + 1, phase⟩ left 0 ≠
       GateElimination.Xor.target ⟨n + 1, phase⟩ right 0)
     (initialEqual :
-      (outputProgram circuit).gateFunction interpretation initial.gate left =
-        (outputProgram circuit).gateFunction interpretation initial.gate right)
+      circuit.program.gateFunction interpretation initial.gate left =
+        circuit.program.gateFunction interpretation initial.gate right)
     (initialDeleted : ∀ fixedValue,
       initial.gate ∈
-        (restrictProgram selected fixedValue (outputProgram circuit)).deleted) :
+        (restrictProgram selected fixedValue circuit.program).deleted) :
     GateElimination.Xor.ThreeGateStep binaryCost interpretation n phase circuit := by
   classical
   have outputDifferent := output_ne_of_target_ne computes targetDifferent
   have rootDifferent := root.gate_ne_of_output_ne left right outputDifferent
-  have path := differingPath_of_gate_ne (outputProgram circuit) selected left right
+  have path := differingPath_of_gate_ne circuit.program selected left right
     agree root.gate root.charged rootDifferent
   let first := Exists.choose path.exists_first
   have firstSpec := Exists.choose_spec path.exists_first
@@ -164,7 +164,7 @@ private noncomputable def threeGateStep
     intro equal
     apply outputRoot_not_readsInput positive phase circuit computes root selected
     exact equal ▸ firstReads
-  have successorExists : ∃ next, UsesGate (outputProgram circuit) first next := by
+  have successorExists : ∃ next, UsesGate circuit.program first next := by
     rcases firstSpec.2.2 with atRoot | successor
     · exact False.elim (first_ne_root atRoot)
     · exact successor
@@ -174,22 +174,22 @@ private noncomputable def threeGateStep
     intro equal
     apply firstDifferent
     calc
-      (outputProgram circuit).gateFunction interpretation first left =
-          (outputProgram circuit).gateFunction interpretation initial.gate left :=
+      circuit.program.gateFunction interpretation first left =
+          circuit.program.gateFunction interpretation initial.gate left :=
         congrArg (fun gate =>
-          (outputProgram circuit).gateFunction interpretation gate left) equal
-      _ = (outputProgram circuit).gateFunction interpretation initial.gate right :=
+          circuit.program.gateFunction interpretation gate left) equal
+      _ = circuit.program.gateFunction interpretation initial.gate right :=
         initialEqual
-      _ = (outputProgram circuit).gateFunction interpretation first right :=
+      _ = circuit.program.gateFunction interpretation first right :=
         (congrArg (fun gate =>
-          (outputProgram circuit).gateFunction interpretation gate right) equal).symm
+          circuit.program.gateFunction interpretation gate right) equal).symm
   have first_ne_next : first ≠ next := firstUsesNext.ne
   have next_ne_initial : next ≠ initial.gate := by
     intro equal
     apply initial.not_uses first
     exact equal ▸ firstUsesNext
   let annihilation := Classical.choice
-    (annihilate_of_readsInput (outputProgram circuit) selected first firstReads)
+    (annihilate_of_readsInput circuit.program selected first firstReads)
   let restricted := restrictCircuit circuit selected annihilation.fixedValue
   have initialMember : initial.gate ∈ restricted.deleted := by
     rw [restrictCircuit_deleted]
@@ -200,15 +200,15 @@ private noncomputable def threeGateStep
   have nextMember : next ∈ restricted.deleted := by
     rw [restrictCircuit_deleted]
     exact restrictProgram_deleted_of_usesGate_constant
-      (outputProgram circuit) selected annihilation.fixedValue firstUsesNext
+      circuit.program selected annihilation.fixedValue firstUsesNext
         annihilation.value_eq
   have threeSubset :
-      ({initial.gate, first, next} : Finset (Fin (g + 1))) ⊆
+      ({initial.gate, first, next} : Finset (Fin g)) ⊆
         restricted.deleted := by
     simp only [Finset.insert_subset_iff, Finset.singleton_subset_iff]
     exact ⟨initialMember, firstMember, nextMember⟩
   have threeCard :
-      ({initial.gate, first, next} : Finset (Fin (g + 1))).card = 3 := by
+      ({initial.gate, first, next} : Finset (Fin g)).card = 3 := by
     rw [Finset.card_insert_of_notMem (by
       simp [Ne.symm first_ne_initial, Ne.symm next_ne_initial])]
     rw [Finset.card_insert_of_notMem (by simp [first_ne_next])]
@@ -275,23 +275,23 @@ private noncomputable def threeGateStep_of_independent_initial
     (computes : circuit.ComputesWith interpretation
       (GateElimination.Xor.target ⟨n + 1, phase⟩))
     (root : OutputRoot circuit)
-    (initial : InitialChargedGate (outputProgram circuit))
+    (initial : InitialChargedGate circuit.program)
     (selected : Fin (n + 1))
     (leftIndependent : ∀ left right : Fin (n + 1) → Bool,
       (∀ input, input ≠ selected → left input = right input) →
-        (origins (outputProgram circuit) initial.left).eval
-            (outputProgram circuit) left =
-          (origins (outputProgram circuit) initial.left).eval
-            (outputProgram circuit) right)
+        (origins circuit.program initial.left).eval
+            circuit.program left =
+          (origins circuit.program initial.left).eval
+            circuit.program right)
     (rightIndependent : ∀ left right : Fin (n + 1) → Bool,
       (∀ input, input ≠ selected → left input = right input) →
-        (origins (outputProgram circuit) initial.right).eval
-            (outputProgram circuit) left =
-          (origins (outputProgram circuit) initial.right).eval
-            (outputProgram circuit) right)
+        (origins circuit.program initial.right).eval
+            circuit.program left =
+          (origins circuit.program initial.right).eval
+            circuit.program right)
     (initialDeleted : ∀ fixedValue,
       initial.gate ∈
-        (restrictProgram selected fixedValue (outputProgram circuit)).deleted) :
+        (restrictProgram selected fixedValue circuit.program).deleted) :
     GateElimination.Xor.ThreeGateStep binaryCost interpretation n phase circuit := by
   let left : Fin (n + 1) → Bool := fun _ => false
   let right : Fin (n + 1) → Bool := fun input => decide (input = selected)
@@ -322,11 +322,11 @@ noncomputable def eliminate
     fun input => input_mem_support circuit computes input
   let root := Classical.choice (exists_outputRoot circuit positive allSupported)
   let initial := Classical.choice
-    (exists_initialChargedGate (outputProgram circuit) ⟨root.gate, root.charged⟩)
+    (exists_initialChargedGate circuit.program ⟨root.gate, root.charged⟩)
   cases initial.pattern with
   | constantLeft value origin_eq =>
-      let avoidance := avoidSimpleOrigin positive (outputProgram circuit)
-        (origins (outputProgram circuit) initial.right) initial.right_simple
+      let avoidance := avoidSimpleOrigin positive circuit.program
+        (origins circuit.program initial.right) initial.right_simple
       exact threeGateStep_of_independent_initial positive phase circuit computes
         root initial avoidance.selected
         (by
@@ -336,10 +336,10 @@ noncomputable def eliminate
         avoidance.independent
         (fun fixedValue =>
           restrictProgram_deleted_of_initial_constant_left
-            (outputProgram circuit) avoidance.selected fixedValue initial origin_eq)
+            circuit.program avoidance.selected fixedValue initial origin_eq)
   | constantRight value origin_eq =>
-      let avoidance := avoidSimpleOrigin positive (outputProgram circuit)
-        (origins (outputProgram circuit) initial.left) initial.left_simple
+      let avoidance := avoidSimpleOrigin positive circuit.program
+        (origins circuit.program initial.left) initial.left_simple
       exact threeGateStep_of_independent_initial positive phase circuit computes
         root initial avoidance.selected
         avoidance.independent
@@ -349,23 +349,23 @@ noncomputable def eliminate
           rfl)
         (fun fixedValue =>
           restrictProgram_deleted_of_initial_constant_right
-            (outputProgram circuit) avoidance.selected fixedValue initial origin_eq)
+            circuit.program avoidance.selected fixedValue initial origin_eq)
   | singleInput input leftNegated rightNegated leftOrigin rightOrigin =>
       let selected := input.succAbove ⟨0, positive⟩
       have input_ne : input ≠ selected :=
         (Fin.succAbove_ne input ⟨0, positive⟩).symm
       have literalIndependent
           (negated : Bool)
-          {wire : Wire (n + 1) (g + 1)}
-          (origin_eq : origins (outputProgram circuit) wire =
+          {wire : Wire (n + 1) g}
+          (origin_eq : origins circuit.program wire =
             .wire negated (Wire.input input)) :
           ∀ left right : Fin (n + 1) → Bool,
             (∀ coordinate, coordinate ≠ selected →
               left coordinate = right coordinate) →
-            (origins (outputProgram circuit) wire).eval
-                (outputProgram circuit) left =
-              (origins (outputProgram circuit) wire).eval
-                (outputProgram circuit) right := by
+            (origins circuit.program wire).eval
+                circuit.program left =
+              (origins circuit.program wire).eval
+                circuit.program right := by
         intro left right agree
         rw [origin_eq]
         cases negated with
@@ -380,7 +380,7 @@ noncomputable def eliminate
         (literalIndependent leftNegated leftOrigin)
         (literalIndependent rightNegated rightOrigin)
         (fun fixedValue =>
-          restrictProgram_deleted_of_readsOnlyInput (outputProgram circuit)
+          restrictProgram_deleted_of_readsOnlyInput circuit.program
             selected fixedValue input initial.gate
               (initial.readsOnlyInput leftOrigin rightOrigin))
   | distinctInputs leftInput rightInput leftNegated rightNegated
@@ -408,7 +408,7 @@ noncomputable def eliminate
       have rightTrace
           (input : Fin (n + 1) → Bool)
           (rightValue : input rightInput = annihilator) :
-          (outputProgram circuit).trace interpretation input initial.right =
+          circuit.program.trace interpretation input initial.right =
             initial.op.absorbing := by
         rw [← origins_eval, rightOrigin]
         cases rightNegated with
@@ -421,8 +421,8 @@ noncomputable def eliminate
             rw [rightValue]
             exact BinaryOp.signed_inputForSignedAbsorbing initial.op true
       have initialEqual :
-          (outputProgram circuit).gateFunction interpretation initial.gate left =
-            (outputProgram circuit).gateFunction interpretation initial.gate right := by
+          circuit.program.gateFunction interpretation initial.gate left =
+            circuit.program.gateFunction interpretation initial.gate right := by
         rw [initial.gateFunction_eq_binaryEval left,
           initial.gateFunction_eq_binaryEval right,
           rightTrace left leftRightValue, rightTrace right rightRightValue]
@@ -430,7 +430,7 @@ noncomputable def eliminate
       exact threeGateStep positive phase circuit computes root initial selected left right
         agree targetDifferent initialEqual
         (fun fixedValue =>
-          restrictProgram_deleted_of_readsInput (outputProgram circuit) selected
+          restrictProgram_deleted_of_readsInput circuit.program selected
             fixedValue (initial.readsInput_left leftOrigin))
 
 end XorElimination

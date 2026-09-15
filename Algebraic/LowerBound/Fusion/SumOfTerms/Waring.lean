@@ -9,6 +9,16 @@ This module instantiates sum-of-terms fusion on actual multivariate
 polynomials.  A charged term is a scalar multiple of a power of a linear form.
 The normalized middle catalecticant sends each such term to a rank-one matrix,
 while the squarefree monomial has a full-rank complement matrix.
+
+## References
+
+The catalecticant rank bound is described in J. M. Landsberg and Zach Teitler,
+*On the ranks and border ranks of symmetric tensors*, equation (1) and
+Remark 6.5, [arXiv:0901.0487](https://arxiv.org/abs/0901.0487).
+Here the middle flattening is restricted to squarefree row and column
+indices, and multinomial normalization is checked over any characteristic-zero
+field. The result is a power-term lower bound; it does not identify the exact
+Waring rank or formalize the paper's border-rank and singularity bounds.
 -/
 
 namespace Algebraic

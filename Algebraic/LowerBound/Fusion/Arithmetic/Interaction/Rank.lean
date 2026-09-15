@@ -1,6 +1,6 @@
 import Algebraic.LowerBound.Fusion.Arithmetic.Interaction
 import Mathlib.Algebra.Order.Floor.Div
-import Mathlib.LinearAlgebra.Dimension.LinearMap
+import Algebraic.LinearAlgebra.Rank
 
 /-!
 # Rank bounds from arithmetic interaction spans
@@ -46,52 +46,13 @@ structure Certificate
   target_rank_ge : (targetRank : Cardinal) ≤
     LinearMap.rank (feature problem.target)
 
-/-- Rank of a scalar multiple of a linear map is at most its rank. -/
-theorem linearMap_rank_smul_le
-    (scalar : K)
-    (map : A →ₗ[K] B) :
-    LinearMap.rank (scalar • map) ≤ LinearMap.rank map :=
-  Submodule.rank_mono (LinearMap.range_smul_le_range map scalar)
+/-- Compatibility name for `LinearMap.rank_smul_le`. -/
+@[deprecated LinearMap.rank_smul_le (since := "2026-09-15")]
+alias linearMap_rank_smul_le := LinearMap.rank_smul_le
 
-/-- The rank of a linear map in the span of a finite family is at most the
-sum of any pointwise rank budgets for that family.  This is the
-linear-algebraic core of nonuniform Fusion bounds; circuit-specific modules
-only need to supply the finite family and prove the span invariant. -/
-theorem linearMap_rank_le_sum_of_mem_span
-    {ι : Type z}
-    [Fintype ι]
-    (target : A →ₗ[K] B)
-    (family : ι → A →ₗ[K] B)
-    (budget : ι → Nat)
-    (targetMem : target ∈ Submodule.span K (Set.range family))
-    (localBound : ∀ index, LinearMap.rank (family index) ≤ budget index) :
-    LinearMap.rank target ≤ ∑ index, (budget index : Cardinal) := by
-  classical
-  have targetMemImage : target ∈
-      Submodule.span K
-        (family '' (Finset.univ : Finset ι)) := by
-    simpa [Set.image_univ] using targetMem
-  obtain ⟨coefficients, coefficientsSpec⟩ :=
-    (Submodule.mem_span_image_finset_iff_exists_fun
-      (R := K) (v := family)).mp targetMemImage
-  rw [← coefficientsSpec]
-  calc
-    LinearMap.rank (∑ index, coefficients index • family index) ≤
-        ∑ index, LinearMap.rank
-          (coefficients index • family index) := by
-      simpa using LinearMap.rank_finsetSum_le
-        (Finset.univ : Finset (↥(Finset.univ : Finset ι)))
-        (fun index => coefficients index • family index)
-    _ ≤ ∑ index : ↥(Finset.univ : Finset ι),
-          (budget index : Cardinal) := by
-      apply Finset.sum_le_sum
-      intro index _
-      exact (linearMap_rank_smul_le
-        (coefficients index) (family index)).trans (localBound index)
-    _ = ∑ index, (budget index : Cardinal) := by
-      simpa only [Finset.univ_eq_attach] using
-        (Finset.sum_attach (Finset.univ : Finset ι)
-          (fun index => (budget index : Cardinal)))
+/-- Compatibility name for `LinearMap.rank_le_sum_of_mem_span`. -/
+@[deprecated LinearMap.rank_le_sum_of_mem_span (since := "2026-09-15")]
+alias linearMap_rank_le_sum_of_mem_span := LinearMap.rank_le_sum_of_mem_span
 
 /-- Every interaction retained from an atom list satisfies the certificate's
 local rank bound. -/
@@ -141,39 +102,12 @@ theorem Certificate.target_rank_le_interactions
       Submodule.span K (Set.range interactionFeature) := by
     simpa [generatedSubmodule, interactionFeature] using
       targetFeature_mem_generatedSubmodule certificate.toCertificate cover
-  have targetMemImage : certificate.feature problem.target ∈
-      Submodule.span K
-        (interactionFeature ''
-          (Finset.univ : Finset
-            (Fin (interactions certificate.toCertificate
-              cover.atoms).length))) := by
-    simpa [Set.image_univ] using targetMem
-  obtain ⟨coefficients, coefficientsSpec⟩ :=
-    (Submodule.mem_span_image_finset_iff_exists_fun
-      (R := K) (v := interactionFeature)).mp targetMemImage
-  rw [← coefficientsSpec]
-  calc
-    LinearMap.rank
-        (∑ index, coefficients index • interactionFeature index) ≤
-        ∑ index,
-          LinearMap.rank (coefficients index • interactionFeature index) := by
-      simpa using LinearMap.rank_finsetSum_le
-        (Finset.univ : Finset
-          ((Finset.univ : Finset
-            (Fin (interactions certificate.toCertificate
-              cover.atoms).length)) : Type))
-        (fun index => coefficients index • interactionFeature index)
-    _ ≤ ∑ _index, (certificate.interactionRank : Cardinal) := by
-      apply Finset.sum_le_sum
-      intro index _
-      exact (linearMap_rank_smul_le
-        (coefficients index) (interactionFeature index)).trans
-          (certificate.rank_le_of_mem_interactions cover.atoms
-            (interactionFeature index) (by
-              simp [interactionFeature]))
-    _ = ((interactions certificate.toCertificate cover.atoms).length :
-          Cardinal) * certificate.interactionRank := by
-      simp [nsmul_eq_mul]
+  have bound := LinearMap.rank_le_sum_of_mem_span
+    (certificate.feature problem.target) interactionFeature
+    (fun _ => certificate.interactionRank) targetMem
+    (fun index => certificate.rank_le_of_mem_interactions cover.atoms
+      (interactionFeature index) (by simp [interactionFeature]))
+  simpa [nsmul_eq_mul] using bound
 
 /-- Natural-number form of the rank-versus-interaction inequality. -/
 theorem Certificate.targetRank_le_mul_coverCost

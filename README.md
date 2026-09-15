@@ -35,12 +35,12 @@ Reusable Boolean, arithmetic, and sum-of-terms bases live under
 `Algebraic.Basis`. The main `Algebraic` module is the umbrella import; focused
 imports are available throughout the directory tree.
 
-For a smaller and more intentional dependency boundary, use:
+Choose an entry point for the task:
 
 - `import Algebraic.Core` for signatures, shared circuits, semantics, costs,
   substitution, and translation;
-- `import Algebraic.Applications` for a curated set of binary-power and
-  lower-bound endpoints under `Algebraic.Applications`;
+- `import Algebraic.Applications` for the umbrella of curated binary-power and
+  lower-bound endpoints; prefer focused application imports when possible;
 - `import Algebraic.Basis.DeMorgan.Complexity` for minimum native circuit
   size, point updates, and the Hamming Lipschitz bound;
 - `import Algebraic.Basis.DeMorgan.PairIndicator` for support/read-once
@@ -49,6 +49,17 @@ For a smaller and more intentional dependency boundary, use:
 
 The naming, namespace, simp, and stability conventions are recorded in
 [`STYLE.md`](STYLE.md).
+
+See the [application guide](docs/applications.md) for focused imports, cost
+conventions, and checked examples. In particular,
+`Algebraic.Applications.Hessian` accepts an ordinary polynomial computation
+equality, and `Algebraic.Applications.Waring` accepts a finite sum-of-powers
+equality. Neither interface requires callers to construct a Fusion certificate.
+
+Elementary Boolean completeness is available from
+`Algebraic.Basis.DeMorgan.Completeness`. Its truth-table construction and
+multi-output completeness theorem do not depend on Lupanov synthesis or
+minimum circuit complexity.
 
 The point-update and counting arguments for strict circuit size hierarchies
 are described in [`docs/circuit-hierarchy.md`](docs/circuit-hierarchy.md).
@@ -79,9 +90,11 @@ keeps the circuit-to-cover argument independent of its set-theoretic or
 algebraic applications. A separate least-fixed-point model handles cyclic
 circuits without weakening the acyclic invariant of `Program`.
 
-This README deliberately does not inventory individual definitions or
-theorems. Module docstrings and the generated API reference are the source of
-truth for the results currently available and their precise hypotheses.
+The [application guide](docs/applications.md) maps representative results to
+their imports, models, and charged operations. Module docstrings and the
+generated API reference give their full statements. The
+[upstream preparation record](docs/upstream-readiness.md) tracks the remaining
+integration and review work.
 
 The [library stocktake](research/library-stocktake-2026-09-08.md) records the
 retained results and the removal of the later star/topology research branch.
@@ -107,6 +120,20 @@ Compile the downstream-style public API regression suite:
 
 ```sh
 lake test
+```
+
+This includes a transitive axiom audit of all library-owned declarations
+visible through the public import, including their private proof dependencies.
+Only `propext`, `Classical.choice`, and `Quot.sound` are allowed. Unexported
+modern-module declarations unreachable from the public API are outside the
+audit. Small executable tests using `native_decide` are kept outside the library.
+
+Check that every library and test module is reachable from its root import,
+and that elementary modules do not depend on research or sharp synthesis:
+
+```sh
+python3 -m unittest discover -s scripts -p 'test_*.py'
+python3 scripts/check_imports.py
 ```
 
 ## Documentation

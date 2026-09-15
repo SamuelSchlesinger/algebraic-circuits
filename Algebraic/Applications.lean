@@ -1,4 +1,6 @@
 import Algebraic.Basis.Arithmetic.Power
+import Algebraic.Applications.Hessian
+import Algebraic.Applications.Waring
 import Algebraic.LowerBound.AC0.ParitySeparation
 import Algebraic.LowerBound.Counting.Shannon
 import Algebraic.LowerBound.Hierarchy

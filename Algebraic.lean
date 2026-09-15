@@ -27,5 +27,6 @@ import Algebraic.Reduction
 import Algebraic.Compaction
 import Algebraic.Counting
 import Algebraic.MassProduction
+import Algebraic.MassProduction.RoutingAssembly
 import Algebraic.LowerBound
 import Algebraic.Applications

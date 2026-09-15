@@ -1,4 +1,5 @@
 import Algebraic.Basis.DeMorgan.NativeCost
+import Algebraic.Basis.DeMorgan.CSLib
 import Cslib.Computability.Circuit.Boolean.Shannon
 import Cslib.Computability.Circuit.Boolean.Lupanov
 

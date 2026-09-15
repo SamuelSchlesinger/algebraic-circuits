@@ -138,7 +138,7 @@ theorem target_rank_le_sum_indexedBudget
   let interactionFeature : Fin (interactions certificate atoms).length →
       (A →ₗ[K] B) :=
     fun index => (interactions certificate atoms).get index
-  apply Rank.linearMap_rank_le_sum_of_mem_span
+  apply LinearMap.rank_le_sum_of_mem_span
     (certificate.feature problem.target) interactionFeature budget
   · simpa [generatedSubmodule, interactionFeature, atoms] using
       targetFeature_mem_circuitSubmodule certificate circuit constructs
@@ -223,7 +223,7 @@ theorem target_rank_le_mul_multiplicationCost
       _ ≤ ∑ _index, (interactionRank : Cardinal) := by
         apply Finset.sum_le_sum
         intro index _
-        exact (Rank.linearMap_rank_smul_le
+        exact (LinearMap.rank_smul_le
           (coefficients index) (interactionFeature index)).trans
             (localBound (interactionFeature index) (by
               simp [CircuitBound, interactionFeature, atoms] at localBound ⊢))

@@ -3,47 +3,14 @@ import Algebraic.Basis.DeMorgan.Restriction
 /-!
 # Restricting one-output De Morgan circuits
 
-This module materializes the circuit's free output wire with an identity gate
-before applying `ProgramRestriction`. Deleted charged gates are indexed
-uniformly by `Fin (g + 1)`: internal gate `k` is `k.castSucc`, and the added
-output identity is `Fin.last g`. The resulting exact cost identity is exposed
-as a standard `Circuit.Reduction` certificate.
+The source program is restricted directly, and its designated output wire is
+then materialized in the residual program when necessary. Deleted charged
+gates are indexed by `Fin g`, the original source-gate type. The exact cost
+identity is exposed as a standard `Circuit.Reduction` certificate.
 -/
 
 namespace Algebraic
 namespace DeMorgan
-
-/-- Append a free identity gate carrying a one-output circuit's output wire. -/
-def outputProgram
-    (source : Circuit signature n g 1) : Program signature n (g + 1) :=
-  source.program.gate (identityLine (source.outputs 0))
-
-/-- The last wire of `outputProgram` is the circuit output. -/
-@[simp] theorem outputProgram_trace_last
-    (source : Circuit signature n g 1)
-    (input : Fin n → Bool) :
-    (outputProgram source).trace interpretation input (Fin.last (n + g)) =
-      source.eval interpretation input 0 := by
-  rw [outputProgram, Program.trace_gate_last]
-  rfl
-
-/-- The last wire of `outputProgram` has exactly the circuit's input support. -/
-@[simp] theorem outputProgram_support_last
-    (source : Circuit signature n g 1) :
-    (outputProgram source).wireSupport (Fin.last (n + g)) =
-      source.inputSupport := by
-  rw [outputProgram, Program.wireSupport_gate_last]
-  change (Finset.univ : Finset (Fin 1)).biUnion
-      (fun _ => source.program.wireSupport (source.outputs 0)) =
-    source.inputSupport
-  rw [Circuit.inputSupport]
-  change (Finset.univ : Finset (Fin 1)).biUnion
-      (fun _ => source.program.wireSupport (source.outputs 0)) =
-    (Finset.univ : Finset (Fin 1)).biUnion
-      (fun output => source.program.wireSupport (source.outputs output))
-  congr 1
-  funext output
-  rw [Fin.eq_zero output]
 
 /--
 Restriction of a one-output De Morgan circuit, with the exact set of deleted
@@ -57,8 +24,8 @@ structure CircuitRestriction
   gateCount : Nat
   /-- Residual circuit on the remaining inputs. -/
   result : Circuit signature n gateCount 1
-  /-- Deleted charged gates; `Fin.last g` denotes the added output identity. -/
-  deleted : Finset (Fin (g + 1))
+  /-- Deleted charged gates in the original source program. -/
+  deleted : Finset (Fin g)
   /-- Pointwise semantics under the chosen input restriction. -/
   eval_eq : ∀ input,
     result.eval interpretation input =
@@ -69,55 +36,32 @@ structure CircuitRestriction
 
 namespace CircuitRestriction
 
-/--
-Turn a restriction of the program obtained by appending a free output identity
-back into a one-output circuit restriction. The restricted output residual is
-materialized as a wire using at most one free gate.
--/
-def ofOutputProgram
+/-- Materialize the residual value of the designated source output, using
+at most one free gate for a constant or a negation. -/
+def ofProgram
     {source : Circuit signature (n + 1) g 1}
     {selected : Fin (n + 1)}
     {fixedValue : Bool}
-    (program : ProgramRestriction
-      (outputProgram source) selected fixedValue) :
+    (program : ProgramRestriction source.program selected fixedValue) :
     CircuitRestriction source selected fixedValue := by
-  let outputValue := program.values (Fin.last ((n + 1) + g))
+  let outputValue := program.values (source.outputs 0)
   let materialized := materialize program.result outputValue
-  let result : Circuit signature n materialized.gateCount 1 :=
-    { program := materialized.result
-      outputs := fun _ => materialized.output }
   exact
     { gateCount := materialized.gateCount
-      result := result
+      result := { program := materialized.result, outputs := fun _ => materialized.output }
       deleted := program.deleted
       eval_eq := by
         intro input
         funext output
         have output_eq : output = 0 := Fin.eq_zero output
         subst output
-        change materialized.result.trace interpretation input
-            materialized.output = _
+        change materialized.result.trace interpretation input materialized.output = _
         rw [materialized.output_eq]
-        calc
-          outputValue.eval program.result input =
-              (outputProgram source).trace interpretation
-                ((InputSubstitution.fix selected fixedValue).apply input)
-                (Fin.last ((n + 1) + g)) :=
-            program.trace_eq input (Fin.last ((n + 1) + g))
-          _ = source.eval interpretation
-                ((InputSubstitution.fix selected fixedValue).apply input) 0 := by
-            exact outputProgram_trace_last source _
+        exact program.trace_eq input (source.outputs 0)
       cost_eq := by
-        have programCost := program.cost_eq
-        calc
-          program.deleted.card + result.cost binaryCost =
-              program.deleted.card +
-                materialized.result.cost binaryCost := rfl
-          _ = program.deleted.card + program.result.cost binaryCost := by
-            rw [materialized.cost_eq]
-          _ = (outputProgram source).cost binaryCost := programCost
-          _ = source.cost binaryCost := by
-            simp [outputProgram, Circuit.cost, identityLine] }
+        change program.deleted.card + materialized.result.cost binaryCost = source.cost binaryCost
+        rw [materialized.cost_eq]
+        exact program.cost_eq }
 
 /-- View an exact circuit restriction as a generic certified reduction. -/
 def toReduction
@@ -141,17 +85,17 @@ noncomputable def restrictCircuit
     (selected : Fin (n + 1))
     (fixedValue : Bool) :
     CircuitRestriction source selected fixedValue := by
-  exact CircuitRestriction.ofOutputProgram
+  exact CircuitRestriction.ofProgram
     (restrictProgram selected fixedValue
-      (outputProgram source))
+      source.program)
 
-/-- Circuit restriction exposes exactly the appended program's deletion set. -/
+/-- Circuit restriction exposes exactly the source program's deletion set. -/
 @[simp] theorem restrictCircuit_deleted
     (source : Circuit signature (n + 1) g 1)
     (selected : Fin (n + 1))
     (fixedValue : Bool) :
     (restrictCircuit source selected fixedValue).deleted =
-      (restrictProgram selected fixedValue (outputProgram source)).deleted := rfl
+      (restrictProgram selected fixedValue source.program).deleted := rfl
 
 end DeMorgan
 end Algebraic

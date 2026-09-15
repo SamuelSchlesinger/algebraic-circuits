@@ -1,7 +1,6 @@
 import Algebraic.Basis.DeMorgan.NativeCost
 import Algebraic.Basis.DeMorgan.PairIndicator
 import Algebraic.Basis.DeMorgan.Threshold
-import Lean.Util.CollectAxioms
 
 /-!
 # Native De Morgan bounds without the retired topology development
@@ -81,27 +80,3 @@ example (value : Bool) :
   omega
 
 end AlgebraicTests.NativeDeMorgan
-
-/- Preserve the axiom audit for every declaration in the retained circuit
-modules, including private helpers and generated declarations. -/
-set_option maxHeartbeats 2000000 in
-run_cmd do
-  let environment ← Lean.getEnv
-  let modules : Array Lean.Name := #[
-    `Algebraic.Analysis.Frontier, `Algebraic.BooleanCube.Neighbors,
-    `Algebraic.Basis.DeMorgan.Operations, `Algebraic.Basis.DeMorgan.ReadOnce,
-    `Algebraic.Basis.DeMorgan.TightCircuit, `Algebraic.Basis.DeMorgan.Mask,
-    `Algebraic.Basis.DeMorgan.PairIndicator, `Algebraic.Basis.DeMorgan.NativeCost,
-    `Algebraic.Basis.DeMorgan.Threshold]
-  let allowed : Array Lean.Name := #[`propext, `Classical.choice, `Quot.sound]
-  let mut checked : Nat := 0
-  for (name, _) in environment.constants.toList do
-    if let some index := environment.getModuleIdxFor? name then
-      if modules.contains environment.header.moduleNames[index]! then
-        checked := checked + 1
-        for dependency in ← Lean.collectAxioms name do
-          unless allowed.contains dependency do
-            throwError "Native De Morgan declaration {name} depends on forbidden axiom {dependency}"
-  if checked = 0 then
-    throwError "Native De Morgan axiom audit did not find any declarations"
-  Lean.logInfo m!"Native De Morgan axiom audit passed for {checked} declarations."

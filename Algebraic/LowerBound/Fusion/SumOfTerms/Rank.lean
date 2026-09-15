@@ -1,6 +1,6 @@
 import Algebraic.LowerBound.Fusion.SumOfTerms
 import Mathlib.Algebra.Order.Floor.Div
-import Mathlib.LinearAlgebra.Dimension.LinearMap
+import Algebraic.LinearAlgebra.Rank
 
 /-!
 # Rank certificates for sum-of-terms circuits
@@ -80,12 +80,9 @@ theorem RankCertificate.targetFeature_mem_termSpan
     (K := K) termValue problem cover
   exact generated_le_comap targetMem
 
-/-- Rank of a scalar multiple of a linear map is at most its rank. -/
-theorem linearMap_rank_smul_le
-    (scalar : K)
-    (map : A →ₗ[K] B) :
-    LinearMap.rank (scalar • map) ≤ LinearMap.rank map :=
-  Submodule.rank_mono (LinearMap.range_smul_le_range map scalar)
+/-- Compatibility name for `LinearMap.rank_smul_le`. -/
+@[deprecated LinearMap.rank_smul_le (since := "2026-09-15")]
+alias linearMap_rank_smul_le := LinearMap.rank_smul_le
 
 /-- The feature rank of the target is at most the number of terms times their
 individual rank bound. -/
@@ -103,28 +100,10 @@ theorem RankCertificate.target_rank_le_terms
   have targetMem : certificate.feature problem.target ∈
       Submodule.span K (Set.range termFeature) :=
     certificate.targetFeature_mem_termSpan cover
-  have targetMemImage : certificate.feature problem.target ∈
-      Submodule.span K
-        (termFeature '' (Finset.univ : Finset (Fin (terms cover.atoms).length))) := by
-    simpa [Set.image_univ] using targetMem
-  obtain ⟨coefficients, coefficientsSpec⟩ :=
-    (Submodule.mem_span_image_finset_iff_exists_fun
-      (R := K) (v := termFeature)).mp targetMemImage
-  rw [← coefficientsSpec]
-  calc
-    LinearMap.rank (∑ index, coefficients index • termFeature index) ≤
-        ∑ index, LinearMap.rank (coefficients index • termFeature index) := by
-      simpa using LinearMap.rank_finsetSum_le
-        (Finset.univ : Finset
-          ((Finset.univ : Finset (Fin (terms cover.atoms).length)) : Type))
-        (fun index => coefficients index • termFeature index)
-    _ ≤ ∑ _index, (certificate.termRank : Cardinal) := by
-      apply Finset.sum_le_sum
-      intro index _
-      exact (linearMap_rank_smul_le (coefficients index) (termFeature index)).trans
-        (certificate.term_rank_le ((terms cover.atoms).get index))
-    _ = ((terms cover.atoms).length : Cardinal) * certificate.termRank := by
-      simp [nsmul_eq_mul]
+  have bound := LinearMap.rank_le_sum_of_mem_span
+    (certificate.feature problem.target) termFeature (fun _ => certificate.termRank)
+    targetMem (fun index => certificate.term_rank_le ((terms cover.atoms).get index))
+  simpa [nsmul_eq_mul] using bound
 
 /-- A rank certificate gives the natural-number cover inequality
 `targetRank ≤ cost * termRank`. -/

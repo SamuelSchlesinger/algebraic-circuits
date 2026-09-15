@@ -1,8 +1,7 @@
 import Algebraic.Basis.DeMorgan.PointUpdate
-import Algebraic.Basis.DeMorgan.CSLib
+import Algebraic.Basis.DeMorgan.Completeness
 import Algebraic.BooleanCube
 import Algebraic.Complexity
-import Cslib.Computability.Circuit.Boolean.LupanovConstruction
 
 /-!
 # Boolean circuit complexity on the truth-table cube
@@ -18,16 +17,6 @@ crosses every attainable threshold with overshoot at most `2 * n`.
 -/
 
 namespace Algebraic.DeMorgan
-
-/-- Every scalar Boolean function has a circuit, using CSLib's finite
-Lupanov construction and the De Morgan realization. -/
-theorem exists_circuit (function : ScalarFunction Bool n) :
-    ∃ gates, ∃ circuit : Circuit signature n gates 1,
-      circuit.ComputesWith interpretation (fun input _ => function input) := by
-  obtain ⟨gates, _, circuit, computes⟩ :=
-    (Cslib.Circuits.Boolean.Lupanov.synthesis (k := n) (d := 0)
-      function (s := 1) (by decide)).exists_circuit
-  exact ⟨_, fromBoolean.compile circuit, (fromBoolean_computes circuit function).2 computes⟩
 
 /-- A minimum-size circuit chosen by well-ordering. This is a classical proof
 witness, not an executable circuit optimizer. -/

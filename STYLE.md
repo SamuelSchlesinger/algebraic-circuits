@@ -33,7 +33,11 @@ surface navigable without forcing breaking renames on existing users.
   non-facade machinery belongs in a descriptive nested namespace rather than
   the root `Algebraic` namespace.
 - Prefer shallow aliases in `Algebraic.Applications` over moving established
-  declarations out of their defining namespaces.
+  declarations out of their defining namespaces. Where the underlying theorem
+  exposes proof-specific certificates or encodings, provide a focused
+  application module with a conventional mathematical premise instead of
+  merely shortening the theorem name. The main Applications module is an
+  umbrella; prefer its focused modules in downstream code.
 
 ## Theorem and simp discipline
 
@@ -56,8 +60,18 @@ Before submitting a change, run:
 lake build Algebraic AlgebraicTests --wfail
 lake test
 lake lint
+python3 -m unittest discover -s scripts -p 'test_*.py'
+python3 scripts/check_imports.py
 ```
 
 Public behavior belongs in the downstream-style `AlgebraicTests` suite.
 Proof-local examples can remain near their defining module when they clarify a
 construction, but they do not replace an import-level regression.
+
+`AlgebraicTests.AxiomAudit` checks all library-owned declarations visible through
+the public import, including extensions in `Cslib.Circuits` and transitive
+private proof dependencies, against the standard logical axiom allowlist.
+Unexported modern-module declarations unreachable from the public API are
+outside the audit. Public import coverage is a separate CI gate: a new file
+must be reachable from `Algebraic.lean` so that its public interface is built
+and audited. New test files must be reachable from `AlgebraicTests.lean`.

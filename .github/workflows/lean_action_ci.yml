@@ -11,6 +11,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+      - name: Check public import coverage and dependency boundaries
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_*.py'
+          python3 scripts/check_imports.py
       - uses: leanprover/lean-action@v1
         with:
           build-args: --wfail

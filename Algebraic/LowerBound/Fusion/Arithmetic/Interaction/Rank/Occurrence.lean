@@ -180,7 +180,7 @@ theorem target_rank_le_sum_indexedBudget
     (localBound : IndexedBound certificate circuit budget) :
     LinearMap.rank (certificate.feature problem.target) ≤
       ∑ index, (budget index : Cardinal) :=
-  Rank.linearMap_rank_le_sum_of_mem_span
+  LinearMap.rank_le_sum_of_mem_span
     (certificate.feature problem.target)
     (interactionFamily certificate circuit) budget
     (targetFeature_mem_span certificate circuit constructs) localBound

@@ -1,4 +1,7 @@
 import AlgebraicTests.Core
+import AlgebraicTests.CoreTranslation
+import AlgebraicTests.Completeness
+import AlgebraicTests.AxiomAudit
 import AlgebraicTests.Boolean
 import AlgebraicTests.FusionCanonicalGraph
 import AlgebraicTests.Circuit
@@ -51,7 +54,10 @@ import AlgebraicTests.AC0SwitchingFamily
 import AlgebraicTests.PartialAssignment
 import AlgebraicTests.Translation
 import AlgebraicTests.LowerBounds
+import AlgebraicTests.Hessian
+import AlgebraicTests.Waring
 import AlgebraicTests.Hierarchy
+import AlgebraicTests.Restriction
 import AlgebraicTests.NativeDeMorgan
 import AlgebraicTests.MassProduction
 

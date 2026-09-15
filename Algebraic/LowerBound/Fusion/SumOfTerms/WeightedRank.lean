@@ -100,34 +100,10 @@ theorem Certificate.target_rank_le_termWeights
   have targetMem : certificate.feature problem.target ∈
       Submodule.span K (Set.range termFeature) :=
     certificate.targetFeature_mem_termSpan cover
-  have targetMemImage : certificate.feature problem.target ∈
-      Submodule.span K
-        (termFeature ''
-          (Finset.univ : Finset (Fin (terms cover.atoms).length))) := by
-    simpa [Set.image_univ] using targetMem
-  obtain ⟨coefficients, coefficientsSpec⟩ :=
-    (Submodule.mem_span_image_finset_iff_exists_fun
-      (R := K) (v := termFeature)).mp targetMemImage
-  rw [← coefficientsSpec]
-  calc
-    LinearMap.rank (∑ index, coefficients index • termFeature index) ≤
-        ∑ index, LinearMap.rank
-          (coefficients index • termFeature index) := by
-      simpa using LinearMap.rank_finsetSum_le
-        (Finset.univ : Finset
-          ((Finset.univ : Finset (Fin (terms cover.atoms).length)) : Type))
-        (fun index ↦ coefficients index • termFeature index)
-    _ ≤ ∑ index :
-          ((Finset.univ : Finset (Fin (terms cover.atoms).length)) : Type),
-        (termWeight ((terms cover.atoms).get index.1) : Cardinal) := by
-      apply Finset.sum_le_sum
-      intro index _
-      exact (linearMap_rank_smul_le (coefficients index)
-        (termFeature index)).trans
-          (certificate.term_rank_le ((terms cover.atoms).get index))
-    _ = ∑ index : Fin (terms cover.atoms).length,
-        (termWeight ((terms cover.atoms).get index) : Cardinal) := by
-      simp
+  exact LinearMap.rank_le_sum_of_mem_span
+    (certificate.feature problem.target) termFeature
+    (fun index => termWeight ((terms cover.atoms).get index)) targetMem
+    (fun index => certificate.term_rank_le ((terms cover.atoms).get index))
 
 /-- Natural-number weighted cover inequality. -/
 theorem Certificate.targetRank_le_termWeights
