@@ -39,6 +39,13 @@ Choose an entry point for the task:
 
 - `import Algebraic.Core` for signatures, shared circuits, semantics, costs,
   substitution, and translation;
+- `import Algebraic.Complexity.Relative` for computing a target from supplied
+  functions on an arbitrary common domain;
+- `import Algebraic.ConditionalComplexity` for the minimum cost of
+  `h(x, g₀(x), …)`, free supplied values, and composition inequalities;
+- `import Algebraic.ConditionalComplexity.Linear` for exact complexity with
+  linear Boolean helpers; see [conditional lower bounds](docs/conditional-complexity.md#six-lower-bound-results-checked-in-lean)
+  for support, Hessian, preprocessing, restriction, and approximation results;
 - `import Algebraic.Applications` for the umbrella of curated binary-power and
   lower-bound endpoints; prefer focused application imports when possible;
 - `import Algebraic.Basis.DeMorgan.Complexity` for minimum native circuit
@@ -60,6 +67,10 @@ Elementary Boolean completeness is available from
 `Algebraic.Basis.DeMorgan.Completeness`. Its truth-table construction and
 multi-output completeness theorem do not depend on Lupanov synthesis or
 minimum circuit complexity.
+
+The [conditional complexity guide](docs/conditional-complexity.md) explains
+the relation to `Synthesis`, a checked counterexample to an exact chain rule,
+and counting bounds for random targets with a fixed supplied family.
 
 The point-update and counting arguments for strict circuit size hierarchies
 are described in [`docs/circuit-hierarchy.md`](docs/circuit-hierarchy.md).

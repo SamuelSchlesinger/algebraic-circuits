@@ -1,5 +1,8 @@
 import AlgebraicTests.Core
 import AlgebraicTests.CoreTranslation
+import AlgebraicTests.ConditionalComplexity
+import AlgebraicTests.ConditionalLowerBounds
+import AlgebraicTests.RelativeComplexity
 import AlgebraicTests.Completeness
 import AlgebraicTests.AxiomAudit
 import AlgebraicTests.Boolean
